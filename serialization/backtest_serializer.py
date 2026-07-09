@@ -92,6 +92,12 @@ def _serialize_portfolio_history(
     Serialize portfolio history.
     """
 
+    portfolio_history = (
+        portfolio_history
+        .astype(object)
+        .where(pd.notnull(portfolio_history), None)
+    )
+
     return (
         portfolio_history
         .reset_index()
@@ -105,6 +111,11 @@ def _serialize_analytics_history(
     Serialize analytics history.
     """
 
+    analytics_history = analytics_history.astype(object).where(
+        pd.notnull(analytics_history),
+        None
+    )
+
     return (
         analytics_history
         .reset_index()
@@ -117,6 +128,11 @@ def _serialize_trade_history(
     """
     Serialize completed trade history.
     """
+
+    trade_history = trade_history.astype(object).where(
+        pd.notnull(trade_history),
+        None
+    )
 
     return (
         trade_history
