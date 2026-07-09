@@ -4,7 +4,8 @@ API routes.
 All REST endpoints are defined here.
 """
 
-from flask import jsonify, request
+from flask import jsonify, request, render_template
+
 
 from api import api
 from utils.logger import get_logger
@@ -49,19 +50,8 @@ def _parse_request(data: dict) -> BacktestRequest:
 
 
 @api.route("/", methods=["GET"])
-def health_check():
-    """
-    Health check endpoint.
-    """
-
-    logger.info("Health check endpoint accessed.")
-
-    return jsonify(
-        {
-            "status": "running",
-            "message": "Trading Strategy Analysis Platform API",
-        }
-    ), 200
+def index():
+    return render_template("index.html")
 
 @api.route("/backtest", methods=["POST"])
 def backtest():

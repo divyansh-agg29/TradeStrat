@@ -1,0 +1,243 @@
+/* ==========================================
+   Theme Variables
+========================================== */
+
+:root {
+
+    /* Backgrounds */
+    --color-bg: #111827;
+    --color-surface: #1F2937;
+    --color-surface-hover: #374151;
+
+    /* Text */
+    --color-text: #F3F4F6;
+    --color-text-secondary: #9CA3AF;
+
+    /* Accent */
+    --color-primary: #3B82F6;
+
+    /* Status */
+    --color-success: #22C55E;
+    --color-danger: #EF4444;
+    --color-warning: #F59E0B;
+
+    /* Borders */
+    --color-border: #374151;
+
+    /* Inputs */
+    --input-bg: #111827;
+    --input-border: #4B5563;
+
+    /* Button */
+    --button-bg: #2563EB;
+    --button-hover: #1D4ED8;
+
+    /* Shadows */
+    --shadow:
+        0 4px 12px rgba(0,0,0,0.25);
+
+    /* Radius */
+
+    --radius: 10px;
+
+}
+
+
+/* ==========================================
+   Global Reset
+========================================== */
+
+* {
+
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+
+}
+
+
+/* ==========================================
+   Page
+========================================== */
+
+html,
+body {
+
+    height: 100%;
+
+}
+
+body {
+
+    background: var(--color-bg);
+
+    color: var(--color-text);
+
+    font-family:
+        "Segoe UI",
+        Tahoma,
+        Geneva,
+        Verdana,
+        sans-serif;
+
+    font-size: 16px;
+
+    line-height: 1.5;
+
+}
+
+
+/* ==========================================
+   Typography
+========================================== */
+
+h1 {
+
+    font-size: 2rem;
+
+    font-weight: 700;
+
+}
+
+h2 {
+
+    font-size: 1.4rem;
+
+    font-weight: 600;
+
+}
+
+h3 {
+
+    font-size: 1rem;
+
+    font-weight: 600;
+
+    color: var(--color-text-secondary);
+
+}
+
+p,
+label {
+
+    color: var(--color-text-secondary);
+
+}
+
+
+/* ==========================================
+   Links
+========================================== */
+
+a {
+
+    color: var(--color-primary);
+
+    text-decoration: none;
+
+}
+
+a:hover {
+
+    text-decoration: underline;
+
+}
+
+
+/* ==========================================
+   Inputs
+========================================== */
+
+.form-input,
+.form-select {
+
+    width: 100%;
+
+    margin-top: 6px;
+
+    padding: 10px 12px;
+
+    background: var(--input-bg);
+
+    color: var(--color-text);
+
+    border: 1px solid var(--input-border);
+
+    border-radius: var(--radius);
+
+    font-size: 15px;
+
+}
+
+.form-input:focus,
+.form-select:focus {
+
+    outline: none;
+
+    border-color: var(--color-primary);
+
+}
+
+
+/* ==========================================
+   Buttons
+========================================== */
+
+.btn-primary {
+
+    display: inline-block;
+
+    cursor: pointer;
+
+    border: none;
+
+    border-radius: var(--radius);
+
+    padding: 12px 20px;
+
+    font-size: 15px;
+
+    font-weight: 600;
+
+    color: #FFFFFF;
+
+    background-color: #2563EB;
+
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.btn-primary:hover {
+
+    background: var(--button-hover);
+
+}
+
+/* ==========================================
+   Panels
+========================================== */
+
+.panel {
+
+    padding: 24px;
+
+    background: var(--color-surface);
+
+    border: 1px solid var(--color-border);
+
+    border-radius: var(--radius);
+
+    box-shadow: var(--shadow);
+
+}
+
+
+/* ==========================================
+   Utility
+========================================== */
+
+.hidden {
+
+    display: none;
+
+}

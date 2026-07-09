@@ -15,7 +15,11 @@ def create_app() -> Flask:
     Flask application factory.
     """
 
-    app = Flask(__name__)
+    app = Flask(
+        __name__,
+        template_folder="frontend/templates",
+        static_folder="frontend/static"
+    )
 
     # Register API blueprint
     app.register_blueprint(api)
