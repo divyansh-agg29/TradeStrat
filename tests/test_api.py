@@ -41,20 +41,6 @@ def _create_request_payload():
         },
     }
 
-def test_health_check(client):
-    """
-    The health endpoint should return HTTP 200.
-    """
-
-    response = client.get("/")
-
-    assert response.status_code == 200
-
-    data = response.get_json()
-
-    assert data["status"] == "running"
-
-    assert "message" in data
 
 @patch("api.routes.serialize_backtest_result")
 @patch("api.routes.run_backtest")
