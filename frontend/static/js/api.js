@@ -19,15 +19,7 @@ function buildBacktestRequest(configuration) {
 
             type: configuration.strategy.type,
 
-            parameters: {
-
-                short_period:
-                    configuration.strategy.shortPeriod,
-
-                long_period:
-                    configuration.strategy.longPeriod
-
-            }
+            parameters: configuration.strategy.parameters
 
         }
 

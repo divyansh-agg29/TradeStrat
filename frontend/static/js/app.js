@@ -11,6 +11,10 @@ function initializeApplication() {
         "Trading Dashboard Initialized"
     );
 
+    populateStrategyDropdown();
+
+    onStrategyChanged();
+
     restorePreviousConfiguration();
 
     registerEventListeners();

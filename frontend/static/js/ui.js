@@ -17,11 +17,8 @@ const ui = {
     strategySelect:
         document.getElementById("strategy-type"),
 
-    shortPeriodInput:
-        document.getElementById("short-period"),
-
-    longPeriodInput:
-        document.getElementById("long-period"),
+    strategyParametersContainer:
+        document.getElementById("strategy-parameters"),
 
     runButton:
         document.getElementById("run-backtest-btn"),
@@ -139,6 +136,66 @@ function registerEventListeners() {
         onRunBacktestClicked
     );
 
+    ui.strategySelect.addEventListener(
+        "change",
+        onStrategyChanged
+    );
+
+}
+
+
+function populateStrategyDropdown() {
+
+    ui.strategySelect.innerHTML = "";
+
+    for (const [key, strategy] of Object.entries(STRATEGY_REGISTRY)) {
+
+        const option = document.createElement("option");
+        option.value = key;
+        option.textContent = strategy.label;
+        ui.strategySelect.appendChild(option);
+
+    }
+
+}
+
+
+function onStrategyChanged() {
+
+    const strategyType = ui.strategySelect.value;
+    const strategy = STRATEGY_REGISTRY[strategyType];
+
+    ui.strategyParametersContainer.innerHTML = "";
+
+    if (!strategy) {
+        return;
+    }
+
+    for (const param of strategy.parameters) {
+
+        const group = document.createElement("div");
+        group.className = "form-group";
+
+        const label = document.createElement("label");
+        label.setAttribute("for", "param-" + param.key);
+        label.textContent = param.label;
+
+        const input = document.createElement("input");
+        input.type = param.type;
+        input.id = "param-" + param.key;
+        input.className = "form-input";
+        input.value = param.default;
+
+        if (param.min !== undefined) {
+            input.min = param.min;
+        }
+
+        group.appendChild(label);
+        group.appendChild(input);
+        ui.strategyParametersContainer.appendChild(group);
+
+    }
+
 }
 
 async function onRunBacktestClicked() {
@@ -167,6 +224,26 @@ async function onRunBacktestClicked() {
 
 function readConfigurationForm() {
 
+    const strategyType = ui.strategySelect.value;
+    const strategy = STRATEGY_REGISTRY[strategyType];
+    const parameters = {};
+
+    if (strategy) {
+
+        for (const param of strategy.parameters) {
+
+            const input = document.getElementById(
+                "param-" + param.key
+            );
+
+            if (input) {
+                parameters[param.key] = Number(input.value);
+            }
+
+        }
+
+    }
+
     return {
 
         ticker: ui.tickerInput.value.trim(),
@@ -181,16 +258,9 @@ function readConfigurationForm() {
 
         strategy: {
 
-            type:
-                ui.strategySelect.value,
+            type: strategyType,
 
-            shortPeriod: Number(
-                ui.shortPeriodInput.value
-            ),
-
-            longPeriod: Number(
-                ui.longPeriodInput.value
-            )
+            parameters: parameters
 
         }
 
@@ -230,34 +300,16 @@ function validateConfiguration(configuration) {
 
     }
 
-    if (
-        configuration.strategy.shortPeriod <= 0
-    ) {
+    const strategy =
+        STRATEGY_REGISTRY[configuration.strategy.type];
 
-        errors.push(
-            "Short SMA period must be positive."
+    if (strategy && strategy.validate) {
+
+        const strategyErrors = strategy.validate(
+            configuration.strategy.parameters
         );
 
-    }
-
-    if (
-        configuration.strategy.longPeriod <= 0
-    ) {
-
-        errors.push(
-            "Long SMA period must be positive."
-        );
-
-    }
-
-    if (
-        configuration.strategy.shortPeriod >=
-        configuration.strategy.longPeriod
-    ) {
-
-        errors.push(
-            "Short SMA period must be smaller than Long SMA period."
-        );
+        errors.push(...strategyErrors);
 
     }
 
@@ -288,10 +340,32 @@ function populateConfigurationForm(configuration) {
     ui.strategySelect.value =
         configuration.strategy.type;
 
-    ui.shortPeriodInput.value =
-        configuration.strategy.shortPeriod;
+    onStrategyChanged();
 
-    ui.longPeriodInput.value =
-        configuration.strategy.longPeriod;
+    // Support both new format (parameters object) and legacy format (shortPeriod/longPeriod)
+    let params = configuration.strategy.parameters;
+
+    if (!params && configuration.strategy.shortPeriod !== undefined) {
+        params = {
+            short_period: configuration.strategy.shortPeriod,
+            long_period: configuration.strategy.longPeriod
+        };
+    }
+
+    if (params) {
+
+        for (const [key, value] of Object.entries(params)) {
+
+            const input = document.getElementById(
+                "param-" + key
+            );
+
+            if (input) {
+                input.value = value;
+            }
+
+        }
+
+    }
 
 }

@@ -99,33 +99,10 @@
                     <label for="strategy-type">Strategy</label>
 
                     <select id="strategy-type" class="form-select">
-
-                        <option value="sma_crossover">
-                            SMA Crossover
-                        </option>
-
                     </select>
                 </div>
 
-                <div class="form-group">
-                    <label for="short-period">Short SMA</label>
-
-                    <input
-                        type="number"
-                        id="short-period"
-                        class="form-input"
-                        value="20">
-                </div>
-
-                <div class="form-group">
-                    <label for="long-period">Long SMA</label>
-
-                    <input
-                        type="number"
-                        id="long-period"
-                        class="form-input"
-                        value="50">
-                </div>
+                <div id="strategy-parameters"></div>
 
             </section>
 
@@ -508,6 +485,7 @@
 <!-- JavaScript -->
 <script src="{{ url_for('static', filename='js/storage.js') }}"></script>
 <script src="{{ url_for('static', filename='js/formatters.js') }}"></script>
+<script src="{{ url_for('static', filename='js/strategies.js') }}"></script>
 <script src="{{ url_for('static', filename='js/api.js') }}"></script>
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 <script src="{{ url_for('static', filename='js/charts.js') }}"></script>

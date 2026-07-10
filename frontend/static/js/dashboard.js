@@ -194,9 +194,17 @@ function renderPriceChart(portfolioHistory) {
 
     // Pushing traces for each indicator column in the portfolio history to be plotted
     const columns = Object.keys(portfolioHistory[0]);
+    const knownColumns = new Set([
+        "Date", "Open", "High", "Low", "Close", "Volume",
+        "Signal", "Cash", "Shares", "Holdings Value",
+        "Portfolio Value", "Position"
+    ]);
     const indicatorPrefixes = [
         "SMA",
-        "EMA"
+        "EMA",
+        "RSI",
+        "MACD",
+        "BB"
     ];
 
     for (const column of columns)
