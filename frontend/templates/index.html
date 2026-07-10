@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Trading Strategy Analysis Platform</title>
+
+    <!-- Plotly -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/cards.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/charts.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tables.css') }}">
+</head>
+
+<body>
+
+    <!-- ================= HEADER ================= -->
+
+    <header id="app-header">
+
+        <h1>Trading Strategy Analysis Platform</h1>
+
+        <div id="connection-status">
+
+            <span class="status-dot"></span>
+
+            <span>Connected</span>
+
+        </div>
+
+    </header>
+
+    <!-- =============== APPLICATION =============== -->
+
+    <div id="app-container">
+
+        <!-- ========= CONTROL PANEL ========= -->
+
+        <aside id="control-panel">
+
+            <h2>Control Panel</h2>
+
+            <!-- Backtest Configuration -->
+
+            <section id="configuration-section" class="panel">
+
+                <h3>Configuration</h3>
+
+                <div class="form-group">
+                    <label for="ticker">Ticker</label>
+                    <input
+                        type="text"
+                        id="ticker"
+                        class="form-input"
+                        placeholder="RELIANCE.NS">
+                </div>
+
+                <div class="form-group">
+                    <label for="start-date">Start Date</label>
+                    <input
+                        type="date"
+                        class="form-input"
+                        id="start-date">
+                </div>
+
+                <div class="form-group">
+                    <label for="end-date">End Date</label>
+                    <input
+                        type="date"
+                        class="form-input"
+                        id="end-date">
+                </div>
+
+                <div class="form-group">
+                    <label for="capital">Initial Capital</label>
+                    <input
+                        type="number"
+                        id="capital"
+                        class="form-input"
+                        value="100000">
+                </div>
+
+            </section>
+
+            <!-- Strategy -->
+
+            <section id="strategy-section" class="panel">
+
+                <h3>Strategy</h3>
+
+                <div class="form-group">
+                    <label for="strategy-type">Strategy</label>
+
+                    <select id="strategy-type" class="form-select">
+
+                        <option value="sma_crossover">
+                            SMA Crossover
+                        </option>
+
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="short-period">Short SMA</label>
+
+                    <input
+                        type="number"
+                        id="short-period"
+                        class="form-input"
+                        value="20">
+                </div>
+
+                <div class="form-group">
+                    <label for="long-period">Long SMA</label>
+
+                    <input
+                        type="number"
+                        id="long-period"
+                        class="form-input"
+                        value="50">
+                </div>
+
+            </section>
+
+            <!-- Execute -->
+
+            <section id="execution-section" class="panel">
+
+                <button id="run-backtest-btn" class="btn-primary">
+
+                    Run Backtest
+
+                </button>
+
+            </section>
+
+        </aside>
+
+        <!-- ========== DASHBOARD ========== -->
+
+        <main id="dashboard">
+
+            <!-- Error Banner -->
+
+            <section id="error-banner-section">
+
+            </section>
+
+            <!-- KPI Cards -->
+
+            <section id="kpi-section">
+
+                <div class="kpi-grid">
+
+                    <!-- Row 1 -->
+
+                    <div class="kpi-card">
+
+                        <div class="kpi-title">Total Return</div>
+
+                        <div
+                            class="kpi-value"
+                            id="kpi-total-return">
+
+                            --
+
+                        </div>
+
+                    </div>
+
+                    <div class="kpi-card">
+
+                        <div class="kpi-title">CAGR</div>
+
+                        <div
+                            class="kpi-value"
+                            id="kpi-cagr">
+
+                            --
+
+                        </div>
+
+                    </div>
+
+                    <div class="kpi-card">
+
+                        <div class="kpi-title">Sharpe Ratio</div>
+
+                        <div
+                            class="kpi-value"
+                            id="kpi-sharpe-ratio">
+
+                            --
+
+                        </div>
+
+                    </div>
+
+                    <div class="kpi-card">
+
+                        <div class="kpi-title">Max Drawdown</div>
+
+                        <div
+                            class="kpi-value"
+                            id="kpi-max-drawdown">
+
+                            --
+
+                        </div>
+
+                    </div>
+
+                    <!-- Row 2 -->
+
+                    <div class="kpi-card">
+
+                        <div class="kpi-title">Final Portfolio Value</div>
+
+                        <div
+                            class="kpi-value"
+                            id="kpi-final-portfolio-value">
+
+                            --
+
+                        </div>
+
+                    </div>
+
+                    <div class="kpi-card">
+
+                        <div class="kpi-title">Win Rate</div>
+
+                        <div
+                            class="kpi-value"
+                            id="kpi-win-rate">
+
+                            --
+
+                        </div>
+
+                    </div>
+
+                    <div class="kpi-card">
+
+                        <div class="kpi-title">Profit Factor</div>
+
+                        <div
+                            class="kpi-value"
+                            id="kpi-profit-factor">
+
+                            --
+
+                        </div>
+
+                    </div>
+
+                    <div class="kpi-card">
+
+                        <div class="kpi-title">Total Trades</div>
+
+                        <div
+                            class="kpi-value"
+                            id="kpi-total-trades">
+
+                            --
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- Price Chart -->
+
+            <section id="price-chart-section" class="chart-panel">
+
+                <div class="section-header">
+                    <h2>Price Chart</h2>
+                </div>
+
+                <div id="price-chart" class="chart-container"></div>
+
+            </section>
+
+            <!-- Equity Curve -->
+
+            <section id="equity-chart-section" class="chart-panel">
+
+                <div class="section-header">
+                    <h2>Equity Curve</h2>
+                </div>
+
+                <div id="equity-chart" class="chart-container"></div>
+
+            </section>
+
+            <!-- Drawdown -->
+
+            <section id="drawdown-chart-section" class="chart-panel">
+
+                <div class="section-header">
+                    <h2>Drawdown Chart</h2>
+                </div>
+
+                <div id="drawdown-chart" class="chart-container"></div>
+
+            </section>
+
+            <!-- Portfolio Metrics -->
+
+            <section id="portfolio-metrics-section" class="dashboard-panel">
+
+                <div class="section-header">
+                    <h2>Portfolio Metrics</h2>
+                </div>
+
+                <div class="section-content metric-grid">
+
+                    <div class="metric-row">
+                        <span>Initial Capital</span>
+                        <span id="metric-initial-capital">--</span>
+                    </div>
+
+                    <div class="metric-row">
+                        <span>Final Portfolio Value</span>
+                        <span id="metric-final-portfolio-value">--</span>
+                    </div>
+
+                    <div class="metric-row">
+                        <span>Profit/Loss %</span>
+                        <span id="metric-profit-loss-percent">--</span>
+                    </div>
+
+                    <div class="metric-row">
+                        <span>Total Return</span>
+                        <span id="metric-total-return">--</span>
+                    </div>
+
+                    <div class="metric-row">
+                        <span>CAGR</span>
+                        <span id="metric-cagr">--</span>
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- Risk Metrics -->
+
+            <section id="risk-metrics-section" class="dashboard-panel">
+
+                <div class="section-header">
+                    <h2>Risk Metrics</h2>
+                </div>
+
+                <div class="section-content metric-grid">
+
+                    <div class="metric-row">
+                        <span>Volatility</span>
+                        <span id="metric-volatility">--</span>
+                    </div>
+
+                    <div class="metric-row">
+                        <span>Sharpe Ratio</span>
+                        <span id="metric-sharpe-ratio">--</span>
+                    </div>
+
+                    <div class="metric-row">
+                        <span>Maximum Drawdown</span>
+                        <span id="metric-maximum-drawdown">--</span>
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- Trade Statistics -->
+
+            <section id="trade-statistics-section" class="dashboard-panel">
+
+                <div class="section-header">
+                    <h2>Trade Statistics</h2>
+                </div>
+
+                <div class="section-content metric-grid">
+
+                    <div class="metric-row">
+                        <span>Total Trades</span>
+                        <span id="metric-total-trades">--</span>
+                    </div>
+
+                    <div class="metric-row">
+                        <span>Winning Trades</span>
+                        <span id="metric-winning-trades">--</span>
+                    </div>
+
+                    <div class="metric-row">
+                        <span>Losing Trades</span>
+                        <span id="metric-losing-trades">--</span>
+                    </div>
+
+                    <div class="metric-row">
+                        <span>Win Rate</span>
+                        <span id="metric-win-rate">--</span>
+                    </div>
+
+                    <div class="metric-row">
+                        <span>Profit Factor</span>
+                        <span id="metric-profit-factor">--</span>
+                    </div>
+
+                    <div class="metric-row">
+                        <span>Average Winner</span>
+                        <span id="metric-average-winner">--</span>
+                    </div>
+
+                    <div class="metric-row">
+                        <span>Average Loser</span>
+                        <span id="metric-average-loser">--</span>
+                    </div>
+
+                    <div class="metric-row">
+                        <span>Largest Winner</span>
+                        <span id="metric-largest-winner">--</span>
+                    </div>
+
+                    <div class="metric-row">
+                        <span>Largest Loser</span>
+                        <span id="metric-largest-loser">--</span>
+                    </div>
+
+                    <div class="metric-row">
+                        <span>Average Holding Period</span>
+                        <span id="metric-average-holding-period">--</span>
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- Trade History -->
+
+            <section id="trade-history-section" class="dashboard-panel">
+
+                <div class="section-header">
+
+                    <h2>Trade History</h2>
+
+                </div>
+
+                <div class="section-content">
+
+                    <table id="trade-history-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>Entry Date</th>
+
+                                <th>Exit Date</th>
+
+                                <th>Holding Period</th>
+
+                                <th>Entry Price</th>
+
+                                <th>Exit Price</th>
+
+                                <th>Quantity</th>
+
+                                <th>Investment</th>
+
+                                <th>Exit Value</th>
+
+                                <th>Return %</th>
+
+                                <th>Profit / Loss</th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="trade-history-body">
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+</body>
+
+<!-- JavaScript -->
+<script src="{{ url_for('static', filename='js/storage.js') }}"></script>
+<script src="{{ url_for('static', filename='js/formatters.js') }}"></script>
+<script src="{{ url_for('static', filename='js/api.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script src="{{ url_for('static', filename='js/tables.js') }}"></script>
+<script src="{{ url_for('static', filename='js/ui.js') }}"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+
+</html>
