@@ -42,10 +42,7 @@ A web-based modular trading strategy analysis platform for backtesting, portfoli
 ## Version History
 
 ### Version 1.0
-
 Initial MVP release.
-
-Completed:
 
 - Market Data Module
 - Indicator Engine
