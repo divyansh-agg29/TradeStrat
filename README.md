@@ -48,7 +48,7 @@ Initial MVP release.
 - Indicator Engine
 - SMA indicator
 - Strategy Engine
-- Crossover Strategy
+- SMA Crossover Strategy
 - Portfolio Simulator
 - Analytics Engine
 - Portfolio Metrics, Risk Metrics, Trade Metrics, Price Chart, Equity Chart, Drawdown Chart, Trade History
