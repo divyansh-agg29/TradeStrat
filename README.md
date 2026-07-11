@@ -46,8 +46,12 @@ Initial MVP release.
 
 - Market Data Module
 - Indicator Engine
-- SMA Strategy
+- SMA indicator
+- Strategy Engine
+- Crossover Strategy
 - Portfolio Simulator
 - Analytics Engine
+- Portfolio Metrics, Risk Metrics, Trade Metrics, Price Chart, Equity Chart, Drawdown Chart, Trade History
+- Backtest Service
 - REST API
 - Interactive Dashboard
