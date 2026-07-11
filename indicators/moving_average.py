@@ -6,6 +6,7 @@ on standardized market data.
 
 Currently implemented indicators:
 - Simple Moving Average (SMA)
+- Exponential Moving Average (EMA)
 
 The functions in this module are intentionally independent of trading strategy,
 portfolio simulation, and analytics. Their sole responsibility is to compute
