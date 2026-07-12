@@ -214,13 +214,9 @@ def calculate_macd(df: pd.DataFrame, fast_period: int = 12, slow_period: int = 2
         logger.error("Price column '%s' not found.", price_column)
         raise ValueError(f"Price column '{price_column}' not found.")
 
-    macd_column = (
-        f"MACD_{fast_period}_{slow_period}"
-    )
-    signal_column = (
-        f"MACD_Signal_{signal_period}"
-    )
-    histogram_column = "MACD_Histogram"
+    macd_column = f"MACD_{fast_period}_{slow_period}_{signal_period}"
+    signal_column = f"MACD_Signal_{fast_period}_{slow_period}_{signal_period}"
+    histogram_column = f"MACD_Histogram_{fast_period}_{slow_period}_{signal_period}"
 
     for column in (
         macd_column,
