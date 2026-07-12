@@ -9,9 +9,10 @@ the requested trading strategy without depending on individual
 strategy modules.
 """
 
-from .sma_crossover import generate_sma_crossover_signals
+from . import generate_sma_crossover_signals, generate_ema_crossover_signals
 
 
 STRATEGY_REGISTRY = {
     "sma_crossover": generate_sma_crossover_signals,
+    "ema_crossover": generate_ema_crossover_signals,
 }
