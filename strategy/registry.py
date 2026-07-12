@@ -11,9 +11,11 @@ strategy modules.
 
 from .sma_crossover import generate_sma_crossover_signals
 from .ema_crossover import generate_ema_crossover_signals
+from .macd_crossover import generate_macd_crossover_signals
 
 
 STRATEGY_REGISTRY = {
     "sma_crossover": generate_sma_crossover_signals,
     "ema_crossover": generate_ema_crossover_signals,
+    "macd_crossover": generate_macd_crossover_signals,
 }
