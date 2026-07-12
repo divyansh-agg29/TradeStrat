@@ -1,41 +1,41 @@
 """
-SMA Crossover Strategy
+EMA Crossover Strategy
 
-This module implements the Simple Moving Average (SMA) crossover trading strategy.
+This module implements the Exponential Moving Average (EMA) crossover trading strategy.
 
 The strategy generates BUY, SELL and HOLD signals based on crossover events
-between a short-term and long-term SMA.
+between a short-term and long-term EMA.
 
 Responsibilities
 ----------------
 - Validate strategy-specific inputs.
-- Ensure required SMA indicators are available.
+- Ensure required EMA indicators are available.
 - Generate crossover signals.
 - Return an enriched copy of the input DataFrame.
 """
 
 import pandas as pd
 
-from indicators.moving_average import calculate_sma
+from indicators.moving_average import calculate_ema
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
 
-def generate_sma_crossover_signals(
+def generate_ema_crossover_signals(
     df: pd.DataFrame,
     short_period: int = 20,
     long_period: int = 50,
     price_column: str = "Close",
 ) -> pd.DataFrame:
     """
-    Generate trading signals using the SMA crossover strategy.
+    Generate trading signals using the EMA crossover strategy.
 
     BUY Signal
-        Generated when the short SMA crosses ABOVE the long SMA.
+        Generated when the short EMA crosses ABOVE the long EMA.
 
     SELL Signal
-        Generated when the short SMA crosses BELOW the long SMA.
+        Generated when the short EMA crosses BELOW the long EMA.
 
     HOLD Signal
         Generated on all other rows.
@@ -46,13 +46,13 @@ def generate_sma_crossover_signals(
         Market data DataFrame.
 
     short_period : int, default=20
-        Short-term SMA period.
+        Short-term EMA period.
 
     long_period : int, default=50
-        Long-term SMA period.
+        Long-term EMA period.
 
     price_column : str, default="Close"
-        Column used for SMA calculations if indicators
+        Column used for EMA calculations if indicators
         need to be generated.
 
     Returns
@@ -61,7 +61,7 @@ def generate_sma_crossover_signals(
         Copy of the supplied DataFrame containing:
 
         - original columns
-        - required SMA columns
+        - required EMA columns
         - Signal column
 
     Raises
@@ -74,7 +74,7 @@ def generate_sma_crossover_signals(
     """
 
     logger.info(
-        "Generating SMA crossover signals "
+        "Generating EMA crossover signals "
         "(short=%s, long=%s).",
         short_period,
         long_period,
@@ -90,7 +90,7 @@ def generate_sma_crossover_signals(
 
     if short_period >= long_period:
         logger.error(
-            "Invalid SMA configuration: "
+            "Invalid EMA configuration: "
             "short_period=%s long_period=%s",
             short_period,
             long_period,
@@ -101,8 +101,8 @@ def generate_sma_crossover_signals(
 
     result_df = df.copy()
 
-    short_column = f"SMA{short_period}"
-    long_column = f"SMA{long_period}"
+    short_column = f"EMA{short_period}"
+    long_column = f"EMA{long_period}"
 
     # ------------------------------------------------------------------
     # Ensure indicators exist
@@ -110,7 +110,7 @@ def generate_sma_crossover_signals(
 
     if short_column not in result_df.columns:
         logger.debug("%s not found. Calculating.", short_column)
-        result_df = calculate_sma(
+        result_df = calculate_ema(
             result_df,
             period=short_period,
             price_column=price_column,
@@ -118,7 +118,7 @@ def generate_sma_crossover_signals(
 
     if long_column not in result_df.columns:
         logger.debug("%s not found. Calculating.", long_column)
-        result_df = calculate_sma(
+        result_df = calculate_ema(
             result_df,
             period=long_period,
             price_column=price_column,
