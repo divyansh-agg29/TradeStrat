@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from strategy.sma_crossover import generate_sma_crossover_signals
+from strategy import generate_sma_crossover_signals
 
 
 # ---------------------------------------------------------------------
