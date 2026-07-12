@@ -114,8 +114,15 @@ def generate_macd_crossover_signals(
     # Ensure indicators exist
     # ------------------------------------------------------------------
 
-    if any([macd_column,signal_column,histogram_column]) not in result_df.columns:
-        logger.debug("MACD not found. Calculating.")
+    if not all(
+        column in result_df.columns
+        for column in (
+            macd_column,
+            signal_column,
+            histogram_column,
+        )
+    ):
+        logger.debug("All MACD columns not found. Calculating.")
         result_df = calculate_macd(
             result_df,
             fast_period=short_period,
