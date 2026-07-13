@@ -159,7 +159,6 @@ function populateStrategyDropdown() {
 
 }
 
-
 function onStrategyChanged() {
 
     const strategyType = ui.strategySelect.value;
@@ -200,27 +199,33 @@ function onStrategyChanged() {
 
 async function onRunBacktestClicked() {
 
-    const configuration =
-        readConfigurationForm();
+    showLoadingOverlay();
 
-    const validation =
-        validateConfiguration(configuration);
+    try{
+        const configuration =
+            readConfigurationForm();
+        const validation =
+            validateConfiguration(configuration);
 
-    if (!validation.isValid) {
-        console.log(validation.errors);
-        return;
+        if (!validation.isValid) {
+            console.log(validation.errors);
+            return;
+        }
+
+        saveConfiguration(configuration);
+
+        const response = await runBacktest(configuration);
+        console.log("Backtest Response:", response);
+
+        renderDashboard(response);
     }
+    finally {
+        hideLoadingOverlay();
+    };
 
-    saveConfiguration(configuration);
-
-    const response = await runBacktest(configuration);
-    console.log("Backtest Response:", response);
-
-    renderDashboard(response);
-
+    
 
 }
-
 
 function readConfigurationForm() {
 

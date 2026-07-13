@@ -8,15 +8,6 @@ const STRATEGY_REGISTRY = {
             {key: "short_period", label: "Short SMA", type: "number", default: 20, min: 1},
             {key: "long_period", label: "Long SMA", type: "number", default: 50, min: 1}
         ],
-
-        validate(params) {
-            const errors = [];
-            if (params.short_period <= 0) {errors.push("Short SMA period must be positive.");}
-            if (params.long_period <= 0) {errors.push("Long SMA period must be positive.");}
-            if (params.short_period >= params.long_period) {errors.push("Short SMA period must be smaller than Long SMA period.");}
-            return errors;
-        }
-
     },
 
     ema_crossover: {
@@ -25,15 +16,6 @@ const STRATEGY_REGISTRY = {
             {key: "short_period", label: "Short EMA", type: "number", default: 20, min: 1},
             {key: "long_period", label: "Long EMA", type: "number", default: 50, min: 1}
         ],
-
-        validate(params) {
-            const errors = [];
-            if (params.short_period <= 0) {errors.push("Short EMA period must be positive.");}
-            if (params.long_period <= 0) {errors.push("Long EMA period must be positive.");}
-            if (params.short_period >= params.long_period) {errors.push("Short EMA period must be smaller than Long EMA period.");}
-            return errors;
-        }
-
     },
 
     macd_crossover: {
@@ -43,16 +25,6 @@ const STRATEGY_REGISTRY = {
             {key: "long_period", label: "Long EMA", type: "number", default: 26, min: 1},
             {key: "signal_period", label: "Signal EMA", type: "number", default: 9, min: 1}
         ],
-
-        validate(params) {
-            const errors = [];
-            if (params.short_period <= 0) {errors.push("Short EMA period must be positive.");}
-            if (params.long_period <= 0) {errors.push("Long EMA period must be positive.");}
-            if (params.signal_period <= 0) {errors.push("Signal EMA period must be positive.");}
-            if (params.short_period >= params.long_period) {errors.push("Short EMA period must be smaller than Long EMA period.");}
-            return errors;
-        }
-
     },
 
     rsi_mean_reversion: {
@@ -62,14 +34,6 @@ const STRATEGY_REGISTRY = {
             {key: "overbought", label: "Overbought", type: "number", default: 70, min: 1},
             {key: "oversold", label: "Oversold", type: "number", default: 30, min: 1}
         ],
-
-        validate(params) {
-            const errors = [];
-            if (params.rsi_period <= 0) {errors.push("RSI period must be positive.");}
-            if (params.overbought <= params.oversold) {errors.push("Overbought must be greater than Oversold.");}
-            return errors;
-        }
-
     }
 
 };

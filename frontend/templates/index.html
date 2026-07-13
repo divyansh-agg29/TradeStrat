@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/cards.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/charts.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/tables.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/loading.css') }}">
 </head>
 
 <body>
@@ -472,9 +473,28 @@
 
     </div>
 
+
+    <!-- ================= LOADING OVERLAY ================= -->
+
+    <div id="loading-overlay">
+
+        <div class="loading-content">
+
+            <div class="loading-spinner"></div>
+
+            <div class="loading-text">
+
+                Running Backtest...
+
+            </div>
+
+        </div>
+
+    </div>
 </body>
 
 <!-- JavaScript -->
+ <script src="{{ url_for('static', filename='js/loading.js') }}"></script>
 <script src="{{ url_for('static', filename='js/storage.js') }}"></script>
 <script src="{{ url_for('static', filename='js/formatters.js') }}"></script>
 <script src="{{ url_for('static', filename='js/strategies.js') }}"></script>
