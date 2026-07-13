@@ -341,12 +341,14 @@ def _execute_signal(
     """
 
     if signal == BUY:
-        open_trade = _execute_buy(
+        new_trade = _execute_buy(
             portfolio,
             current_date,
             current_index,
             close_price,
         )
+        if new_trade is not None:
+            open_trade = new_trade
         return open_trade, None
 
     elif signal == SELL:
