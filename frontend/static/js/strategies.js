@@ -53,9 +53,23 @@ const STRATEGY_REGISTRY = {
             return errors;
         }
 
+    },
+
+    rsi_mean_reversion: {
+        label: "RSI Mean Reversion",
+        parameters: [
+            {key: "rsi_period", label: "RSI Period", type: "number", default: 14, min: 1},
+            {key: "overbought", label: "Overbought", type: "number", default: 70, min: 1},
+            {key: "oversold", label: "Oversold", type: "number", default: 30, min: 1}
+        ],
+
+        validate(params) {
+            const errors = [];
+            if (params.rsi_period <= 0) {errors.push("RSI period must be positive.");}
+            if (params.overbought <= params.oversold) {errors.push("Overbought must be greater than Oversold.");}
+            return errors;
+        }
+
     }
-
-
-
 
 };
