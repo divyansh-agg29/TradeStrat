@@ -2,6 +2,7 @@
 
 function formatPercentage(value) {
 
+    if (value === null || value === undefined) { return "N/A"; }
     return `${value.toFixed(2)}%`;
 
 }
@@ -15,12 +16,14 @@ const currencyFormatter = new Intl.NumberFormat("en-IN", {
 });
 
 function formatCurrency(value) {
+    if (value === null || value === undefined) { return "N/A"; }
     return currencyFormatter.format(value);
 }
 
 
 function formatNumber(value) {
 
+    if (value === null || value === undefined) { return "N/A"; }
     return value.toFixed(2);
 
 }

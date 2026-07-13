@@ -10,6 +10,8 @@ The serializer intentionally remains independent of:
 - Business logic
 """
 
+import math
+
 from models import BacktestResult
 from utils.logger import get_logger
 from analytics import PortfolioMetrics,RiskMetrics,TradeMetrics
@@ -58,6 +60,13 @@ def serialize_backtest_result(
     }
 
 
+def _sanitize_value(value):
+    """Replace non-JSON-safe floats with None."""
+    if isinstance(value, float) and (math.isinf(value) or math.isnan(value)):
+        return None
+    return value
+
+
 def _serialize_portfolio_metrics(
     metrics: PortfolioMetrics,
 ) -> dict:
@@ -65,7 +74,7 @@ def _serialize_portfolio_metrics(
     Serialize portfolio metrics.
     """
 
-    return vars(metrics)
+    return {k: _sanitize_value(v) for k, v in vars(metrics).items()}
 
 def _serialize_risk_metrics(
     metrics: RiskMetrics,
@@ -74,7 +83,7 @@ def _serialize_risk_metrics(
     Serialize risk metrics.
     """
 
-    return vars(metrics)
+    return {k: _sanitize_value(v) for k, v in vars(metrics).items()}
 
 def _serialize_trade_metrics(
     metrics: TradeMetrics,
@@ -83,7 +92,7 @@ def _serialize_trade_metrics(
     Serialize trade metrics.
     """
 
-    return vars(metrics)
+    return {k: _sanitize_value(v) for k, v in vars(metrics).items()}
 
 def _serialize_portfolio_history(
     portfolio_history: pd.DataFrame,
