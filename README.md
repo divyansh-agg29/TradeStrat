@@ -55,3 +55,11 @@ Initial MVP release.
 - Backtest Service
 - REST API
 - Interactive Dashboard
+
+### Version 1.1
+Expanded strategy support and technical analysis capabilities.
+
+- Added EMA, RSI and MACD indicators
+- Added trading strategies: EMA crossover, MACD Crossover, RSI Mean Reversion
+- Improved chart interaction: mouse-wheel zoom, drag to pan
+
