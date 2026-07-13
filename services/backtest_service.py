@@ -23,6 +23,9 @@ from models import StrategyConfig
 from strategy import STRATEGY_REGISTRY
 from utils.logger import get_logger
 
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
+
 logger = get_logger(__name__)
 
 
@@ -57,6 +60,12 @@ def run_backtest(
         market_data,
         strategy_function,
         request.strategy,
+    )
+
+    strategy_output = _trim_to_requested_period(
+        strategy_output,
+        request.start_date,
+        request.end_date,
     )
 
     simulation_result = _run_simulation(
@@ -102,16 +111,73 @@ def _validate_request(
 def _get_market_data(
     request: BacktestRequest,
 ):
+    """
+    Download market data including a warm-up period.
+
+    An additional one year of historical data is downloaded prior to
+    the requested start date to allow recursive indicators (EMA, RSI,
+    MACD, etc.) to stabilize before the backtest begins.
+    """
+
+    warmup_start_date = _get_warmup_start_date(
+        request.start_date
+    )
+
     logger.info(
-        "Downloading market data for %s",
+        "Downloading market data for %s "
+        "(warm-up start=%s, requested start=%s).",
         request.ticker,
+        warmup_start_date,
+        request.start_date,
     )
 
     return get_stock_data(
         ticker=request.ticker,
-        start_date=request.start_date,
+        start_date=warmup_start_date,
         end_date=request.end_date,
     )
+
+def _get_warmup_start_date(
+    start_date: str,
+) -> str:
+    """
+    Calculate the extended start date used for indicator warm-up.
+
+    One calendar year of additional historical data is requested
+    before the user-specified start date.
+    """
+
+    requested_start = datetime.strptime(
+        start_date,
+        "%Y-%m-%d",
+    )
+
+    warmup_start = requested_start - relativedelta(years=1)
+
+    return warmup_start.strftime("%Y-%m-%d")
+
+def _trim_to_requested_period(
+    df,
+    start_date: str,
+    end_date: str,
+):
+    """
+    Trim the strategy output back to the user-requested date range.
+
+    Indicator calculations and signal generation are performed on the
+    extended dataset to allow indicators to stabilize during the warm-up
+    period. Before portfolio simulation, the warm-up rows are removed so
+    that only the requested period is evaluated.
+    """
+
+    logger.info(
+        "Trimming warm-up period "
+        "(start=%s, end=%s).",
+        start_date,
+        end_date,
+    )
+
+    return df.loc[start_date:end_date].copy()
 
 def _get_strategy_function(
     strategy_type: str,
