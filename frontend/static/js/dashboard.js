@@ -316,10 +316,13 @@ function renderPriceChart(portfolioHistory) {
             yaxis: {
                 gridcolor: "#3b4456"
             },
-            showlegend: true
+            showlegend: true,
+            dragmode: "pan"
         },
         {
-            responsive: true
+            responsive: true,
+            scrollZoom: true,
+            displayModeBar: false
         }
     );
 
@@ -378,7 +381,9 @@ function renderEquityChart(analyticsHistory)
 
             color: "#FFFFFF"
 
-        }
+        },
+
+        dragmode: "pan"
     };
 
     Plotly.newPlot(
@@ -387,7 +392,8 @@ function renderEquityChart(analyticsHistory)
         layout,
         {
             responsive: true,
-            displayModeBar: false
+            displayModeBar: false,
+            scrollZoom: true
         }
     );
 }
@@ -456,7 +462,9 @@ function renderDrawdownChart(analyticsHistory)
 
             color: "#FFFFFF"
 
-        }
+        },
+
+        dragmode: "pan"
 
     };
 
@@ -466,7 +474,8 @@ function renderDrawdownChart(analyticsHistory)
         layout,
         {
             responsive: true,
-            displayModeBar: false
+            displayModeBar: false,
+            scrollZoom: true
         }
     );
 }
