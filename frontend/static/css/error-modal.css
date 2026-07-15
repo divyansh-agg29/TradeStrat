@@ -1,0 +1,103 @@
+/* ==========================================================
+   Error Modal
+   ========================================================== */
+
+#error-modal {
+
+    position: fixed;
+
+    inset: 0;
+
+    display: none;
+
+    justify-content: center;
+
+    align-items: center;
+
+    background: rgba(0, 0, 0, 0.45);
+
+    backdrop-filter: blur(2px);
+
+    z-index: 10000;
+
+}
+
+#error-modal.active {
+
+    display: flex;
+
+}
+
+.error-modal-content {
+
+    width: 420px;
+
+    max-width: 90%;
+
+    background: #1f2937;
+
+    border: 1px solid #374151;
+
+    border-radius: 10px;
+
+    overflow: hidden;
+
+    box-shadow: 0 10px 40px rgba(0,0,0,.4);
+
+}
+
+.error-modal-header {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    padding: 16px 20px;
+
+    border-bottom: 1px solid #374151;
+
+}
+
+.error-modal-title {
+
+    font-size: 1.1rem;
+
+    font-weight: 600;
+
+    color: white;
+
+}
+
+.error-modal-close {
+
+    cursor: pointer;
+
+    font-size: 24px;
+
+    color: #9ca3af;
+
+}
+
+.error-modal-close:hover {
+
+    color: white;
+
+}
+
+.error-modal-body {
+
+    padding: 20px;
+
+}
+
+#error-message {
+
+    color: #d1d5db;
+
+    line-height: 1.6;
+
+    white-space: pre-wrap;
+
+}

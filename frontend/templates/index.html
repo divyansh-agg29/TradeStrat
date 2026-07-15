@@ -18,6 +18,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/charts.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/tables.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/loading.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/error-modal.css') }}">
 </head>
 
 <body>
@@ -491,9 +492,49 @@
         </div>
 
     </div>
+
+    <!-- ================= ERROR MODAL ================= -->
+
+    <div id="error-modal">
+
+        <div class="error-modal-content">
+
+            <div class="error-modal-header">
+
+                <div
+                    id="error-title"
+                    class="error-modal-title">
+
+                    Error
+
+                </div>
+
+                <div
+                    id="error-close"
+                    class="error-modal-close">
+
+                    &times;
+
+                </div>
+
+            </div>
+
+            <div class="error-modal-body">
+
+                <div id="error-message">
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
 </body>
 
 <!-- JavaScript -->
+ <script src="{{ url_for('static', filename='js/error-modal.js') }}"></script>
  <script src="{{ url_for('static', filename='js/loading.js') }}"></script>
 <script src="{{ url_for('static', filename='js/storage.js') }}"></script>
 <script src="{{ url_for('static', filename='js/formatters.js') }}"></script>

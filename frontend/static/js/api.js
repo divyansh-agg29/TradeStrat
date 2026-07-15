@@ -30,31 +30,31 @@ function buildBacktestRequest(configuration) {
 
 async function runBacktest(configuration) {
 
-    const requestBody =
-        buildBacktestRequest(configuration);
+    const requestBody =buildBacktestRequest(configuration);
 
-    console.log(
-        "API Request:",
-        requestBody
-    );
+    console.log("API Request:",requestBody);
 
     const response = await fetch(
         BACKTEST_ENDPOINT,
         {
-
             method: "POST",
-
             headers: {
-
                 "Content-Type": "application/json"
-
             },
-
             body: JSON.stringify(requestBody)
-
         }
     );
 
-    return await response.json();
 
+    const result = await response.json();
+
+    if (!result.success) {
+
+        throw new Error(
+            result.error.message
+        );
+
+    }
+
+    return result;
 }

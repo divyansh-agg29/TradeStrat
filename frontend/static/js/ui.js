@@ -208,7 +208,10 @@ async function onRunBacktestClicked() {
             validateConfiguration(configuration);
 
         if (!validation.isValid) {
-            console.log(validation.errors);
+            showErrorModal(
+                "Invalid Configuration",
+                validation.errors.join("\n")
+            );
             return;
         }
 
@@ -218,6 +221,16 @@ async function onRunBacktestClicked() {
         console.log("Backtest Response:", response);
 
         renderDashboard(response);
+    }
+    catch (error) {
+
+        console.error(error);
+
+        showErrorModal(
+            "Backtest Failed",
+            error.message
+        );
+
     }
     finally {
         hideLoadingOverlay();
