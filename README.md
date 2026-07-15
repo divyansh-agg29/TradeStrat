@@ -63,3 +63,9 @@ Expanded strategy support and technical analysis capabilities.
 - Added trading strategies: EMA crossover, MACD Crossover, RSI Mean Reversion
 - Improved chart interaction: mouse-wheel zoom, drag to pan
 
+### Version 1.2
+Improved backtesting accuracy and overall user experience.
+
+- Added automatic indicator warm-up period for more accurate recursive indicator calculations
+- Added full-screen loading overlay during backtest execution
+- Added user-friendly error modal for frontend and backend validation errors
