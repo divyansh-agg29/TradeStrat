@@ -87,6 +87,18 @@ class TradeMetrics:
 
 
 @dataclass
+class BenchmarkMetrics:
+    """
+    Summary metrics comparing strategy performance against
+    a passive Buy & Hold benchmark.
+    """
+
+    benchmark_final_value: float = 0.0
+    benchmark_return: float = 0.0
+    alpha: float = 0.0
+
+
+@dataclass
 class AnalyticsResult:
     """
     Container for the complete analytics output.
@@ -102,6 +114,10 @@ class AnalyticsResult:
 
     trade_metrics: TradeMetrics = field(
         default_factory=TradeMetrics
+    )
+
+    benchmark_metrics: BenchmarkMetrics = field(
+        default_factory=BenchmarkMetrics
     )
 
     analytics_history: pd.DataFrame = field(
@@ -145,8 +161,11 @@ def analyze_performance(
         simulation_result
     )
 
+    initial_capital = simulation_result.summary["initial_capital"]
+
     analytics_history = _build_analytics_history(
-        simulation_result
+        simulation_result,
+        initial_capital,
     )
 
     risk_metrics = _calculate_risk_metrics(
@@ -158,12 +177,17 @@ def analyze_performance(
         simulation_result
     )
 
+    benchmark_metrics = _calculate_benchmark_metrics(
+        simulation_result
+    )
+
     logger.info("Performance analysis completed.")
 
     return AnalyticsResult(
         portfolio_metrics=portfolio_metrics,
         risk_metrics=risk_metrics,
         trade_metrics=trade_metrics,
+        benchmark_metrics=benchmark_metrics,
         analytics_history=analytics_history,
     )
 
@@ -223,6 +247,7 @@ def _validate_inputs(
 
     required_columns = {
         "Portfolio Value",
+        "Close",
     }
 
     missing_columns = (
@@ -318,6 +343,7 @@ def _calculate_portfolio_metrics(
 
 def _build_analytics_history(
     simulation_result: SimulationResult,
+    initial_capital: float,
 ) -> pd.DataFrame:
     """
     Build the derived analytics time series.
@@ -326,6 +352,9 @@ def _build_analytics_history(
     ----------
     simulation_result : SimulationResult
         Completed portfolio simulation.
+
+    initial_capital : float
+        Starting capital used for Buy & Hold benchmark.
 
     Returns
     -------
@@ -341,6 +370,7 @@ def _build_analytics_history(
     - Running Peak
     - Drawdown
     - Drawdown %
+    - Buy & Hold Value
     """
 
     logger.debug(
@@ -395,7 +425,75 @@ def _build_analytics_history(
         analytics_history["Drawdown %"].fillna(0.0)
     )
 
+    # --------------------------------------------------------
+    # Buy & Hold Value
+    # --------------------------------------------------------
+
+    close_prices = analytics_history["Close"]
+    first_close = close_prices.iloc[0]
+    shares_bought = initial_capital / first_close
+
+    analytics_history["Buy & Hold Value"] = (
+        shares_bought * close_prices
+    )
+
     return analytics_history
+
+
+def _calculate_benchmark_metrics(
+    simulation_result: SimulationResult,
+) -> BenchmarkMetrics:
+    """
+    Calculate Buy & Hold benchmark metrics.
+
+    Computes the hypothetical portfolio value if the entire initial
+    capital was used to buy the stock on the first day and held
+    until the last day.
+
+    Parameters
+    ----------
+    simulation_result : SimulationResult
+        Completed portfolio simulation.
+
+    Returns
+    -------
+    BenchmarkMetrics
+        Benchmark performance summary.
+    """
+
+    logger.debug(
+        "Calculating benchmark metrics."
+    )
+
+    portfolio_history = simulation_result.portfolio_history
+    summary = simulation_result.summary
+
+    initial_capital = summary["initial_capital"]
+    final_portfolio_value = summary["final_portfolio_value"]
+
+    first_close = portfolio_history["Close"].iloc[0]
+    last_close = portfolio_history["Close"].iloc[-1]
+
+    shares_bought = initial_capital / first_close
+    benchmark_final_value = shares_bought * last_close
+
+    benchmark_return = (
+        (benchmark_final_value - initial_capital)
+        / initial_capital
+    ) * 100
+
+    strategy_return = (
+        (final_portfolio_value - initial_capital)
+        / initial_capital
+    ) * 100
+
+    alpha = strategy_return - benchmark_return
+
+    return BenchmarkMetrics(
+        benchmark_final_value=benchmark_final_value,
+        benchmark_return=benchmark_return,
+        alpha=alpha,
+    )
 
 
 def _calculate_risk_metrics(

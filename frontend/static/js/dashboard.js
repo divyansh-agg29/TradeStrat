@@ -10,6 +10,8 @@ function renderDashboard(response) {
 
     renderRiskMetrics(data.risk_metrics);
 
+    renderBenchmarkMetrics(data.benchmark_metrics);
+
     renderTradeStatistics(data.trade_metrics);
 
     renderCharts(data);
@@ -91,6 +93,20 @@ function renderRiskMetrics(riskMetrics) {
 
     ui.riskMaximumDrawdown.textContent =
         formatPercentage(riskMetrics.maximum_drawdown);
+
+}
+
+
+function renderBenchmarkMetrics(benchmarkMetrics) {
+
+    ui.benchmarkFinalValue.textContent =
+        formatCurrency(benchmarkMetrics.benchmark_final_value);
+
+    ui.benchmarkReturn.textContent =
+        formatPercentage(benchmarkMetrics.benchmark_return);
+
+    ui.benchmarkAlpha.textContent =
+        formatPercentage(benchmarkMetrics.alpha);
 
 }
 
@@ -338,11 +354,23 @@ function renderEquityChart(analyticsHistory)
         row => row["Portfolio Value"]
     );
 
-    const trace = {
+    const buyHoldValues = analyticsHistory.map(
+        row => row["Buy & Hold Value"]
+    );
+
+    const strategyTrace = {
         x: dates,
         y: portfolioValues,
         mode: "lines",
-        name: "Portfolio Value"
+        name: "Strategy"
+    };
+
+    const benchmarkTrace = {
+        x: dates,
+        y: buyHoldValues,
+        mode: "lines",
+        name: "Buy & Hold",
+        line: { dash: "dash" }
     };
 
     const layout = {
@@ -388,7 +416,7 @@ function renderEquityChart(analyticsHistory)
 
     Plotly.newPlot(
         ui.equityChart,
-        [trace],
+        [strategyTrace, benchmarkTrace],
         layout,
         {
             responsive: true,

@@ -79,7 +79,19 @@ const ui = {
     riskMaximumDrawdown:
         document.getElementById("metric-maximum-drawdown"),
     
-    
+
+    // Benchmark Metrics
+
+    benchmarkFinalValue:
+        document.getElementById("metric-benchmark-final-value"),
+
+    benchmarkReturn:
+        document.getElementById("metric-benchmark-return"),
+
+    benchmarkAlpha:
+        document.getElementById("metric-alpha"),
+
+
     // Trade Metrics
 
     tradeTotalTrades:

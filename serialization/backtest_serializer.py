@@ -14,7 +14,7 @@ import math
 
 from models import BacktestResult
 from utils.logger import get_logger
-from analytics import PortfolioMetrics,RiskMetrics,TradeMetrics
+from analytics import BenchmarkMetrics,PortfolioMetrics,RiskMetrics,TradeMetrics
 import pandas as pd
 
 logger = get_logger(__name__)
@@ -57,6 +57,9 @@ def serialize_backtest_result(
         "trade_history": _serialize_trade_history(
             result.simulation_result.trade_history
         ),
+        "benchmark_metrics": _serialize_benchmark_metrics(
+            result.analytics_result.benchmark_metrics
+        ),
     }
 
 
@@ -90,6 +93,15 @@ def _serialize_trade_metrics(
 ) -> dict:
     """
     Serialize trade metrics.
+    """
+
+    return {k: _sanitize_value(v) for k, v in vars(metrics).items()}
+
+def _serialize_benchmark_metrics(
+    metrics: BenchmarkMetrics,
+) -> dict:
+    """
+    Serialize benchmark metrics.
     """
 
     return {k: _sanitize_value(v) for k, v in vars(metrics).items()}

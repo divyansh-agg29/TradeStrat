@@ -7,6 +7,7 @@ portfolio simulations.
 
 from .metrics import (
     AnalyticsResult,
+    BenchmarkMetrics,
     PortfolioMetrics,
     RiskMetrics,
     TradeMetrics,
@@ -15,6 +16,7 @@ from .metrics import (
 
 __all__ = [
     "AnalyticsResult",
+    "BenchmarkMetrics",
     "PortfolioMetrics",
     "RiskMetrics",
     "TradeMetrics",

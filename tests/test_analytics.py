@@ -18,14 +18,19 @@ from portfolio.simulator import SimulationResult
 def create_simulation_result(
     portfolio_values,
     trade_history=None,
+    close_prices=None,
 ):
     """
     Create a minimal SimulationResult for testing.
     """
 
+    if close_prices is None:
+        close_prices = [v / 100 for v in portfolio_values]
+
     portfolio_history = pd.DataFrame(
         {
             "Portfolio Value": portfolio_values,
+            "Close": close_prices,
         },
         index=pd.date_range(
             start="2025-01-01",
@@ -121,6 +126,7 @@ def test_analyze_performance_rejects_missing_summary_fields():
         portfolio_history=pd.DataFrame(
             {
                 "Portfolio Value": [100000, 101000],
+                "Close": [1000, 1010],
             }
         ),
         trade_history=pd.DataFrame(),
@@ -738,4 +744,164 @@ def test_original_portfolio_history_is_not_modified():
     assert (
         list(simulation_result.portfolio_history.columns)
         == original_columns
+    )
+
+
+# ============================================================================
+# Benchmark Metrics Tests
+# ============================================================================
+
+def test_benchmark_metrics_calculated_correctly():
+    """
+    Buy & Hold metrics should match manual computation.
+    """
+
+    simulation_result = create_simulation_result(
+        portfolio_values=[
+            100000,
+            105000,
+            110000,
+        ],
+        close_prices=[
+            100,
+            110,
+            120,
+        ],
+    )
+
+    analytics_result = analyze_performance(simulation_result)
+
+    metrics = analytics_result.benchmark_metrics
+
+    # Buy & Hold: 100000 / 100 = 1000 shares, final = 1000 * 120 = 120000
+    assert metrics.benchmark_final_value == pytest.approx(120000.0)
+    assert metrics.benchmark_return == pytest.approx(20.0)
+
+
+def test_benchmark_return_matches_stock_return():
+    """
+    Buy & Hold return should equal the stock's percentage change.
+    """
+
+    simulation_result = create_simulation_result(
+        portfolio_values=[
+            100000,
+            100000,
+            100000,
+        ],
+        close_prices=[
+            200,
+            250,
+            300,
+        ],
+    )
+
+    analytics_result = analyze_performance(simulation_result)
+
+    # Stock went from 200 to 300 = 50%
+    assert (
+        analytics_result.benchmark_metrics.benchmark_return
+        == pytest.approx(50.0)
+    )
+
+
+def test_alpha_positive_when_strategy_outperforms():
+    """
+    Alpha should be positive when strategy return exceeds benchmark.
+    """
+
+    simulation_result = create_simulation_result(
+        portfolio_values=[
+            100000,
+            120000,
+            150000,
+        ],
+        close_prices=[
+            100,
+            105,
+            110,
+        ],
+    )
+
+    analytics_result = analyze_performance(simulation_result)
+
+    # Strategy return = 50%, Benchmark return = 10%
+    assert analytics_result.benchmark_metrics.alpha > 0
+    assert analytics_result.benchmark_metrics.alpha == pytest.approx(40.0)
+
+
+def test_alpha_negative_when_strategy_underperforms():
+    """
+    Alpha should be negative when strategy return is below benchmark.
+    """
+
+    simulation_result = create_simulation_result(
+        portfolio_values=[
+            100000,
+            99000,
+            98000,
+        ],
+        close_prices=[
+            100,
+            110,
+            120,
+        ],
+    )
+
+    analytics_result = analyze_performance(simulation_result)
+
+    # Strategy return = -2%, Benchmark return = 20%
+    assert analytics_result.benchmark_metrics.alpha < 0
+
+
+def test_alpha_zero_when_equal():
+    """
+    Alpha should be approximately zero when strategy matches benchmark.
+    """
+
+    simulation_result = create_simulation_result(
+        portfolio_values=[
+            100000,
+            110000,
+            120000,
+        ],
+        close_prices=[
+            100,
+            110,
+            120,
+        ],
+    )
+
+    analytics_result = analyze_performance(simulation_result)
+
+    # Strategy return = 20%, Benchmark return = 20%
+    assert (
+        analytics_result.benchmark_metrics.alpha
+        == pytest.approx(0.0)
+    )
+
+
+def test_analytics_history_contains_buy_hold_column():
+    """
+    Analytics history should contain the Buy & Hold Value column.
+    """
+
+    simulation_result = create_simulation_result(
+        portfolio_values=[
+            100000,
+            102000,
+            104000,
+        ],
+        close_prices=[
+            100,
+            102,
+            104,
+        ],
+    )
+
+    analytics_result = analyze_performance(simulation_result)
+
+    assert (
+        "Buy & Hold Value"
+        in analytics_result.analytics_history.columns
     )
