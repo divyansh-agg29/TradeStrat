@@ -69,3 +69,10 @@ Improved backtesting accuracy and overall user experience.
 - Added automatic indicator warm-up period for more accurate recursive indicator calculations
 - Added full-screen loading overlay during backtest execution
 - Added user-friendly error modal for frontend and backend validation errors
+
+### Version 1.3
+Enhanced backtesting analytics with benchmark comparison and extended risk metrics.
+
+- Added Buy & Hold benchmark comparison with passive equity curve overlay on the Equity Chart
+- Added Benchmark Metrics panel displaying Buy & Hold Final Value, Buy & Hold Return, and Strategy Alpha
+- Added Sortino Ratio and Calmar Ratio to Risk Metrics
