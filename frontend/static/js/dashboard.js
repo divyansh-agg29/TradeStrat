@@ -94,6 +94,12 @@ function renderRiskMetrics(riskMetrics) {
     ui.riskMaximumDrawdown.textContent =
         formatPercentage(riskMetrics.maximum_drawdown);
 
+    ui.riskSortinoRatio.textContent =
+        formatNumber(riskMetrics.sortino_ratio);
+
+    ui.riskCalmarRatio.textContent =
+        formatNumber(riskMetrics.calmar_ratio);
+
 }
 
 

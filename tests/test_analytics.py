@@ -511,6 +511,118 @@ def test_sharpe_ratio_returns_finite_value():
     )
 
 
+def test_sortino_ratio_zero_for_flat_portfolio():
+    """
+    Sortino Ratio should be zero when all returns are zero.
+    """
+
+    simulation_result = create_simulation_result(
+        portfolio_values=[
+            100000,
+            100000,
+            100000,
+            100000,
+        ]
+    )
+
+    analytics_result = analyze_performance(simulation_result)
+
+    assert (
+        analytics_result.risk_metrics.sortino_ratio
+        == pytest.approx(0.0)
+    )
+
+
+def test_sortino_ratio_finite_for_changing_portfolio():
+    """
+    Sortino Ratio should be finite for a portfolio with mixed returns.
+    """
+
+    simulation_result = create_simulation_result(
+        portfolio_values=[
+            100000,
+            102000,
+            101000,
+            104000,
+            103000,
+        ]
+    )
+
+    analytics_result = analyze_performance(simulation_result)
+
+    assert math.isfinite(
+        analytics_result.risk_metrics.sortino_ratio
+    )
+
+
+def test_sortino_ratio_infinite_when_no_downside():
+    """
+    Sortino Ratio should be infinite when all returns are positive
+    (no downside).
+    """
+
+    simulation_result = create_simulation_result(
+        portfolio_values=[
+            100000,
+            101000,
+            102000,
+            103000,
+        ]
+    )
+
+    analytics_result = analyze_performance(simulation_result)
+
+    assert math.isinf(
+        analytics_result.risk_metrics.sortino_ratio
+    )
+
+
+def test_calmar_ratio_zero_when_no_drawdown():
+    """
+    Calmar Ratio should be zero when maximum drawdown is zero.
+    """
+
+    simulation_result = create_simulation_result(
+        portfolio_values=[
+            100000,
+            101000,
+            102000,
+            103000,
+        ]
+    )
+
+    analytics_result = analyze_performance(simulation_result)
+
+    assert (
+        analytics_result.risk_metrics.calmar_ratio
+        == pytest.approx(0.0)
+    )
+
+
+def test_calmar_ratio_positive_for_profitable_portfolio():
+    """
+    Calmar Ratio should be positive when CAGR is positive and
+    drawdown exists.
+    """
+
+    simulation_result = create_simulation_result(
+        portfolio_values=[
+            100000,
+            110000,
+            105000,
+            115000,
+            120000,
+        ]
+    )
+
+    analytics_result = analyze_performance(simulation_result)
+
+    assert (
+        analytics_result.risk_metrics.calmar_ratio
+        > 0
+    )
+
+
 # ============================================================================
 # Trade Metrics Tests
 # ============================================================================

@@ -78,6 +78,12 @@ const ui = {
     
     riskMaximumDrawdown:
         document.getElementById("metric-maximum-drawdown"),
+
+    riskSortinoRatio:
+        document.getElementById("metric-sortino-ratio"),
+
+    riskCalmarRatio:
+        document.getElementById("metric-calmar-ratio"),
     
 
     // Benchmark Metrics

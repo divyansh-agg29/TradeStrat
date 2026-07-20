@@ -61,6 +61,8 @@ class RiskMetrics:
     annualized_volatility: float = 0.0
     maximum_drawdown: float = 0.0
     sharpe_ratio: float = 0.0
+    sortino_ratio: float = 0.0
+    calmar_ratio: float = 0.0
 
 
 @dataclass
@@ -562,10 +564,77 @@ def _calculate_risk_metrics(
             / daily_volatility
         ) * (TRADING_DAYS_PER_YEAR ** 0.5)
 
+    # --------------------------------------------------------
+    # Sortino Ratio
+    # --------------------------------------------------------
+
+    downside_returns = daily_returns[
+        daily_returns < daily_risk_free_rate
+    ]
+
+    if downside_returns.empty:
+
+        if excess_returns.mean() > 0:
+            sortino_ratio = float("inf")
+
+        elif excess_returns.mean() < 0:
+            sortino_ratio = float("-inf")
+
+        else:
+            sortino_ratio = 0.0
+
+    else:
+        downside_deviation = (
+            (
+                (downside_returns - daily_risk_free_rate)
+                ** 2
+            ).mean()
+            ** 0.5
+        )
+
+        if downside_deviation == 0:
+            sortino_ratio = 0.0
+        else:
+            sortino_ratio = (
+                excess_returns.mean()
+                / downside_deviation
+            ) * (TRADING_DAYS_PER_YEAR ** 0.5)
+
+    # --------------------------------------------------------
+    # Calmar Ratio
+    # --------------------------------------------------------
+
+    if maximum_drawdown == 0:
+        calmar_ratio = 0.0
+
+    else:
+        portfolio_value = (
+            analytics_history["Portfolio Value"]
+        )
+
+        total_return_ratio = (
+            portfolio_value.iloc[-1]
+            / portfolio_value.iloc[0]
+        )
+
+        trading_days = len(analytics_history)
+        years = trading_days / TRADING_DAYS_PER_YEAR
+
+        if years > 0 and total_return_ratio > 0:
+            cagr = (
+                total_return_ratio ** (1 / years) - 1
+            ) * 100
+        else:
+            cagr = 0.0
+
+        calmar_ratio = cagr / maximum_drawdown
+
     return RiskMetrics(
         annualized_volatility=annualized_volatility,
         maximum_drawdown=maximum_drawdown,
         sharpe_ratio=sharpe_ratio,
+        sortino_ratio=sortino_ratio,
+        calmar_ratio=calmar_ratio,
     )
 
 
