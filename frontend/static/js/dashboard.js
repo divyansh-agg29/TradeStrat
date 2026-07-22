@@ -4,7 +4,7 @@ function renderDashboard(response) {
 
     const data = response.data;
 
-    renderKPICards(data.portfolio_metrics, data.risk_metrics, data.trade_metrics);
+    renderKPICards(data.portfolio_metrics, data.risk_metrics, data.trade_metrics, data.benchmark_metrics);
 
     renderPortfolioMetrics(data.portfolio_metrics);
 
@@ -20,7 +20,7 @@ function renderDashboard(response) {
 
 }
 
-function renderKPICards(portfolioMetrics, riskMetrics, tradeMetrics) {
+function renderKPICards(portfolioMetrics, riskMetrics, tradeMetrics, benchmarkMetrics) {
 
     ui.totalReturnCard.textContent =
         formatPercentage(
@@ -59,6 +59,16 @@ function renderKPICards(portfolioMetrics, riskMetrics, tradeMetrics) {
 
     ui.totalTradesCard.textContent =
         tradeMetrics.total_trades;
+
+    ui.sortinoRatioCard.textContent =
+        formatNumber(
+            riskMetrics.sortino_ratio
+        );
+
+    ui.alphaCard.textContent =
+        formatPercentage(
+            benchmarkMetrics.alpha
+        );
 
 }
 

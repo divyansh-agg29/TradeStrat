@@ -48,6 +48,12 @@ const ui = {
 
     totalTradesCard:
         document.getElementById("kpi-total-trades"),
+
+    sortinoRatioCard:
+        document.getElementById("kpi-sortino-ratio"),
+
+    alphaCard:
+        document.getElementById("kpi-alpha"),
     
 
     // Portfolio Metrics

@@ -130,120 +130,58 @@
 
                 <div class="kpi-grid">
 
-                    <!-- Row 1 -->
+                    <!-- Row 1: Portfolio Performance -->
 
                     <div class="kpi-card">
-
-                        <div class="kpi-title">Total Return</div>
-
-                        <div
-                            class="kpi-value"
-                            id="kpi-total-return">
-
-                            --
-
-                        </div>
-
-                    </div>
-
-                    <div class="kpi-card">
-
-                        <div class="kpi-title">CAGR</div>
-
-                        <div
-                            class="kpi-value"
-                            id="kpi-cagr">
-
-                            --
-
-                        </div>
-
-                    </div>
-
-                    <div class="kpi-card">
-
-                        <div class="kpi-title">Sharpe Ratio</div>
-
-                        <div
-                            class="kpi-value"
-                            id="kpi-sharpe-ratio">
-
-                            --
-
-                        </div>
-
-                    </div>
-
-                    <div class="kpi-card">
-
-                        <div class="kpi-title">Max Drawdown</div>
-
-                        <div
-                            class="kpi-value"
-                            id="kpi-max-drawdown">
-
-                            --
-
-                        </div>
-
-                    </div>
-
-                    <!-- Row 2 -->
-
-                    <div class="kpi-card">
-
                         <div class="kpi-title">Final Portfolio Value</div>
-
-                        <div
-                            class="kpi-value"
-                            id="kpi-final-portfolio-value">
-
-                            --
-
-                        </div>
-
+                        <div class="kpi-value" id="kpi-final-portfolio-value">--</div>
                     </div>
 
                     <div class="kpi-card">
+                        <div class="kpi-title">Total Return</div>
+                        <div class="kpi-value" id="kpi-total-return">--</div>
+                    </div>
 
+                    <div class="kpi-card">
+                        <div class="kpi-title">CAGR</div>
+                        <div class="kpi-value" id="kpi-cagr">--</div>
+                    </div>
+
+                    <div class="kpi-card">
                         <div class="kpi-title">Win Rate</div>
-
-                        <div
-                            class="kpi-value"
-                            id="kpi-win-rate">
-
-                            --
-
-                        </div>
-
+                        <div class="kpi-value" id="kpi-win-rate">--</div>
                     </div>
 
                     <div class="kpi-card">
-
                         <div class="kpi-title">Profit Factor</div>
+                        <div class="kpi-value" id="kpi-profit-factor">--</div>
+                    </div>
 
-                        <div
-                            class="kpi-value"
-                            id="kpi-profit-factor">
+                    <!-- Row 2: Risk & Context -->
 
-                            --
-
-                        </div>
-
+                    <div class="kpi-card">
+                        <div class="kpi-title">Sharpe Ratio</div>
+                        <div class="kpi-value" id="kpi-sharpe-ratio">--</div>
                     </div>
 
                     <div class="kpi-card">
+                        <div class="kpi-title">Sortino Ratio</div>
+                        <div class="kpi-value" id="kpi-sortino-ratio">--</div>
+                    </div>
 
+                    <div class="kpi-card">
+                        <div class="kpi-title">Max Drawdown</div>
+                        <div class="kpi-value" id="kpi-max-drawdown">--</div>
+                    </div>
+
+                    <div class="kpi-card">
                         <div class="kpi-title">Total Trades</div>
+                        <div class="kpi-value" id="kpi-total-trades">--</div>
+                    </div>
 
-                        <div
-                            class="kpi-value"
-                            id="kpi-total-trades">
-
-                            --
-
-                        </div>
-
+                    <div class="kpi-card">
+                        <div class="kpi-title">Alpha</div>
+                        <div class="kpi-value" id="kpi-alpha">--</div>
                     </div>
 
                 </div>
@@ -286,7 +224,9 @@
 
             </section>
 
-            <!-- Portfolio Metrics -->
+            <!-- Portfolio + Risk Metrics (side-by-side) -->
+
+            <div class="metrics-row-pair">
 
             <section id="portfolio-metrics-section" class="dashboard-panel">
 
@@ -364,8 +304,6 @@
 
             </section>
 
-            <!-- Benchmark Metrics -->
-
             <section id="benchmark-metrics-section" class="dashboard-panel">
 
                 <div class="section-header">
@@ -393,6 +331,8 @@
 
             </section>
 
+            </div>
+
             <!-- Trade Statistics -->
 
             <section id="trade-statistics-section" class="dashboard-panel">
@@ -403,54 +343,59 @@
 
                 <div class="section-content metric-grid">
 
-                    <div class="metric-row">
-                        <span>Total Trades</span>
-                        <span id="metric-total-trades">--</span>
+                    <div class="metric-row-pair">
+                        <div class="metric-row">
+                            <span>Total Trades</span>
+                            <span id="metric-total-trades">--</span>
+                        </div>
+                        <div class="metric-row">
+                            <span>Win Rate</span>
+                            <span id="metric-win-rate">--</span>
+                        </div>
                     </div>
 
-                    <div class="metric-row">
-                        <span>Winning Trades</span>
-                        <span id="metric-winning-trades">--</span>
+                    <div class="metric-row-pair">
+                        <div class="metric-row">
+                            <span>Winning Trades</span>
+                            <span id="metric-winning-trades">--</span>
+                        </div>
+                        <div class="metric-row">
+                            <span>Losing Trades</span>
+                            <span id="metric-losing-trades">--</span>
+                        </div>
                     </div>
 
-                    <div class="metric-row">
-                        <span>Losing Trades</span>
-                        <span id="metric-losing-trades">--</span>
+                    <div class="metric-row-pair">
+                        <div class="metric-row">
+                            <span>Average Winner</span>
+                            <span id="metric-average-winner">--</span>
+                        </div>
+                        <div class="metric-row">
+                            <span>Average Loser</span>
+                            <span id="metric-average-loser">--</span>
+                        </div>
                     </div>
 
-                    <div class="metric-row">
-                        <span>Win Rate</span>
-                        <span id="metric-win-rate">--</span>
+                    <div class="metric-row-pair">
+                        <div class="metric-row">
+                            <span>Largest Winner</span>
+                            <span id="metric-largest-winner">--</span>
+                        </div>
+                        <div class="metric-row">
+                            <span>Largest Loser</span>
+                            <span id="metric-largest-loser">--</span>
+                        </div>
                     </div>
 
-                    <div class="metric-row">
-                        <span>Profit Factor</span>
-                        <span id="metric-profit-factor">--</span>
-                    </div>
-
-                    <div class="metric-row">
-                        <span>Average Winner</span>
-                        <span id="metric-average-winner">--</span>
-                    </div>
-
-                    <div class="metric-row">
-                        <span>Average Loser</span>
-                        <span id="metric-average-loser">--</span>
-                    </div>
-
-                    <div class="metric-row">
-                        <span>Largest Winner</span>
-                        <span id="metric-largest-winner">--</span>
-                    </div>
-
-                    <div class="metric-row">
-                        <span>Largest Loser</span>
-                        <span id="metric-largest-loser">--</span>
-                    </div>
-
-                    <div class="metric-row">
-                        <span>Average Holding Period</span>
-                        <span id="metric-average-holding-period">--</span>
+                    <div class="metric-row-pair">
+                        <div class="metric-row">
+                            <span>Profit Factor</span>
+                            <span id="metric-profit-factor">--</span>
+                        </div>
+                        <div class="metric-row">
+                            <span>Average Holding Period</span>
+                            <span id="metric-average-holding-period">--</span>
+                        </div>
                     </div>
 
                 </div>

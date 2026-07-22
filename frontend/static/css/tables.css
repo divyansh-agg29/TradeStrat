@@ -12,7 +12,7 @@
 
     box-shadow: var(--shadow);
 
-    padding: 24px;
+    padding: 16px;
 
 }
 
@@ -27,7 +27,7 @@
 
     flex-direction: column;
 
-    gap: 12px;
+    gap: 0;
 
 }
 
@@ -44,7 +44,7 @@
 
     align-items: center;
 
-    padding: 12px 0;
+    padding: 6px 0;
 
     border-bottom: 1px solid var(--color-border);
 
@@ -140,5 +140,43 @@
     color: var(--color-text-secondary);
 
     padding: 60px !important;
+
+}
+
+
+/* ==========================================
+   Metrics Row Pair (2-column grid)
+========================================== */
+
+.metrics-row-pair {
+
+    display: grid;
+
+    grid-template-columns: 1fr 1fr 1fr;
+
+    gap: 20px;
+
+}
+
+
+/* ==========================================
+   Metric Row Pair (side-by-side within panel)
+========================================== */
+
+.metric-row-pair {
+
+    display: grid;
+
+    grid-template-columns: 1fr 1fr;
+
+    gap: 0 20px;
+
+    border-bottom: 1px solid var(--color-border);
+
+}
+
+.metric-row-pair .metric-row {
+
+    border-bottom: none;
 
 }
