@@ -88,3 +88,11 @@ Redesigned dashboard UI for compactness and practicality.
 - Arranged Portfolio, Risk and Benchmark Metrics side-by-side in a 3-column layout
 - Restructured Trade Statistics into uniform paired rows for better space utilisation
 - Compacted metric rows and dashboard panel padding throughout
+
+### Version 1.5
+Added KPI Interpretation System with color-coded values and informational tooltips.
+
+- Added backend KPI Interpreter module with dedicated `kpi_cards` response object
+- KPI values are now color-coded based on interpretation levels (Excellent, Good, Average, Poor)
+- Color coding applied to CAGR, Profit Factor, Sharpe Ratio, Sortino Ratio, Max Drawdown and Alpha
+- Added hover tooltips on each KPI card with metric explanations and interpretation ranges
