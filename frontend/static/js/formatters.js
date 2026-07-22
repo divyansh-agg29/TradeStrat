@@ -28,6 +28,19 @@ function formatNumber(value) {
 
 }
 
+function formatByType(value, formatType) {
+
+    switch (formatType) {
+        case "percentage": return formatPercentage(value);
+        case "currency": return formatCurrency(value);
+        case "number": return formatNumber(value);
+        case "integer": return value != null ? String(value) : "N/A";
+        default: return String(value);
+    }
+
+}
+
+
 function formatDate(dateString) {
 
     const date = new Date(dateString);

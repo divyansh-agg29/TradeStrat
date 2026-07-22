@@ -19,6 +19,8 @@ function initializeApplication() {
 
     registerEventListeners();
 
+    initKpiTooltips();
+
 }
 
 function restorePreviousConfiguration() {

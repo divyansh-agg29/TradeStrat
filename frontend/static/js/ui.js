@@ -23,39 +23,6 @@ const ui = {
     runButton:
         document.getElementById("run-backtest-btn"),
 
-    // KPI Cards
-
-    totalReturnCard:
-        document.getElementById("kpi-total-return"),
-
-    cagrCard:
-        document.getElementById("kpi-cagr"),
-
-    sharpeRatioCard:
-        document.getElementById("kpi-sharpe-ratio"),
-
-    maxDrawdownCard:
-        document.getElementById("kpi-max-drawdown"),
-
-    finalPortfolioCard:
-        document.getElementById("kpi-final-portfolio-value"),
-
-    winRateCard:
-        document.getElementById("kpi-win-rate"),
-
-    profitFactorCard:
-        document.getElementById("kpi-profit-factor"),
-
-    totalTradesCard:
-        document.getElementById("kpi-total-trades"),
-
-    sortinoRatioCard:
-        document.getElementById("kpi-sortino-ratio"),
-
-    alphaCard:
-        document.getElementById("kpi-alpha"),
-    
-
     // Portfolio Metrics
 
     portfolioInitialCapital:

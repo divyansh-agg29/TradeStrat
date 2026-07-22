@@ -21,6 +21,12 @@
     --color-danger: #EF4444;
     --color-warning: #F59E0B;
 
+    /* Interpretation */
+    --color-excellent: #22C55E;
+    --color-good: #3B82F6;
+    --color-average: #F59E0B;
+    --color-poor: #EF4444;
+
     /* Borders */
     --color-border: #374151;
 

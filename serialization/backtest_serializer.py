@@ -15,6 +15,7 @@ import math
 from models import BacktestResult
 from utils.logger import get_logger
 from analytics import BenchmarkMetrics,PortfolioMetrics,RiskMetrics,TradeMetrics
+from interpretation import build_kpi_cards
 import pandas as pd
 
 logger = get_logger(__name__)
@@ -59,6 +60,9 @@ def serialize_backtest_result(
         ),
         "benchmark_metrics": _serialize_benchmark_metrics(
             result.analytics_result.benchmark_metrics
+        ),
+        "kpi_cards": build_kpi_cards(
+            result.analytics_result
         ),
     }
 

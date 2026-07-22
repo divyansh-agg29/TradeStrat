@@ -4,7 +4,7 @@ function renderDashboard(response) {
 
     const data = response.data;
 
-    renderKPICards(data.portfolio_metrics, data.risk_metrics, data.trade_metrics, data.benchmark_metrics);
+    renderKPICards(data.kpi_cards);
 
     renderPortfolioMetrics(data.portfolio_metrics);
 
@@ -20,55 +20,24 @@ function renderDashboard(response) {
 
 }
 
-function renderKPICards(portfolioMetrics, riskMetrics, tradeMetrics, benchmarkMetrics) {
+function renderKPICards(kpiCards) {
 
-    ui.totalReturnCard.textContent =
-        formatPercentage(
-            portfolioMetrics.total_return
-        );
+    for (const [key, kpi] of Object.entries(kpiCards)) {
 
-    ui.cagrCard.textContent =
-        formatPercentage(
-            portfolioMetrics.cagr
-        );
+        const elementId = "kpi-" + key.replace(/_/g, "-");
+        const el = document.getElementById(elementId);
 
-    ui.sharpeRatioCard.textContent =
-        formatNumber(
-            riskMetrics.sharpe_ratio
-        );
+        if (!el) continue;
 
-    ui.maxDrawdownCard.textContent =
-        formatPercentage(
-            riskMetrics.maximum_drawdown
-        );
+        el.textContent = formatByType(kpi.value, kpi.format_type);
 
-    ui.finalPortfolioCard.textContent =
-        formatCurrency(
-            portfolioMetrics.final_portfolio_value
-        );
+        el.className = "kpi-value";
 
-    ui.winRateCard.textContent =
-        formatPercentage(
-            tradeMetrics.win_rate
-        );
+        if (kpi.interpretation) {
+            el.classList.add("kpi-" + kpi.interpretation);
+        }
 
-    ui.profitFactorCard.textContent =
-        formatNumber(
-            tradeMetrics.profit_factor
-        );
-
-    ui.totalTradesCard.textContent =
-        tradeMetrics.total_trades;
-
-    ui.sortinoRatioCard.textContent =
-        formatNumber(
-            riskMetrics.sortino_ratio
-        );
-
-    ui.alphaCard.textContent =
-        formatPercentage(
-            benchmarkMetrics.alpha
-        );
+    }
 
 }
 

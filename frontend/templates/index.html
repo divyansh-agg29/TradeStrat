@@ -133,54 +133,54 @@
                     <!-- Row 1: Portfolio Performance -->
 
                     <div class="kpi-card">
-                        <div class="kpi-title">Final Portfolio Value</div>
+                        <div class="kpi-title">Final Portfolio Value <span class="kpi-info-icon" data-kpi="final_portfolio_value">ⓘ</span></div>
                         <div class="kpi-value" id="kpi-final-portfolio-value">--</div>
                     </div>
 
                     <div class="kpi-card">
-                        <div class="kpi-title">Total Return</div>
+                        <div class="kpi-title">Total Return <span class="kpi-info-icon" data-kpi="total_return">ⓘ</span></div>
                         <div class="kpi-value" id="kpi-total-return">--</div>
                     </div>
 
                     <div class="kpi-card">
-                        <div class="kpi-title">CAGR</div>
+                        <div class="kpi-title">CAGR <span class="kpi-info-icon" data-kpi="cagr">ⓘ</span></div>
                         <div class="kpi-value" id="kpi-cagr">--</div>
                     </div>
 
                     <div class="kpi-card">
-                        <div class="kpi-title">Win Rate</div>
+                        <div class="kpi-title">Win Rate <span class="kpi-info-icon" data-kpi="win_rate">ⓘ</span></div>
                         <div class="kpi-value" id="kpi-win-rate">--</div>
                     </div>
 
                     <div class="kpi-card">
-                        <div class="kpi-title">Profit Factor</div>
+                        <div class="kpi-title">Profit Factor <span class="kpi-info-icon" data-kpi="profit_factor">ⓘ</span></div>
                         <div class="kpi-value" id="kpi-profit-factor">--</div>
                     </div>
 
                     <!-- Row 2: Risk & Context -->
 
                     <div class="kpi-card">
-                        <div class="kpi-title">Sharpe Ratio</div>
+                        <div class="kpi-title">Sharpe Ratio <span class="kpi-info-icon" data-kpi="sharpe_ratio">ⓘ</span></div>
                         <div class="kpi-value" id="kpi-sharpe-ratio">--</div>
                     </div>
 
                     <div class="kpi-card">
-                        <div class="kpi-title">Sortino Ratio</div>
+                        <div class="kpi-title">Sortino Ratio <span class="kpi-info-icon" data-kpi="sortino_ratio">ⓘ</span></div>
                         <div class="kpi-value" id="kpi-sortino-ratio">--</div>
                     </div>
 
                     <div class="kpi-card">
-                        <div class="kpi-title">Max Drawdown</div>
-                        <div class="kpi-value" id="kpi-max-drawdown">--</div>
+                        <div class="kpi-title">Max Drawdown <span class="kpi-info-icon" data-kpi="maximum_drawdown">ⓘ</span></div>
+                        <div class="kpi-value" id="kpi-maximum-drawdown">--</div>
                     </div>
 
                     <div class="kpi-card">
-                        <div class="kpi-title">Total Trades</div>
+                        <div class="kpi-title">Total Trades <span class="kpi-info-icon" data-kpi="total_trades">ⓘ</span></div>
                         <div class="kpi-value" id="kpi-total-trades">--</div>
                     </div>
 
                     <div class="kpi-card">
-                        <div class="kpi-title">Alpha</div>
+                        <div class="kpi-title">Alpha <span class="kpi-info-icon" data-kpi="alpha">ⓘ</span></div>
                         <div class="kpi-value" id="kpi-alpha">--</div>
                     </div>
 
@@ -524,6 +524,7 @@
 <script src="{{ url_for('static', filename='js/formatters.js') }}"></script>
 <script src="{{ url_for('static', filename='js/strategies.js') }}"></script>
 <script src="{{ url_for('static', filename='js/api.js') }}"></script>
+<script src="{{ url_for('static', filename='js/kpi-tooltips.js') }}"></script>
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
 <script src="{{ url_for('static', filename='js/tables.js') }}"></script>

@@ -58,3 +58,74 @@
     font-weight: 700;
 
 }
+
+
+/* ==========================================
+   KPI Interpretation Colors
+========================================== */
+
+.kpi-excellent { color: var(--color-excellent); }
+
+.kpi-good { color: var(--color-good); }
+
+.kpi-average { color: var(--color-average); }
+
+.kpi-poor { color: var(--color-poor); }
+
+
+/* ==========================================
+   KPI Info Icon
+========================================== */
+
+.kpi-info-icon {
+
+    cursor: pointer;
+
+    opacity: 0.5;
+
+    font-size: 0.75rem;
+
+    margin-left: 4px;
+
+    transition: opacity 0.2s;
+
+}
+
+.kpi-info-icon:hover {
+
+    opacity: 1;
+
+}
+
+
+/* ==========================================
+   KPI Tooltip
+========================================== */
+
+.kpi-tooltip {
+
+    position: fixed;
+
+    z-index: 1000;
+
+    background: var(--color-surface);
+
+    border: 1px solid var(--color-border);
+
+    border-radius: var(--radius);
+
+    box-shadow: var(--shadow);
+
+    padding: 12px 16px;
+
+    max-width: 300px;
+
+    font-size: 0.8rem;
+
+    line-height: 1.5;
+
+    color: var(--color-text);
+
+    pointer-events: none;
+
+}
