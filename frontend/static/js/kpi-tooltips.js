@@ -16,10 +16,10 @@ const KPI_TOOLTIPS = {
         description: "Compound Annual Growth Rate — annualized return over the backtest period.",
         preference: "Higher is better.",
         ranges: [
-            "Below 5% → Poor",
-            "5% – 10% → Average",
-            "10% – 20% → Good",
-            "Above 20% → Excellent",
+            "Below 8% → Poor",
+            "8% – 15% → Average",
+            "15% – 25% → Good",
+            "Above 25% → Excellent",
         ],
     },
 
@@ -33,8 +33,8 @@ const KPI_TOOLTIPS = {
         preference: "Higher is better.",
         ranges: [
             "Below 1.0 → Losing strategy",
-            "1.0 – 1.5 → Average",
-            "1.5 – 2.0 → Good",
+            "1.0 – 1.3 → Average",
+            "1.3 – 2.0 → Good",
             "Above 2.0 → Excellent",
         ],
     },
@@ -43,10 +43,10 @@ const KPI_TOOLTIPS = {
         description: "Risk-adjusted return per unit of total volatility.",
         preference: "Higher is better.",
         ranges: [
-            "Below 0.5 → Poor",
-            "0.5 – 1.0 → Average",
-            "1.0 – 1.5 → Good",
-            "Above 1.5 → Excellent",
+            "Below 1.0 → Poor",
+            "1.0 – 1.5 → Average",
+            "1.5 – 2.0 → Good",
+            "Above 2.0 → Excellent",
         ],
     },
 
@@ -54,10 +54,10 @@ const KPI_TOOLTIPS = {
         description: "Risk-adjusted return considering only downside volatility.",
         preference: "Higher is better.",
         ranges: [
-            "Below 0.5 → Poor",
-            "0.5 – 1.0 → Average",
-            "1.0 – 1.5 → Good",
-            "Above 1.5 → Excellent",
+            "Below 1.0 → Poor",
+            "1.0 – 2.0 → Average",
+            "2.0 – 3.0 → Good",
+            "Above 3.0 → Excellent",
         ],
     },
 
@@ -65,10 +65,10 @@ const KPI_TOOLTIPS = {
         description: "Largest peak-to-trough decline during the backtest.",
         preference: "Lower is better.",
         ranges: [
-            "Below 5% → Excellent",
-            "5% – 15% → Good",
-            "15% – 25% → Average",
-            "Above 25% → Poor",
+            "Below 10% → Excellent",
+            "10% – 20% → Good",
+            "20% – 35% → Average",
+            "Above 35% → Poor",
         ],
     },
 
@@ -81,8 +81,8 @@ const KPI_TOOLTIPS = {
         description: "Strategy return minus Buy & Hold return.",
         preference: "Positive is better — indicates outperformance.",
         ranges: [
-            "Below -5% → Poor",
-            "-5% – 0% → Average",
+            "Below -10% → Poor",
+            "-10% – 0% → Average",
             "0% – 10% → Good",
             "Above 10% → Excellent",
         ],

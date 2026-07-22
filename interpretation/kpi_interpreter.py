@@ -69,9 +69,9 @@ KPI_DEFINITIONS = [
         field="cagr",
         format_type="percentage",
         thresholds=[
-            (5, "poor"),
-            (10, "average"),
-            (20, "good"),
+            (8, "poor"),
+            (15, "average"),
+            (25, "good"),
         ],
     ),
 
@@ -89,7 +89,7 @@ KPI_DEFINITIONS = [
         format_type="number",
         thresholds=[
             (1.0, "poor"),
-            (1.5, "average"),
+            (1.3, "average"),
             (2.0, "good"),
         ],
     ),
@@ -100,9 +100,9 @@ KPI_DEFINITIONS = [
         field="sharpe_ratio",
         format_type="number",
         thresholds=[
-            (0.5, "poor"),
-            (1.0, "average"),
-            (1.5, "good"),
+            (1.0, "poor"),
+            (1.5, "average"),
+            (2.0, "good"),
         ],
     ),
 
@@ -112,9 +112,9 @@ KPI_DEFINITIONS = [
         field="sortino_ratio",
         format_type="number",
         thresholds=[
-            (0.5, "poor"),
-            (1.0, "average"),
-            (1.5, "good"),
+            (1.0, "poor"),
+            (2.0, "average"),
+            (3.0, "good"),
         ],
     ),
 
@@ -124,9 +124,9 @@ KPI_DEFINITIONS = [
         field="maximum_drawdown",
         format_type="percentage",
         thresholds=[
-            (5, "excellent"),
-            (15, "good"),
-            (25, "average"),
+            (10, "excellent"),
+            (20, "good"),
+            (35, "average"),
         ],
         invert=True,
     ),
@@ -144,7 +144,7 @@ KPI_DEFINITIONS = [
         field="alpha",
         format_type="percentage",
         thresholds=[
-            (-5, "poor"),
+            (-10, "poor"),
             (0, "average"),
             (10, "good"),
         ],
