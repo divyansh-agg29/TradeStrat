@@ -76,3 +76,15 @@ Enhanced backtesting analytics with benchmark comparison and extended risk metri
 - Added Buy & Hold benchmark comparison with passive equity curve overlay on the Equity Chart
 - Added Benchmark Metrics panel displaying Buy & Hold Final Value, Buy & Hold Return, and Strategy Alpha
 - Added Sortino Ratio and Calmar Ratio to Risk Metrics
+
+### Version 1.4
+Redesigned dashboard UI for compactness and practicality.
+
+- Compacted KPI cards with reduced padding and font sizes
+- Expanded KPI grid to 5 columns with Sortino Ratio and Alpha cards
+- Reordered KPI cards into Portfolio Performance and Risk & Context rows
+- Reduced chart heights and tightened section spacing across the dashboard
+- Narrowed control panel sidebar from 360px to 260px
+- Arranged Portfolio, Risk and Benchmark Metrics side-by-side in a 3-column layout
+- Restructured Trade Statistics into uniform paired rows for better space utilisation
+- Compacted metric rows and dashboard panel padding throughout
