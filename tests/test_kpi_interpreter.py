@@ -250,7 +250,7 @@ class TestCagrInterpretation:
         assert build_kpi_cards(result)["cagr"]["interpretation"] == "poor"
 
     def test_average(self):
-        result = make_analytics_result(portfolio_cagr=7.0)
+        result = make_analytics_result(portfolio_cagr=10.0)
         assert build_kpi_cards(result)["cagr"]["interpretation"] == "average"
 
     def test_good(self):
@@ -288,11 +288,11 @@ class TestSharpeInterpretation:
         assert build_kpi_cards(result)["sharpe_ratio"]["interpretation"] == "poor"
 
     def test_average(self):
-        result = make_analytics_result(risk_sharpe_ratio=0.7)
+        result = make_analytics_result(risk_sharpe_ratio=1.2)
         assert build_kpi_cards(result)["sharpe_ratio"]["interpretation"] == "average"
 
     def test_good(self):
-        result = make_analytics_result(risk_sharpe_ratio=1.2)
+        result = make_analytics_result(risk_sharpe_ratio=1.7)
         assert build_kpi_cards(result)["sharpe_ratio"]["interpretation"] == "good"
 
     def test_excellent(self):
@@ -307,7 +307,7 @@ class TestSortinoInterpretation:
         assert build_kpi_cards(result)["sortino_ratio"]["interpretation"] == "poor"
 
     def test_excellent(self):
-        result = make_analytics_result(risk_sortino_ratio=2.0)
+        result = make_analytics_result(risk_sortino_ratio=3.5)
         assert build_kpi_cards(result)["sortino_ratio"]["interpretation"] == "excellent"
 
 
@@ -326,14 +326,14 @@ class TestMaxDrawdownInterpretation:
         assert build_kpi_cards(result)["maximum_drawdown"]["interpretation"] == "average"
 
     def test_poor(self):
-        result = make_analytics_result(risk_maximum_drawdown=30.0)
+        result = make_analytics_result(risk_maximum_drawdown=40.0)
         assert build_kpi_cards(result)["maximum_drawdown"]["interpretation"] == "poor"
 
 
 class TestAlphaInterpretation:
 
     def test_poor(self):
-        result = make_analytics_result(benchmark_alpha=-10.0)
+        result = make_analytics_result(benchmark_alpha=-15.0)
         assert build_kpi_cards(result)["alpha"]["interpretation"] == "poor"
 
     def test_average(self):
