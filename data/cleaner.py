@@ -52,7 +52,7 @@ def clean_market_data(df: pd.DataFrame) -> pd.DataFrame:
         ValueError:
             If the DataFrame violates the expected data contract.
     """
-    logger.info("Cleaning downloaded market data.")
+    logger.info("Cleaning retrieved market data.")
 
     cleaned_df = df.copy()
 

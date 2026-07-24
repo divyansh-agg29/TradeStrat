@@ -124,7 +124,7 @@ def _get_market_data(
     )
 
     logger.info(
-        "Downloading market data for %s "
+        "Retrieving market data for %s "
         "(warm-up start=%s, requested start=%s).",
         request.ticker,
         warmup_start_date,
