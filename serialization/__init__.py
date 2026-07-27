@@ -9,7 +9,9 @@ business logic and the Flask API.
 """
 
 from .backtest_serializer import serialize_backtest_result
+from .comparison_serializer import serialize_comparison_result
 
 __all__ = [
     "serialize_backtest_result",
+    "serialize_comparison_result",
 ]
