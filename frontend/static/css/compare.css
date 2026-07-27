@@ -1,0 +1,146 @@
+/* Compare tab styles — populated in Phase 8. */
+
+/* Tab bar */
+#tab-bar {
+    position: fixed;
+    top: 80px;
+    left: 0;
+    right: 0;
+    z-index: 999;
+    display: flex;
+    gap: 0;
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.tab-btn {
+    padding: 0.75rem 1.5rem;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.tab-btn.active {
+    color: var(--color-text);
+    border-bottom-color: var(--color-primary);
+}
+
+.tab-btn:hover {
+    color: var(--color-text);
+}
+
+/* Tab content visibility */
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Compare container */
+#compare-container {
+    margin-top: 122px;
+    display: flex;
+    min-height: calc(100vh - 122px);
+}
+
+/* Compare control panel — mirrors sidebar */
+#compare-control-panel {
+    position: fixed;
+    top: 122px;
+    left: 0;
+    width: 260px;
+    height: calc(100vh - 122px);
+    overflow-y: auto;
+    padding: 24px 16px;
+    background: var(--color-surface);
+    border-right: 1px solid var(--color-border);
+}
+
+#compare-control-panel h2 {
+    margin-bottom: 16px;
+}
+
+#compare-control-panel section {
+    margin-bottom: 32px;
+}
+
+/* Compare dashboard area */
+#compare-dashboard {
+    margin-left: 260px;
+    width: calc(100% - 260px);
+    padding: 24px;
+    min-height: calc(100vh - 122px);
+}
+
+/* Strategy entry */
+.compare-strategy-entry {
+    padding: 12px;
+    margin-bottom: 12px;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+}
+
+.compare-strategy-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.compare-strategy-label {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--color-text);
+}
+
+.compare-remove-btn {
+    background: none;
+    border: none;
+    color: var(--color-danger);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+}
+
+.compare-remove-btn:disabled {
+    color: var(--color-text-secondary);
+    cursor: not-allowed;
+    opacity: 0.4;
+}
+
+/* Secondary button */
+.btn-secondary {
+    display: block;
+    width: 100%;
+    margin-top: 12px;
+    padding: 10px 16px;
+    background: var(--color-surface-hover);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.btn-secondary:hover {
+    background: var(--color-border);
+}
+
+.btn-secondary:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* Run comparison button — full width */
+#run-comparison-btn {
+    width: 100%;
+}

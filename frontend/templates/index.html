@@ -19,6 +19,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/tables.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/loading.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/error-modal.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/compare.css') }}">
 </head>
 
 <body>
@@ -31,8 +32,16 @@
 
     </header>
 
+    <!-- ================= TAB BAR ================= -->
+
+    <nav id="tab-bar">
+        <button class="tab-btn active" data-tab="backtest">Backtest</button>
+        <button class="tab-btn" data-tab="compare">Compare</button>
+    </nav>
+
     <!-- =============== APPLICATION =============== -->
 
+    <div id="backtest-tab-content" class="tab-content active">
     <div id="app-container">
 
         <!-- ========= CONTROL PANEL ========= -->
@@ -457,6 +466,66 @@
         </main>
 
     </div>
+    </div>
+
+    <div id="compare-tab-content" class="tab-content">
+        <div id="compare-container">
+
+            <!-- Compare Control Panel -->
+            <aside id="compare-control-panel">
+
+                <h2>Compare Strategies</h2>
+
+                <!-- Shared Parameters -->
+                <section class="panel">
+                    <h3>Configuration</h3>
+
+                    <div class="form-group">
+                        <label for="compare-ticker">Ticker</label>
+                        <input type="text" id="compare-ticker" class="form-input" placeholder="RELIANCE.NS">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="compare-start-date">Start Date</label>
+                        <input type="date" id="compare-start-date" class="form-input">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="compare-end-date">End Date</label>
+                        <input type="date" id="compare-end-date" class="form-input">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="compare-capital">Initial Capital</label>
+                        <input type="number" id="compare-capital" class="form-input" value="100000">
+                    </div>
+                </section>
+
+                <!-- Strategy List -->
+                <section class="panel">
+                    <h3>Strategies</h3>
+
+                    <div id="compare-strategy-list">
+                        <!-- Strategy entries dynamically inserted here -->
+                    </div>
+
+                    <button id="add-strategy-btn" class="btn-secondary">+ Add Strategy</button>
+                </section>
+
+                <!-- Execute -->
+                <section class="panel">
+                    <button id="run-comparison-btn" class="btn-primary">Run Comparison</button>
+                </section>
+
+            </aside>
+
+            <!-- Compare Results Area (Phase 7) -->
+            <main id="compare-dashboard">
+                <!-- Populated by Phase 7 -->
+            </main>
+
+        </div>
+    </div>
 
 
     <!-- ================= LOADING OVERLAY ================= -->
@@ -529,6 +598,7 @@
 <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
 <script src="{{ url_for('static', filename='js/tables.js') }}"></script>
 <script src="{{ url_for('static', filename='js/ui.js') }}"></script>
+<script src="{{ url_for('static', filename='js/compare.js') }}"></script>
 <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 
 </html>
