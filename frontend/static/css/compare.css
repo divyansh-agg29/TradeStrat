@@ -144,3 +144,146 @@
 #run-comparison-btn {
     width: 100%;
 }
+
+/* Compare dashboard sections */
+#compare-dashboard section {
+    margin-bottom: 20px;
+}
+
+/* ── Summary Header ─────────────────────────────── */
+
+.compare-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    padding: 1rem 1.25rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    color: var(--color-text-secondary);
+    font-size: 0.95rem;
+    align-items: center;
+}
+
+.compare-summary strong {
+    color: var(--color-text);
+}
+
+/* ── Metrics Matrix ─────────────────────────────── */
+
+.compare-matrix-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.compare-matrix-table th,
+.compare-matrix-table td {
+    padding: 10px 14px;
+    text-align: center;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.compare-matrix-table th {
+    background: var(--color-surface);
+    color: var(--color-text-secondary);
+    font-weight: 600;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+.compare-matrix-table th:first-child,
+.compare-matrix-table td:first-child {
+    text-align: left;
+}
+
+.compare-matrix-label {
+    font-weight: 500;
+    color: var(--color-text);
+}
+
+.compare-matrix-error {
+    color: var(--color-danger);
+    font-style: italic;
+}
+
+.compare-best {
+    color: var(--color-success);
+    font-weight: 700;
+}
+
+/* ── Trade History Tabs ─────────────────────────── */
+
+#compare-trades-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: 0;
+}
+
+.compare-trade-tab {
+    padding: 0.6rem 1.2rem;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.compare-trade-tab.active {
+    color: var(--color-text);
+    border-bottom-color: var(--color-primary);
+}
+
+.compare-trade-tab:hover {
+    color: var(--color-text);
+}
+
+.compare-trade-panel {
+    display: none;
+}
+
+.compare-trade-panel.active {
+    display: block;
+}
+
+.compare-trade-error,
+.compare-trade-empty {
+    padding: 1.5rem;
+    color: var(--color-text-secondary);
+    font-style: italic;
+}
+
+.compare-trade-error {
+    color: var(--color-danger);
+}
+
+/* ── Trade Tables (compare) ─────────────────────── */
+
+.compare-trade-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.compare-trade-table th,
+.compare-trade-table td {
+    padding: 8px 12px;
+    text-align: right;
+    border-bottom: 1px solid var(--color-border);
+    white-space: nowrap;
+}
+
+.compare-trade-table th {
+    background: var(--color-surface);
+    color: var(--color-text-secondary);
+    font-weight: 600;
+}
+
+.compare-trade-table th:first-child,
+.compare-trade-table td:first-child {
+    text-align: left;
+}
