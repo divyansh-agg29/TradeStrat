@@ -20,7 +20,7 @@ A web-based modular trading strategy analysis platform for backtesting, portfoli
 ```mermaid
 graph TD
     subgraph Frontend
-        UI[Dashboard · Compare Tab · Plotly Charts]
+        UI[Backtest Tab · Compare Tab]
     end
 
     subgraph API[Flask API]
