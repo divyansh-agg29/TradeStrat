@@ -11,14 +11,13 @@ const MAX_STRATEGIES = 6;
 
 function initCompareForm() {
 
-    addStrategyEntry();
-    addStrategyEntry();
-
     document.getElementById("add-strategy-btn")
         .addEventListener("click", addStrategyEntry);
 
     document.getElementById("run-comparison-btn")
         .addEventListener("click", onRunComparison);
+
+    restoreCompareConfiguration();
 
 }
 
@@ -282,6 +281,8 @@ async function onRunComparison() {
         return;
     }
 
+    saveCompareConfiguration(request);
+
     showLoadingOverlay();
 
     try {
@@ -306,6 +307,58 @@ async function onRunComparison() {
     } finally {
         hideLoadingOverlay();
     }
+
+}
+
+
+// ── Persistence ──────────────────────────────────────────────
+
+
+function restoreCompareConfiguration() {
+
+    const saved = loadCompareConfiguration();
+
+    if (!saved) {
+        addStrategyEntry();
+        addStrategyEntry();
+        return;
+    }
+
+    document.getElementById("compare-ticker").value = saved.ticker || "";
+    document.getElementById("compare-start-date").value = saved.start_date || "";
+    document.getElementById("compare-end-date").value = saved.end_date || "";
+    document.getElementById("compare-capital").value = saved.initial_capital || 100000;
+
+    const strategies = saved.strategies || [];
+
+    if (strategies.length < MIN_STRATEGIES) {
+        addStrategyEntry();
+        addStrategyEntry();
+        return;
+    }
+
+    strategies.forEach(function(stratConfig) {
+
+        addStrategyEntry();
+
+        const list = document.getElementById("compare-strategy-list");
+        const entry = list.lastElementChild;
+
+        const typeSelect = entry.querySelector(".compare-strategy-type");
+        typeSelect.value = stratConfig.type;
+        renderCompareStrategyParams(entry);
+
+        if (stratConfig.parameters) {
+            const inputs = entry.querySelectorAll(".compare-param-input");
+            inputs.forEach(function(input) {
+                var key = input.dataset.paramKey;
+                if (stratConfig.parameters[key] !== undefined) {
+                    input.value = stratConfig.parameters[key];
+                }
+            });
+        }
+
+    });
 
 }
 
