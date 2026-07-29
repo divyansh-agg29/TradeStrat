@@ -23,6 +23,8 @@ from typing import Any
 
 import pandas as pd
 
+from risk.manager import RiskManager
+from risk.config import RiskConfig
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -106,11 +108,14 @@ class CompletedTrade:
     profit_loss: float
     return_pct: float
     holding_period: int
+    exit_reason: str | None = None
+    stop_loss_price: float | None = None
 
 
 def simulate_portfolio(
     df: pd.DataFrame,
     initial_capital: float = 100000,
+    risk_config: RiskConfig | None = None,
 ) -> SimulationResult:
     """
     Simulate portfolio performance using trading signals.
@@ -137,6 +142,7 @@ def simulate_portfolio(
 
     portfolio = _initialize_portfolio(initial_capital)
     portfolio_value = initial_capital
+    risk_manager = RiskManager(risk_config)
 
     logger.debug(
         "Initial portfolio state: "
@@ -162,13 +168,14 @@ def simulate_portfolio(
             f"Close={close_price}"
         )
 
-        open_trade, completed_trade = _execute_signal(
+        open_trade, completed_trade = _evaluate_risk_and_signal(
             signal=signal,
             current_date=index,
             current_index=row_number,
             close_price=close_price,
             portfolio=portfolio,
             open_trade=open_trade,
+            risk_manager=risk_manager,
         )
 
         if completed_trade is not None:
@@ -328,17 +335,35 @@ def _record_portfolio_state(
     df.at[index, "Portfolio Value"] = portfolio_value
     df.at[index, "Position"] = portfolio.position
 
-def _execute_signal(
+def _evaluate_risk_and_signal(
     signal: str,
     current_date: pd.Timestamp,
     current_index: int,
     close_price: float,
     portfolio: PortfolioState,
     open_trade: OpenTrade | None,
+    risk_manager: RiskManager,
 ) -> tuple[OpenTrade | None, CompletedTrade | None]:
     """
-    Execute a trading signal.
+    Evaluate the risk manager first, then process the strategy signal.
     """
+
+    if open_trade is not None and risk_manager.should_stop(
+        entry_price=open_trade.entry_price,
+        current_price=close_price,
+    ):
+        logger.debug(
+            "Stop-loss triggered for open trade at %s.",
+            current_date,
+        )
+        return _execute_stop_loss(
+            portfolio=portfolio,
+            open_trade=open_trade,
+            current_date=current_date,
+            current_index=current_index,
+            close_price=close_price,
+            risk_manager=risk_manager,
+        )
 
     if signal == BUY:
         new_trade = _execute_buy(
@@ -411,6 +436,53 @@ def _execute_buy(
         shares=shares_to_buy,
     )
 
+def _execute_stop_loss(
+    portfolio: PortfolioState,
+    open_trade: OpenTrade,
+    current_date: pd.Timestamp,
+    current_index: int,
+    close_price: float,
+    risk_manager: RiskManager,
+) -> tuple[OpenTrade | None, CompletedTrade | None]:
+    """
+    Close an open trade because the stop-loss threshold was reached.
+    """
+
+    exit_value = open_trade.shares * close_price
+
+    portfolio.cash += exit_value
+    portfolio.shares = 0
+    portfolio.position = FLAT
+
+    investment = open_trade.entry_price * open_trade.shares
+    profit_loss = exit_value - investment
+    return_pct = (profit_loss / investment) * 100
+
+    holding_period = current_index - open_trade.entry_index
+    stop_loss_price = risk_manager.get_stop_loss_price(
+        open_trade.entry_price
+    )
+
+    completed_trade = CompletedTrade(
+        entry_date=open_trade.entry_date,
+        exit_date=current_date,
+        entry_price=open_trade.entry_price,
+        exit_price=close_price,
+        shares=open_trade.shares,
+        investment=investment,
+        exit_value=exit_value,
+        profit_loss=profit_loss,
+        return_pct=return_pct,
+        holding_period=holding_period,
+        exit_reason="stop_loss",
+        stop_loss_price=stop_loss_price,
+    )
+
+    logger.debug("Stop-loss executed: Position closed.")
+
+    return None, completed_trade
+
+
 def _execute_sell(
     portfolio: PortfolioState,
     open_trade: OpenTrade | None,
@@ -458,6 +530,8 @@ def _execute_sell(
         profit_loss=profit_loss,
         return_pct=return_pct,
         holding_period=holding_period,
+        exit_reason=None,
+        stop_loss_price=None,
     )
 
     logger.debug(

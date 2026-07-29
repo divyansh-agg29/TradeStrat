@@ -31,3 +31,13 @@ class RiskManager:
             return False
 
         return self._rule.should_stop(entry_price, current_price)
+
+    def get_stop_loss_price(self, entry_price: float) -> float | None:
+        """
+        Return the stop-loss price for the configured fixed stop-loss rule.
+        """
+
+        if self._rule is None:
+            return None
+
+        return entry_price * (1 - self._rule.stop_loss_percent)

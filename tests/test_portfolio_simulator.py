@@ -2,6 +2,7 @@ import pandas as pd
 import pytest
 
 from portfolio import SimulationResult, simulate_portfolio
+from risk.config import RiskConfig
 
 def create_sample_dataframe(
     signals: list[str] | None = None,
@@ -167,6 +168,31 @@ def test_buy_hold_sell_flow():
     assert portfolio.iloc[0]["Position"] == "LONG"
     assert portfolio.iloc[1]["Position"] == "LONG"
     assert portfolio.iloc[2]["Position"] == "FLAT"
+
+
+def test_stop_loss_uses_configured_percentage():
+    """
+    Test that the stop-loss threshold comes from the supplied risk config.
+    """
+
+    df = create_sample_dataframe(
+        signals=["BUY", "HOLD", "HOLD"],
+        prices=[100, 96.5, 96.5],
+    )
+
+    risk_config = RiskConfig(
+        stop_loss_enabled=True,
+        stop_loss_percent=0.05,
+    )
+
+    result = simulate_portfolio(
+        df,
+        risk_config=risk_config,
+    )
+
+    assert result.trade_history.empty
+    assert result.summary["completed_trade_count"] == 0
+    assert result.summary["position"] == "LONG"
 
 
 def test_buy_ignored_when_already_long():

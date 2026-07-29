@@ -71,6 +71,7 @@ def run_backtest(
     simulation_result = _run_simulation(
         strategy_output,
         request.initial_capital,
+        request.risk,
     )
 
     analytics_result = _run_analytics(
@@ -217,6 +218,7 @@ def _execute_strategy(
 def _run_simulation(
     strategy_output,
     initial_capital: float,
+    risk_config,
 ) -> SimulationResult:
     """
     Execute the Portfolio Simulator.
@@ -227,6 +229,7 @@ def _run_simulation(
     return simulate_portfolio(
         strategy_output,
         initial_capital=initial_capital,
+        risk_config=risk_config,
     )
 
 def _run_analytics(
