@@ -101,6 +101,10 @@ graph TD
 
 ## Development Changelog
 
+### 2026-07-29 — Fixed Stop-Loss Risk Support
+- Added a new risk configuration layer for backtest requests, including optional fixed stop-loss settings
+- Portfolio simulation now supports automatic stop-loss exits and records stop-loss-driven trade closures in trade history
+
 ### 2026-07-28 — Compare Tab Form Persistence
 - Added form persistence for the Compare tab via localStorage
 
