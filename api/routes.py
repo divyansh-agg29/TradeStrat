@@ -10,7 +10,7 @@ from flask import jsonify, request, render_template
 from api import api
 from utils.logger import get_logger
 
-from models import BacktestRequest, ComparisonRequest, StrategyConfig
+from models import BacktestRequest, ComparisonRequest, RiskConfig, StrategyConfig
 from serialization import serialize_backtest_result, serialize_comparison_result
 from services import run_backtest, run_comparison
 
@@ -61,6 +61,15 @@ def _parse_request(data: dict) -> BacktestRequest:
         parameters=strategy.get("parameters", {}),
     )
 
+    risk_data = data.get("risk", {})
+    risk_config = None
+
+    if risk_data and risk_data.get("stop_loss_percent") is not None:
+        risk_config = RiskConfig(
+            stop_loss_enabled=True,
+            stop_loss_percent=float(risk_data["stop_loss_percent"]),
+        )
+
     return BacktestRequest(
         ticker=data.get("ticker", ""),
         start_date=data.get("start_date", ""),
@@ -74,6 +83,7 @@ def _parse_request(data: dict) -> BacktestRequest:
             0.0,
         ),
         strategy=strategy_config,
+        risk=risk_config,
     )
 
 

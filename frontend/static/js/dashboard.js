@@ -150,6 +150,8 @@ function renderTradeHistory(trades) {
 
         const row = document.createElement("tr");
 
+        const exitReason = trade.exit_reason || "Signal";
+
         row.innerHTML = `
             <td>${formatDate(trade.entry_date)}</td>
             <td>${formatDate(trade.exit_date)}</td>
@@ -161,6 +163,7 @@ function renderTradeHistory(trades) {
             <td>${formatCurrency(trade.exit_value)}</td>
             <td>${formatPercentage(trade.return_pct)}</td>
             <td>${formatCurrency(trade.profit_loss)}</td>
+            <td>${exitReason}</td>
         `;
 
         ui.tradeHistoryBody.appendChild(row);

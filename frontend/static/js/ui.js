@@ -20,6 +20,12 @@ const ui = {
     strategyParametersContainer:
         document.getElementById("strategy-parameters"),
 
+    stopLossEnabledCheckbox:
+        document.getElementById("stop-loss-enabled"),
+
+    stopLossPercentInput:
+        document.getElementById("stop-loss-percent"),
+
     runButton:
         document.getElementById("run-backtest-btn"),
 
@@ -131,6 +137,24 @@ function registerEventListeners() {
         "change",
         onStrategyChanged
     );
+
+    ui.stopLossEnabledCheckbox.addEventListener(
+        "change",
+        onStopLossCheckboxChanged
+    );
+
+}
+
+function onStopLossCheckboxChanged() {
+
+    const isEnabled = ui.stopLossEnabledCheckbox.checked;
+
+    const fieldContainer = document.getElementById("stop-loss-field-container");
+    fieldContainer.style.display = isEnabled ? "block" : "none";
+
+    if (!isEnabled) {
+        ui.stopLossPercentInput.value = "";
+    }
 
 }
 
@@ -253,6 +277,17 @@ function readConfigurationForm() {
 
     }
 
+    const stopLossEnabled = ui.stopLossEnabledCheckbox.checked;
+    const stopLossPercentStr = ui.stopLossPercentInput.value.trim();
+    const risk = {};
+
+    if (stopLossEnabled && stopLossPercentStr !== "") {
+        const stopLossPercent = Number(stopLossPercentStr);
+        if (stopLossPercent > 0) {
+            risk.stopLossPercent = stopLossPercent / 100;
+        }
+    }
+
     return {
 
         ticker: ui.tickerInput.value.trim(),
@@ -271,7 +306,9 @@ function readConfigurationForm() {
 
             parameters: parameters
 
-        }
+        },
+
+        risk: risk
 
     };
 
@@ -307,6 +344,14 @@ function validateConfiguration(configuration) {
             "Start date must be before end date."
         );
 
+    }
+
+    if (configuration.risk && Object.keys(configuration.risk).length > 0) {
+        if (!configuration.risk.stopLossPercent || configuration.risk.stopLossPercent <= 0) {
+            errors.push(
+                "Stop Loss % must be greater than zero when enabled."
+            );
+        }
     }
 
     const strategy =
@@ -345,6 +390,16 @@ function populateConfigurationForm(configuration) {
 
     ui.capitalInput.value =
         configuration.initialCapital;
+
+    if (configuration.risk && configuration.risk.stopLossPercent !== undefined) {
+        ui.stopLossEnabledCheckbox.checked = true;
+        ui.stopLossPercentInput.value = (configuration.risk.stopLossPercent * 100).toString();
+        document.getElementById("stop-loss-field-container").style.display = "block";
+    } else {
+        ui.stopLossEnabledCheckbox.checked = false;
+        ui.stopLossPercentInput.value = "";
+        document.getElementById("stop-loss-field-container").style.display = "none";
+    }
 
     ui.strategySelect.value =
         configuration.strategy.type;

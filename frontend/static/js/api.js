@@ -5,6 +5,13 @@ const BACKTEST_ENDPOINT = "/backtest";
 
 function buildBacktestRequest(configuration) {
 
+    const risk = {};
+
+    if (configuration.risk && configuration.risk.stopLossPercent !== "") {
+        risk.stop_loss_enabled = true;
+        risk.stop_loss_percent = Number(configuration.risk.stopLossPercent);
+    }
+
     return {
 
         ticker: configuration.ticker,
@@ -21,7 +28,9 @@ function buildBacktestRequest(configuration) {
 
             parameters: configuration.strategy.parameters
 
-        }
+        },
+
+        risk: Object.keys(risk).length > 0 ? risk : undefined
 
     };
 
