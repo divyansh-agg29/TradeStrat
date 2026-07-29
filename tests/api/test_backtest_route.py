@@ -81,6 +81,77 @@ def test_backtest_success(
 
     mock_serializer.assert_called_once()
 
+
+@patch("api.routes.serialize_backtest_result")
+@patch("api.routes.run_backtest")
+def test_backtest_parses_stop_loss_risk_settings(
+    mock_run_backtest,
+    mock_serializer,
+    client,
+):
+    """
+    Backtest route should parse stop-loss settings into RiskConfig.
+    """
+
+    payload = _create_request_payload()
+    payload["risk"] = {
+        "stop_loss_percent": 0.05,
+    }
+
+    mock_run_backtest.return_value = object()
+    mock_serializer.return_value = {
+        "portfolio_metrics": {},
+        "risk_metrics": {},
+        "trade_metrics": {},
+        "portfolio_history": [],
+        "analytics_history": [],
+        "trade_history": [],
+    }
+
+    response = client.post(
+        "/backtest",
+        json=payload,
+    )
+
+    request_arg = mock_run_backtest.call_args.args[0]
+
+    assert response.status_code == 200
+    assert request_arg.risk.stop_loss_enabled is True
+    assert request_arg.risk.stop_loss_percent == 0.05
+
+
+@patch("api.routes.serialize_backtest_result")
+@patch("api.routes.run_backtest")
+def test_backtest_without_risk_settings_uses_default_mode(
+    mock_run_backtest,
+    mock_serializer,
+    client,
+):
+    """
+    Omitting risk settings should leave the request risk config unset.
+    """
+
+    mock_run_backtest.return_value = object()
+    mock_serializer.return_value = {
+        "portfolio_metrics": {},
+        "risk_metrics": {},
+        "trade_metrics": {},
+        "portfolio_history": [],
+        "analytics_history": [],
+        "trade_history": [],
+    }
+
+    response = client.post(
+        "/backtest",
+        json=_create_request_payload(),
+    )
+
+    request_arg = mock_run_backtest.call_args.args[0]
+
+    assert response.status_code == 200
+    assert request_arg.risk is None
+
+
 def test_backtest_missing_strategy(client):
     """
     Missing strategy should return HTTP 400.

@@ -10,6 +10,7 @@ from analytics import AnalyticsResult
 from models import (
     BacktestRequest,
     BacktestResult,
+    RiskConfig,
     StrategyConfig,
 )
 from portfolio import SimulationResult
@@ -18,6 +19,7 @@ from services import run_backtest
 
 def _create_request(
     strategy_type: str = "sma_crossover",
+    risk: RiskConfig | None = None,
 ) -> BacktestRequest:
     """
     Create a valid BacktestRequest for testing.
@@ -36,6 +38,7 @@ def _create_request(
                 "long_period": 50,
             },
         ),
+        risk=risk,
     )
 
 @patch("services.backtest_service.analyze_performance")
@@ -114,6 +117,62 @@ def test_run_backtest_success(
     mock_simulate_portfolio.assert_called_once()
 
     mock_analyze_performance.assert_called_once()
+
+
+@patch("services.backtest_service.analyze_performance")
+@patch("services.backtest_service.simulate_portfolio")
+@patch("services.backtest_service.get_stock_data")
+def test_run_backtest_passes_risk_config_to_simulator(
+    mock_get_stock_data,
+    mock_simulate_portfolio,
+    mock_analyze_performance,
+):
+    """
+    Backtest Service should forward request risk settings to the simulator.
+    """
+
+    strategy_output = pd.DataFrame(
+        {
+            "Close": [100.0, 95.0],
+            "Signal": ["BUY", "HOLD"],
+        },
+        index=pd.date_range(
+            start="2022-01-01",
+            periods=2,
+            freq="D",
+        ),
+    )
+
+    simulation_result = SimulationResult(
+        portfolio_history=pd.DataFrame(),
+        trade_history=pd.DataFrame(),
+        summary={},
+    )
+    analytics_result = AnalyticsResult()
+    risk_config = RiskConfig(
+        stop_loss_enabled=True,
+        stop_loss_percent=0.05,
+    )
+
+    mock_get_stock_data.return_value = strategy_output
+    mock_simulate_portfolio.return_value = simulation_result
+    mock_analyze_performance.return_value = analytics_result
+
+    with patch(
+        "services.backtest_service._get_strategy_function"
+    ) as mock_strategy:
+
+        mock_strategy.return_value = (
+            lambda df, **kwargs: strategy_output
+        )
+
+        run_backtest(
+            _create_request(risk=risk_config)
+        )
+
+    _, kwargs = mock_simulate_portfolio.call_args
+
+    assert kwargs["risk_config"] is risk_config
 
 
 def test_run_backtest_invalid_request_type():

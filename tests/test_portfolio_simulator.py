@@ -195,6 +195,119 @@ def test_stop_loss_uses_configured_percentage():
     assert result.summary["position"] == "LONG"
 
 
+def test_stop_loss_closes_trade_and_updates_portfolio_state():
+    """
+    Test that a configured stop loss closes the trade and updates cash.
+    """
+
+    df = create_sample_dataframe(
+        signals=["BUY", "HOLD", "HOLD"],
+        prices=[100, 94, 110],
+    )
+
+    result = simulate_portfolio(
+        df,
+        risk_config=RiskConfig(
+            stop_loss_enabled=True,
+            stop_loss_percent=0.05,
+        ),
+    )
+
+    portfolio = result.portfolio_history
+
+    assert result.summary["position"] == "FLAT"
+    assert result.summary["shares_held"] == 0
+    assert result.summary["cash"] == 94000
+    assert result.summary["final_portfolio_value"] == 94000
+    assert result.summary["completed_trade_count"] == 1
+
+    assert portfolio.iloc[1]["Cash"] == 94000
+    assert portfolio.iloc[1]["Shares"] == 0
+    assert portfolio.iloc[1]["Holdings Value"] == 0
+    assert portfolio.iloc[1]["Portfolio Value"] == 94000
+    assert portfolio.iloc[1]["Position"] == "FLAT"
+
+
+def test_stop_loss_trade_history_records_exit_reason():
+    """
+    Test that stop-loss exits are identifiable in trade history.
+    """
+
+    df = create_sample_dataframe(
+        signals=["BUY", "HOLD"],
+        prices=[100, 95],
+    )
+
+    result = simulate_portfolio(
+        df,
+        risk_config=RiskConfig(
+            stop_loss_enabled=True,
+            stop_loss_percent=0.05,
+        ),
+    )
+
+    trade = result.trade_history.iloc[0]
+
+    assert trade["entry_price"] == 100
+    assert trade["exit_price"] == 95
+    assert trade["shares"] == 1000
+    assert trade["investment"] == 100000
+    assert trade["exit_value"] == 95000
+    assert trade["profit_loss"] == -5000
+    assert trade["return_pct"] == -5.0
+    assert trade["holding_period"] == 1
+    assert trade["exit_reason"] == "stop_loss"
+    assert trade["stop_loss_price"] == 95
+
+
+def test_default_mode_ignores_stop_loss_threshold():
+    """
+    Test that no stop loss is applied when no risk settings are supplied.
+    """
+
+    df = create_sample_dataframe(
+        signals=["BUY", "HOLD", "SELL"],
+        prices=[100, 94, 110],
+    )
+
+    result = simulate_portfolio(df)
+
+    trade = result.trade_history.iloc[0]
+
+    assert result.summary["final_portfolio_value"] == 110000
+    assert result.summary["completed_trade_count"] == 1
+    assert trade["exit_price"] == 110
+    assert pd.isna(trade["exit_reason"])
+    assert pd.isna(trade["stop_loss_price"])
+
+
+def test_signal_based_exit_still_occurs_with_risk_config():
+    """
+    Test that normal SELL exits still work when stop loss is not reached.
+    """
+
+    df = create_sample_dataframe(
+        signals=["BUY", "HOLD", "SELL"],
+        prices=[100, 101, 103],
+    )
+
+    result = simulate_portfolio(
+        df,
+        risk_config=RiskConfig(
+            stop_loss_enabled=True,
+            stop_loss_percent=0.05,
+        ),
+    )
+
+    trade = result.trade_history.iloc[0]
+
+    assert result.summary["final_portfolio_value"] == 103000
+    assert result.summary["completed_trade_count"] == 1
+    assert trade["exit_price"] == 103
+    assert pd.isna(trade["exit_reason"])
+    assert pd.isna(trade["stop_loss_price"])
+
+
 def test_buy_ignored_when_already_long():
     """
     Test that BUY signals are ignored while already holding a position.
