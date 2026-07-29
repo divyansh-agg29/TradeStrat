@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 from models.strategy_config import StrategyConfig
+from risk.config import RiskConfig
 
 
 @dataclass(frozen=True)
@@ -18,3 +19,4 @@ class BacktestRequest:
     initial_capital: float = 100000.0
     risk_free_rate: float = 0.0
     strategy: StrategyConfig = None
+    risk: RiskConfig | None = None

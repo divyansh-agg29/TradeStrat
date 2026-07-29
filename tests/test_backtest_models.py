@@ -6,6 +6,7 @@ from analytics import AnalyticsResult
 from models import (
     BacktestRequest,
     BacktestResult,
+    RiskConfig,
     StrategyConfig,
 )
 from portfolio import SimulationResult
@@ -44,6 +45,31 @@ def test_strategy_config_default_parameters():
     assert config.parameters == {}
 
 
+def test_risk_config_creation():
+    """
+    RiskConfig should store the supplied values.
+    """
+
+    risk_config = RiskConfig(
+        stop_loss_enabled=True,
+        stop_loss_percent=0.03,
+    )
+
+    assert risk_config.stop_loss_enabled is True
+    assert risk_config.stop_loss_percent == 0.03
+
+
+def test_risk_config_defaults():
+    """
+    RiskConfig should default to disabled state.
+    """
+
+    risk_config = RiskConfig()
+
+    assert risk_config.stop_loss_enabled is False
+    assert risk_config.stop_loss_percent is None
+
+
 def test_backtest_request_creation():
     """
     BacktestRequest should store all supplied values.
@@ -57,6 +83,11 @@ def test_backtest_request_creation():
         },
     )
 
+    risk_config = RiskConfig(
+        stop_loss_enabled=True,
+        stop_loss_percent=0.03,
+    )
+
     request = BacktestRequest(
         ticker="RELIANCE.NS",
         start_date="2022-01-01",
@@ -64,6 +95,7 @@ def test_backtest_request_creation():
         initial_capital=100000,
         risk_free_rate=0.06,
         strategy=strategy,
+        risk=risk_config,
     )
 
     assert request.ticker == "RELIANCE.NS"
@@ -77,6 +109,7 @@ def test_backtest_request_creation():
     assert request.risk_free_rate == 0.06
 
     assert request.strategy is strategy
+    assert request.risk is risk_config
 
 
 def test_backtest_request_defaults():
