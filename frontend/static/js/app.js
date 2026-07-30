@@ -13,6 +13,8 @@ function initializeApplication() {
 
     populateStrategyDropdown();
 
+    populateStopLossDropdown();
+
     onStrategyChanged();
 
     restorePreviousConfiguration();

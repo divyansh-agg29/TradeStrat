@@ -150,7 +150,7 @@ function renderTradeHistory(trades) {
 
         const row = document.createElement("tr");
 
-        const exitReason = trade.exit_reason || "Signal";
+        const exitReason = trade.exit_reason;
 
         row.innerHTML = `
             <td>${formatDate(trade.entry_date)}</td>

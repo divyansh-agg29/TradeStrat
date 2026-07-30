@@ -95,7 +95,8 @@ def test_backtest_parses_stop_loss_risk_settings(
 
     payload = _create_request_payload()
     payload["risk"] = {
-        "stop_loss_percent": 0.05,
+        "stop_loss_type": "fixed_percentage",
+        "parameters": {"percent": 0.05},
     }
 
     mock_run_backtest.return_value = object()
@@ -116,8 +117,8 @@ def test_backtest_parses_stop_loss_risk_settings(
     request_arg = mock_run_backtest.call_args.args[0]
 
     assert response.status_code == 200
-    assert request_arg.risk.stop_loss_enabled is True
-    assert request_arg.risk.stop_loss_percent == 0.05
+    assert request_arg.risk.stop_loss_type == "fixed_percentage"
+    assert request_arg.risk.stop_loss_parameters == {"percent": 0.05}
 
 
 @patch("api.routes.serialize_backtest_result")
@@ -150,6 +151,45 @@ def test_backtest_without_risk_settings_uses_default_mode(
 
     assert response.status_code == 200
     assert request_arg.risk is None
+
+
+@patch("api.routes.serialize_backtest_result")
+@patch("api.routes.run_backtest")
+def test_backtest_parses_absolute_price_risk_settings(
+    mock_run_backtest,
+    mock_serializer,
+    client,
+):
+    """
+    Backtest route should parse absolute price stop-loss settings.
+    """
+
+    payload = _create_request_payload()
+    payload["risk"] = {
+        "stop_loss_type": "absolute_price",
+        "parameters": {"price": 450},
+    }
+
+    mock_run_backtest.return_value = object()
+    mock_serializer.return_value = {
+        "portfolio_metrics": {},
+        "risk_metrics": {},
+        "trade_metrics": {},
+        "portfolio_history": [],
+        "analytics_history": [],
+        "trade_history": [],
+    }
+
+    response = client.post(
+        "/backtest",
+        json=payload,
+    )
+
+    request_arg = mock_run_backtest.call_args.args[0]
+
+    assert response.status_code == 200
+    assert request_arg.risk.stop_loss_type == "absolute_price"
+    assert request_arg.risk.stop_loss_parameters == {"price": 450}
 
 
 def test_backtest_missing_strategy(client):

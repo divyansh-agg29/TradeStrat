@@ -23,8 +23,11 @@ const ui = {
     stopLossEnabledCheckbox:
         document.getElementById("stop-loss-enabled"),
 
-    stopLossPercentInput:
-        document.getElementById("stop-loss-percent"),
+    stopLossTypeSelect:
+        document.getElementById("stop-loss-type"),
+
+    stopLossParametersContainer:
+        document.getElementById("stop-loss-parameters"),
 
     runButton:
         document.getElementById("run-backtest-btn"),
@@ -143,6 +146,11 @@ function registerEventListeners() {
         onStopLossCheckboxChanged
     );
 
+    ui.stopLossTypeSelect.addEventListener(
+        "change",
+        onStopLossTypeChanged
+    );
+
 }
 
 function onStopLossCheckboxChanged() {
@@ -153,7 +161,68 @@ function onStopLossCheckboxChanged() {
     fieldContainer.style.display = isEnabled ? "block" : "none";
 
     if (!isEnabled) {
-        ui.stopLossPercentInput.value = "";
+        ui.stopLossParametersContainer.innerHTML = "";
+    } else {
+        onStopLossTypeChanged();
+    }
+
+}
+
+
+function populateStopLossDropdown() {
+
+    ui.stopLossTypeSelect.innerHTML = "";
+
+    for (const [key, rule] of Object.entries(STOP_LOSS_REGISTRY)) {
+
+        const option = document.createElement("option");
+        option.value = key;
+        option.textContent = rule.label;
+        ui.stopLossTypeSelect.appendChild(option);
+
+    }
+
+}
+
+
+function onStopLossTypeChanged() {
+
+    const stopLossType = ui.stopLossTypeSelect.value;
+    const rule = STOP_LOSS_REGISTRY[stopLossType];
+
+    ui.stopLossParametersContainer.innerHTML = "";
+
+    if (!rule) {
+        return;
+    }
+
+    for (const param of rule.parameters) {
+
+        const group = document.createElement("div");
+        group.className = "form-group";
+
+        const label = document.createElement("label");
+        label.setAttribute("for", "risk-param-" + param.key);
+        label.textContent = param.label;
+
+        const input = document.createElement("input");
+        input.type = param.type;
+        input.id = "risk-param-" + param.key;
+        input.className = "form-input";
+        input.value = param.default;
+
+        if (param.min !== undefined) {
+            input.min = param.min;
+        }
+
+        if (param.step !== undefined) {
+            input.step = param.step;
+        }
+
+        group.appendChild(label);
+        group.appendChild(input);
+        ui.stopLossParametersContainer.appendChild(group);
+
     }
 
 }
@@ -278,13 +347,24 @@ function readConfigurationForm() {
     }
 
     const stopLossEnabled = ui.stopLossEnabledCheckbox.checked;
-    const stopLossPercentStr = ui.stopLossPercentInput.value.trim();
     const risk = {};
 
-    if (stopLossEnabled && stopLossPercentStr !== "") {
-        const stopLossPercent = Number(stopLossPercentStr);
-        if (stopLossPercent > 0) {
-            risk.stopLossPercent = stopLossPercent / 100;
+    if (stopLossEnabled) {
+        const stopLossType = ui.stopLossTypeSelect.value;
+        const rule = STOP_LOSS_REGISTRY[stopLossType];
+
+        if (rule) {
+            const rawParams = {};
+
+            for (const param of rule.parameters) {
+                const input = document.getElementById("risk-param-" + param.key);
+                if (input) {
+                    rawParams[param.key] = Number(input.value);
+                }
+            }
+
+            risk.stopLossType = stopLossType;
+            risk.parameters = rule.toPayload(rawParams);
         }
     }
 
@@ -346,11 +426,11 @@ function validateConfiguration(configuration) {
 
     }
 
-    if (configuration.risk && Object.keys(configuration.risk).length > 0) {
-        if (!configuration.risk.stopLossPercent || configuration.risk.stopLossPercent <= 0) {
-            errors.push(
-                "Stop Loss % must be greater than zero when enabled."
-            );
+    if (configuration.risk && configuration.risk.stopLossType) {
+        const rule = STOP_LOSS_REGISTRY[configuration.risk.stopLossType];
+        if (rule && rule.validate) {
+            const riskErrors = rule.validate(configuration.risk.parameters || {});
+            errors.push(...riskErrors);
         }
     }
 
@@ -391,13 +471,25 @@ function populateConfigurationForm(configuration) {
     ui.capitalInput.value =
         configuration.initialCapital;
 
-    if (configuration.risk && configuration.risk.stopLossPercent !== undefined) {
+    if (configuration.risk && configuration.risk.stopLossType) {
         ui.stopLossEnabledCheckbox.checked = true;
-        ui.stopLossPercentInput.value = (configuration.risk.stopLossPercent * 100).toString();
         document.getElementById("stop-loss-field-container").style.display = "block";
+
+        ui.stopLossTypeSelect.value = configuration.risk.stopLossType;
+        onStopLossTypeChanged();
+
+        const rule = STOP_LOSS_REGISTRY[configuration.risk.stopLossType];
+        if (rule && configuration.risk.parameters) {
+            const displayParams = rule.fromPayload(configuration.risk.parameters);
+            for (const [key, value] of Object.entries(displayParams)) {
+                const input = document.getElementById("risk-param-" + key);
+                if (input) {
+                    input.value = value;
+                }
+            }
+        }
     } else {
         ui.stopLossEnabledCheckbox.checked = false;
-        ui.stopLossPercentInput.value = "";
         document.getElementById("stop-loss-field-container").style.display = "none";
     }
 

@@ -8,12 +8,13 @@ A web-based modular trading strategy analysis platform for backtesting, portfoli
 - **Technical Indicators** — SMA, EMA, RSI, MACD with automatic warm-up period handling
 - **Trading Strategies** — SMA Crossover, EMA Crossover, MACD Crossover, RSI Mean Reversion
 - **Portfolio Simulation** — Full trade lifecycle simulation with configurable initial capital
+- **Risk Management** — Pluggable stop-loss framework with dropdown selection and dynamic parameters (Fixed Percentage, Absolute Price)
 - **Performance Analytics** — Portfolio metrics, risk metrics, and trade statistics
 - **Benchmark Comparison** — Buy & Hold benchmark overlay with alpha calculation
 - **KPI Interpretation** — Color-coded KPI cards with interpretation levels and hover tooltips
 - **Strategy Comparison** — Run 2–6 strategies side-by-side with metrics matrix, equity/drawdown chart overlays, and per-strategy trade history tabs
 - **Interactive Dashboard** — Plotly charts (price, equity, drawdown), tabbed interface (Backtest / Compare), form persistence via localStorage
-- **REST API** — `POST /backtest` and `POST /compare` endpoints with JSON request/response
+
 
 ## Architecture
 
@@ -100,6 +101,13 @@ graph TD
 
 
 ## Development Changelog
+
+### 2026-07-30 — Pluggable Stop-Loss Framework & Absolute Price Stop-Loss
+- Refactored risk system into a registry-based architecture: `RiskConfig` now uses `stop_loss_type` + `stop_loss_parameters` instead of hard-coded fields
+- Added `STOP_LOSS_REGISTRY` (backend + frontend) so new stop-loss types require only a rule class and a registry entry
+- Implemented Absolute Price Stop-Loss: exits trade when price drops to or below a user-specified level
+- Frontend stop-loss selection now uses a dropdown with dynamic parameter fields (mirroring the strategy pattern)
+- Updated API payload shape: `{ "risk": { "stop_loss_type": "...", "parameters": { ... } } }`
 
 ### 2026-07-29 — Fixed Stop-Loss Risk Support
 - Added risk configuration layer for backtest requests with optional fixed stop-loss settings

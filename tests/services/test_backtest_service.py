@@ -150,8 +150,8 @@ def test_run_backtest_passes_risk_config_to_simulator(
     )
     analytics_result = AnalyticsResult()
     risk_config = RiskConfig(
-        stop_loss_enabled=True,
-        stop_loss_percent=0.05,
+        stop_loss_type="fixed_percentage",
+        stop_loss_parameters={"percent": 0.05},
     )
 
     mock_get_stock_data.return_value = strategy_output

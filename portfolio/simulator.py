@@ -108,7 +108,7 @@ class CompletedTrade:
     profit_loss: float
     return_pct: float
     holding_period: int
-    exit_reason: str | None = None
+    exit_reason: str = "signal"
     stop_loss_price: float | None = None
 
 
@@ -530,7 +530,7 @@ def _execute_sell(
         profit_loss=profit_loss,
         return_pct=return_pct,
         holding_period=holding_period,
-        exit_reason=None,
+        exit_reason="signal",
         stop_loss_price=None,
     )
 

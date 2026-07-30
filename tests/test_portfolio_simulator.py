@@ -181,8 +181,8 @@ def test_stop_loss_uses_configured_percentage():
     )
 
     risk_config = RiskConfig(
-        stop_loss_enabled=True,
-        stop_loss_percent=0.05,
+        stop_loss_type="fixed_percentage",
+        stop_loss_parameters={"percent": 0.05},
     )
 
     result = simulate_portfolio(
@@ -208,8 +208,8 @@ def test_stop_loss_closes_trade_and_updates_portfolio_state():
     result = simulate_portfolio(
         df,
         risk_config=RiskConfig(
-            stop_loss_enabled=True,
-            stop_loss_percent=0.05,
+            stop_loss_type="fixed_percentage",
+            stop_loss_parameters={"percent": 0.05},
         ),
     )
 
@@ -241,8 +241,8 @@ def test_stop_loss_trade_history_records_exit_reason():
     result = simulate_portfolio(
         df,
         risk_config=RiskConfig(
-            stop_loss_enabled=True,
-            stop_loss_percent=0.05,
+            stop_loss_type="fixed_percentage",
+            stop_loss_parameters={"percent": 0.05},
         ),
     )
 
@@ -277,8 +277,8 @@ def test_default_mode_ignores_stop_loss_threshold():
     assert result.summary["final_portfolio_value"] == 110000
     assert result.summary["completed_trade_count"] == 1
     assert trade["exit_price"] == 110
-    assert pd.isna(trade["exit_reason"])
-    assert pd.isna(trade["stop_loss_price"])
+    assert trade["exit_reason"] == "signal"
+    assert trade["stop_loss_price"] is None
 
 
 def test_signal_based_exit_still_occurs_with_risk_config():
@@ -294,8 +294,8 @@ def test_signal_based_exit_still_occurs_with_risk_config():
     result = simulate_portfolio(
         df,
         risk_config=RiskConfig(
-            stop_loss_enabled=True,
-            stop_loss_percent=0.05,
+            stop_loss_type="fixed_percentage",
+            stop_loss_parameters={"percent": 0.05},
         ),
     )
 
@@ -304,8 +304,8 @@ def test_signal_based_exit_still_occurs_with_risk_config():
     assert result.summary["final_portfolio_value"] == 103000
     assert result.summary["completed_trade_count"] == 1
     assert trade["exit_price"] == 103
-    assert pd.isna(trade["exit_reason"])
-    assert pd.isna(trade["stop_loss_price"])
+    assert trade["exit_reason"] == "signal"
+    assert trade["stop_loss_price"] is None
 
 
 def test_buy_ignored_when_already_long():
@@ -678,3 +678,52 @@ def test_return_type():
     result = simulate_portfolio(df)
 
     assert isinstance(result, SimulationResult)
+
+
+def test_absolute_price_stop_loss_closes_trade():
+    """
+    Test that an absolute price stop-loss closes the trade correctly.
+    """
+
+    df = create_sample_dataframe(
+        signals=["BUY", "HOLD", "HOLD"],
+        prices=[500, 449, 460],
+    )
+
+    result = simulate_portfolio(
+        df,
+        risk_config=RiskConfig(
+            stop_loss_type="absolute_price",
+            stop_loss_parameters={"price": 450},
+        ),
+    )
+
+    assert result.summary["position"] == "FLAT"
+    assert result.summary["completed_trade_count"] == 1
+    assert result.summary["shares_held"] == 0
+
+
+def test_absolute_price_stop_loss_records_exit_details():
+    """
+    Test that absolute price stop-loss exits are recorded in trade history.
+    """
+
+    df = create_sample_dataframe(
+        signals=["BUY", "HOLD"],
+        prices=[500, 440],
+    )
+
+    result = simulate_portfolio(
+        df,
+        risk_config=RiskConfig(
+            stop_loss_type="absolute_price",
+            stop_loss_parameters={"price": 450},
+        ),
+    )
+
+    trade = result.trade_history.iloc[0]
+
+    assert trade["entry_price"] == 500
+    assert trade["exit_price"] == 440
+    assert trade["exit_reason"] == "stop_loss"
+    assert trade["stop_loss_price"] == 450

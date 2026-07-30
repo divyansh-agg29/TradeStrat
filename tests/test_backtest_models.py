@@ -51,12 +51,12 @@ def test_risk_config_creation():
     """
 
     risk_config = RiskConfig(
-        stop_loss_enabled=True,
-        stop_loss_percent=0.03,
+        stop_loss_type="fixed_percentage",
+        stop_loss_parameters={"percent": 0.03},
     )
 
-    assert risk_config.stop_loss_enabled is True
-    assert risk_config.stop_loss_percent == 0.03
+    assert risk_config.stop_loss_type == "fixed_percentage"
+    assert risk_config.stop_loss_parameters == {"percent": 0.03}
 
 
 def test_risk_config_defaults():
@@ -66,8 +66,8 @@ def test_risk_config_defaults():
 
     risk_config = RiskConfig()
 
-    assert risk_config.stop_loss_enabled is False
-    assert risk_config.stop_loss_percent is None
+    assert risk_config.stop_loss_type is None
+    assert risk_config.stop_loss_parameters is None
 
 
 def test_backtest_request_creation():
@@ -84,8 +84,8 @@ def test_backtest_request_creation():
     )
 
     risk_config = RiskConfig(
-        stop_loss_enabled=True,
-        stop_loss_percent=0.03,
+        stop_loss_type="fixed_percentage",
+        stop_loss_parameters={"percent": 0.03},
     )
 
     request = BacktestRequest(
