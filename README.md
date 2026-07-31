@@ -8,7 +8,7 @@ A web-based modular trading strategy analysis platform for backtesting, portfoli
 - **Technical Indicators** — SMA, EMA, RSI, MACD with automatic warm-up period handling
 - **Trading Strategies** — SMA Crossover, EMA Crossover, MACD Crossover, RSI Mean Reversion
 - **Portfolio Simulation** — Full trade lifecycle simulation with configurable initial capital
-- **Risk Management** — Pluggable stop-loss framework with dropdown selection and dynamic parameters (Fixed Percentage, Absolute Price)
+- **Risk Management** — Pluggable stop-loss framework with dropdown selection and dynamic parameters (Fixed Percentage, Absolute Price, Offset from Entry)
 - **Performance Analytics** — Portfolio metrics, risk metrics, and trade statistics
 - **Benchmark Comparison** — Buy & Hold benchmark overlay with alpha calculation
 - **KPI Interpretation** — Color-coded KPI cards with interpretation levels and hover tooltips
@@ -104,6 +104,12 @@ graph TD
 
 
 ## Development Changelog
+
+### 2026-07-31 — Offset from Entry Stop-Loss
+- Added `OffsetFromEntryStopLoss` rule: exits a long trade when price falls to `entry_price - offset`
+- Registered `offset_from_entry` in both backend `STOP_LOSS_REGISTRY` and frontend `STOP_LOSS_REGISTRY`
+- Frontend dropdown now includes "Offset from Entry" with a single "Price Offset" parameter
+- Added unit, simulator integration, and API route tests for the new stop-loss type
 
 ### 2026-07-30 — Pluggable Stop-Loss Framework & Absolute Price Stop-Loss
 - Refactored risk system into a registry-based architecture: `RiskConfig` now uses `stop_loss_type` + `stop_loss_parameters` instead of hard-coded fields
