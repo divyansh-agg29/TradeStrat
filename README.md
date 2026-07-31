@@ -37,6 +37,7 @@ graph TD
     subgraph Engines[Core Engines]
         IND[Indicators]
         STR[Strategies]
+        RISK[Risk Module · Stop-Loss Registry]
         SIM[Portfolio Simulator]
         ANA[Analytics Engine]
     end
@@ -53,6 +54,8 @@ graph TD
     CS --> BS
     BS --> IND
     BS --> STR
+    BS --> RISK
+    RISK --> SIM
     BS --> SIM
     BS --> ANA
     BS --> DL
