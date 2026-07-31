@@ -7,6 +7,7 @@ from risk import (
     RiskConfig,
     RiskManager,
     STOP_LOSS_REGISTRY,
+    TrailingStopLoss,
 )
 
 
@@ -213,6 +214,64 @@ def test_offset_from_entry_rejects_non_positive_offset(offset):
         OffsetFromEntryStopLoss(offset=offset)
 
 
+# ── TrailingStopLoss ────────────────────────────────────────
+
+
+def test_trailing_stop_triggers_at_or_below_peak_threshold():
+    """
+    Stop should fire when current price is at or below peak * (1 - percent).
+    """
+
+    rule = TrailingStopLoss(percent=0.10)
+
+    assert rule.should_stop(entry_price=100, current_price=108, peak_price=120) is True
+    assert rule.should_stop(entry_price=100, current_price=107.99, peak_price=120) is True
+
+
+def test_trailing_stop_does_not_trigger_above_peak_threshold():
+    """
+    Stop should not fire while price is above peak * (1 - percent).
+    """
+
+    rule = TrailingStopLoss(percent=0.10)
+
+    assert rule.should_stop(entry_price=100, current_price=109, peak_price=120) is False
+
+
+def test_trailing_stop_get_stop_price_uses_peak():
+    """
+    get_stop_price should return peak_price * (1 - percent).
+    """
+
+    rule = TrailingStopLoss(percent=0.10)
+
+    assert rule.get_stop_price(100, peak_price=120) == 108
+    assert rule.get_stop_price(100, peak_price=150) == 135
+
+
+def test_trailing_stop_get_stop_price_defaults_to_entry_when_peak_is_none():
+    """
+    get_stop_price should use entry_price when no peak is supplied.
+    """
+
+    rule = TrailingStopLoss(percent=0.10)
+
+    assert rule.get_stop_price(100) == 90
+
+
+@pytest.mark.parametrize("percent", [0, -0.10])
+def test_trailing_stop_rejects_non_positive_percent(percent):
+    """
+    Percent must be positive.
+    """
+
+    with pytest.raises(
+        ValueError,
+        match="percent must be greater than zero",
+    ):
+        TrailingStopLoss(percent=percent)
+
+
 # ── RiskManager ──────────────────────────────────────────────
 
 
@@ -281,6 +340,23 @@ def test_risk_manager_resolves_offset_from_entry():
     assert risk_manager.should_stop(500, 451) is False
 
 
+def test_risk_manager_resolves_trailing_stop():
+    """
+    RiskManager should resolve and apply the trailing stop rule.
+    """
+
+    risk_manager = RiskManager(
+        RiskConfig(
+            stop_loss_type="trailing_stop",
+            stop_loss_parameters={"percent": 0.10},
+        )
+    )
+
+    assert risk_manager.get_stop_loss_price(100, peak_price=120) == 108
+    assert risk_manager.should_stop(100, 108, peak_price=120) is True
+    assert risk_manager.should_stop(100, 109, peak_price=120) is False
+
+
 def test_risk_manager_rejects_unknown_type():
     """
     An unknown stop_loss_type should raise a ValueError.
@@ -303,9 +379,10 @@ def test_risk_manager_rejects_unknown_type():
 
 def test_registry_contains_expected_types():
     """
-    STOP_LOSS_REGISTRY should contain the three implemented types.
+    STOP_LOSS_REGISTRY should contain all implemented types.
     """
 
     assert "fixed_percentage" in STOP_LOSS_REGISTRY
     assert "absolute_price" in STOP_LOSS_REGISTRY
     assert "offset_from_entry" in STOP_LOSS_REGISTRY
+    assert "trailing_stop" in STOP_LOSS_REGISTRY

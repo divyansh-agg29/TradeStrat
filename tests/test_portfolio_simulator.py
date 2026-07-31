@@ -776,3 +776,52 @@ def test_offset_from_entry_stop_loss_records_exit_details():
     assert trade["exit_price"] == 440
     assert trade["exit_reason"] == "stop_loss"
     assert trade["stop_loss_price"] == 450
+
+
+def test_trailing_stop_loss_closes_trade():
+    """
+    Test that a trailing stop-loss closes the trade after price rises and then falls.
+    """
+
+    df = create_sample_dataframe(
+        signals=["BUY", "HOLD", "HOLD", "HOLD"],
+        prices=[100, 120, 110, 108],
+    )
+
+    result = simulate_portfolio(
+        df,
+        risk_config=RiskConfig(
+            stop_loss_type="trailing_stop",
+            stop_loss_parameters={"percent": 0.10},
+        ),
+    )
+
+    assert result.summary["position"] == "FLAT"
+    assert result.summary["completed_trade_count"] == 1
+    assert result.summary["shares_held"] == 0
+
+
+def test_trailing_stop_loss_records_exit_details():
+    """
+    Test that trailing stop-loss exits are recorded in trade history using peak price.
+    """
+
+    df = create_sample_dataframe(
+        signals=["BUY", "HOLD", "HOLD"],
+        prices=[100, 120, 108],
+    )
+
+    result = simulate_portfolio(
+        df,
+        risk_config=RiskConfig(
+            stop_loss_type="trailing_stop",
+            stop_loss_parameters={"percent": 0.10},
+        ),
+    )
+
+    trade = result.trade_history.iloc[0]
+
+    assert trade["entry_price"] == 100
+    assert trade["exit_price"] == 108
+    assert trade["exit_reason"] == "stop_loss"
+    assert trade["stop_loss_price"] == 108

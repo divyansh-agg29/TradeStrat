@@ -231,6 +231,45 @@ def test_backtest_parses_offset_from_entry_risk_settings(
     assert request_arg.risk.stop_loss_parameters == {"offset": 50}
 
 
+@patch("api.routes.serialize_backtest_result")
+@patch("api.routes.run_backtest")
+def test_backtest_parses_trailing_stop_risk_settings(
+    mock_run_backtest,
+    mock_serializer,
+    client,
+):
+    """
+    Backtest route should parse trailing stop-loss settings.
+    """
+
+    payload = _create_request_payload()
+    payload["risk"] = {
+        "stop_loss_type": "trailing_stop",
+        "parameters": {"percent": 0.05},
+    }
+
+    mock_run_backtest.return_value = object()
+    mock_serializer.return_value = {
+        "portfolio_metrics": {},
+        "risk_metrics": {},
+        "trade_metrics": {},
+        "portfolio_history": [],
+        "analytics_history": [],
+        "trade_history": [],
+    }
+
+    response = client.post(
+        "/backtest",
+        json=payload,
+    )
+
+    request_arg = mock_run_backtest.call_args.args[0]
+
+    assert response.status_code == 200
+    assert request_arg.risk.stop_loss_type == "trailing_stop"
+    assert request_arg.risk.stop_loss_parameters == {"percent": 0.05}
+
+
 def test_backtest_missing_strategy(client):
     """
     Missing strategy should return HTTP 400.
