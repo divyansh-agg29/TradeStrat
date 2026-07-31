@@ -64,7 +64,32 @@ class AbsolutePriceStopLoss:
         return self.price
 
 
+@dataclass(frozen=True)
+class OffsetFromEntryStopLoss:
+    """
+    Fixed point offset stop-loss from entry price.
+
+    For a long position, the stop is triggered when the current price
+    falls to entry_price - offset or below.
+    """
+
+    offset: float
+
+    def __post_init__(self) -> None:
+        if self.offset <= 0:
+            raise ValueError("offset must be greater than zero")
+
+    def should_stop(self, entry_price: float, current_price: float) -> bool:
+        if entry_price <= 0:
+            return False
+        return current_price <= self.get_stop_price(entry_price)
+
+    def get_stop_price(self, entry_price: float) -> float:
+        return entry_price - self.offset
+
+
 STOP_LOSS_REGISTRY: dict[str, type] = {
     "fixed_percentage": FixedPercentageStopLoss,
     "absolute_price": AbsolutePriceStopLoss,
+    "offset_from_entry": OffsetFromEntryStopLoss,
 }

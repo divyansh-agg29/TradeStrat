@@ -3,6 +3,7 @@ import pytest
 from risk import (
     AbsolutePriceStopLoss,
     FixedPercentageStopLoss,
+    OffsetFromEntryStopLoss,
     RiskConfig,
     RiskManager,
     STOP_LOSS_REGISTRY,
@@ -164,6 +165,54 @@ def test_absolute_price_rejects_non_positive_price(price):
         AbsolutePriceStopLoss(price=price)
 
 
+# ── OffsetFromEntryStopLoss ───────────────────────────────
+
+
+def test_offset_from_entry_triggers_at_or_below_threshold():
+    """
+    Stop should fire when current price is at or below entry - offset.
+    """
+
+    rule = OffsetFromEntryStopLoss(offset=50)
+
+    assert rule.should_stop(entry_price=500, current_price=450) is True
+    assert rule.should_stop(entry_price=500, current_price=449) is True
+
+
+def test_offset_from_entry_does_not_trigger_above_threshold():
+    """
+    Stop should not fire while price is above entry - offset.
+    """
+
+    rule = OffsetFromEntryStopLoss(offset=50)
+
+    assert rule.should_stop(entry_price=500, current_price=451) is False
+
+
+def test_offset_from_entry_get_stop_price():
+    """
+    get_stop_price should return entry_price - offset.
+    """
+
+    rule = OffsetFromEntryStopLoss(offset=50)
+
+    assert rule.get_stop_price(500) == 450
+    assert rule.get_stop_price(1000) == 950
+
+
+@pytest.mark.parametrize("offset", [0, -10])
+def test_offset_from_entry_rejects_non_positive_offset(offset):
+    """
+    Offset must be positive.
+    """
+
+    with pytest.raises(
+        ValueError,
+        match="offset must be greater than zero",
+    ):
+        OffsetFromEntryStopLoss(offset=offset)
+
+
 # ── RiskManager ──────────────────────────────────────────────
 
 
@@ -215,6 +264,23 @@ def test_risk_manager_resolves_absolute_price():
     assert risk_manager.should_stop(500, 451) is False
 
 
+def test_risk_manager_resolves_offset_from_entry():
+    """
+    RiskManager should resolve and apply the offset from entry rule.
+    """
+
+    risk_manager = RiskManager(
+        RiskConfig(
+            stop_loss_type="offset_from_entry",
+            stop_loss_parameters={"offset": 50},
+        )
+    )
+
+    assert risk_manager.get_stop_loss_price(500) == 450
+    assert risk_manager.should_stop(500, 450) is True
+    assert risk_manager.should_stop(500, 451) is False
+
+
 def test_risk_manager_rejects_unknown_type():
     """
     An unknown stop_loss_type should raise a ValueError.
@@ -237,8 +303,9 @@ def test_risk_manager_rejects_unknown_type():
 
 def test_registry_contains_expected_types():
     """
-    STOP_LOSS_REGISTRY should contain the two implemented types.
+    STOP_LOSS_REGISTRY should contain the three implemented types.
     """
 
     assert "fixed_percentage" in STOP_LOSS_REGISTRY
     assert "absolute_price" in STOP_LOSS_REGISTRY
+    assert "offset_from_entry" in STOP_LOSS_REGISTRY

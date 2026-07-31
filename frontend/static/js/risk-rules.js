@@ -48,6 +48,29 @@ const STOP_LOSS_REGISTRY = {
             return errors;
         }
 
+    },
+
+    offset_from_entry: {
+        label: "Offset from Entry",
+        parameters: [
+            {key: "offset", label: "Price Offset", type: "number", default: 5, min: 0.01, step: 0.01}
+        ],
+
+        toPayload(params) {
+            return {offset: params.offset};
+        },
+
+        fromPayload(params) {
+            return {offset: params.offset};
+        },
+
+        validate(params) {
+            const errors = [];
+            if (!params.offset || params.offset <= 0) {
+                errors.push("Price Offset must be greater than zero.");
+            }
+            return errors;
+        }
     }
 
 };

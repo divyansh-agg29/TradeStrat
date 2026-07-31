@@ -727,3 +727,52 @@ def test_absolute_price_stop_loss_records_exit_details():
     assert trade["exit_price"] == 440
     assert trade["exit_reason"] == "stop_loss"
     assert trade["stop_loss_price"] == 450
+
+
+def test_offset_from_entry_stop_loss_closes_trade():
+    """
+    Test that an offset-from-entry stop-loss closes the trade correctly.
+    """
+
+    df = create_sample_dataframe(
+        signals=["BUY", "HOLD", "HOLD"],
+        prices=[500, 449, 460],
+    )
+
+    result = simulate_portfolio(
+        df,
+        risk_config=RiskConfig(
+            stop_loss_type="offset_from_entry",
+            stop_loss_parameters={"offset": 50},
+        ),
+    )
+
+    assert result.summary["position"] == "FLAT"
+    assert result.summary["completed_trade_count"] == 1
+    assert result.summary["shares_held"] == 0
+
+
+def test_offset_from_entry_stop_loss_records_exit_details():
+    """
+    Test that offset-from-entry stop-loss exits are recorded in trade history.
+    """
+
+    df = create_sample_dataframe(
+        signals=["BUY", "HOLD"],
+        prices=[500, 440],
+    )
+
+    result = simulate_portfolio(
+        df,
+        risk_config=RiskConfig(
+            stop_loss_type="offset_from_entry",
+            stop_loss_parameters={"offset": 50},
+        ),
+    )
+
+    trade = result.trade_history.iloc[0]
+
+    assert trade["entry_price"] == 500
+    assert trade["exit_price"] == 440
+    assert trade["exit_reason"] == "stop_loss"
+    assert trade["stop_loss_price"] == 450

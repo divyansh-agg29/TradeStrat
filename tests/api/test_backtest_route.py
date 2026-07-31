@@ -192,6 +192,45 @@ def test_backtest_parses_absolute_price_risk_settings(
     assert request_arg.risk.stop_loss_parameters == {"price": 450}
 
 
+@patch("api.routes.serialize_backtest_result")
+@patch("api.routes.run_backtest")
+def test_backtest_parses_offset_from_entry_risk_settings(
+    mock_run_backtest,
+    mock_serializer,
+    client,
+):
+    """
+    Backtest route should parse offset-from-entry stop-loss settings.
+    """
+
+    payload = _create_request_payload()
+    payload["risk"] = {
+        "stop_loss_type": "offset_from_entry",
+        "parameters": {"offset": 50},
+    }
+
+    mock_run_backtest.return_value = object()
+    mock_serializer.return_value = {
+        "portfolio_metrics": {},
+        "risk_metrics": {},
+        "trade_metrics": {},
+        "portfolio_history": [],
+        "analytics_history": [],
+        "trade_history": [],
+    }
+
+    response = client.post(
+        "/backtest",
+        json=payload,
+    )
+
+    request_arg = mock_run_backtest.call_args.args[0]
+
+    assert response.status_code == 200
+    assert request_arg.risk.stop_loss_type == "offset_from_entry"
+    assert request_arg.risk.stop_loss_parameters == {"offset": 50}
+
+
 def test_backtest_missing_strategy(client):
     """
     Missing strategy should return HTTP 400.
