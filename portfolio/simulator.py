@@ -91,6 +91,7 @@ class OpenTrade:
     entry_index: int
     entry_price: float
     shares: int
+    highest_close: float
 
 @dataclass
 class CompletedTrade:
@@ -161,6 +162,9 @@ def simulate_portfolio(
 
         signal = row["Signal"]
         close_price = row["Close"]
+
+        if open_trade is not None:
+            open_trade.highest_close = max(open_trade.highest_close, close_price)
 
         logger.debug(
             f"Processing {index}: "
@@ -351,6 +355,7 @@ def _evaluate_risk_and_signal(
     if open_trade is not None and risk_manager.should_stop(
         entry_price=open_trade.entry_price,
         current_price=close_price,
+        peak_price=open_trade.highest_close,
     ):
         logger.debug(
             "Stop-loss triggered for open trade at %s.",
@@ -434,6 +439,7 @@ def _execute_buy(
         entry_index=current_index,
         entry_price=close_price,
         shares=shares_to_buy,
+        highest_close=close_price,
     )
 
 def _execute_stop_loss(
@@ -460,7 +466,8 @@ def _execute_stop_loss(
 
     holding_period = current_index - open_trade.entry_index
     stop_loss_price = risk_manager.get_stop_loss_price(
-        open_trade.entry_price
+        open_trade.entry_price,
+        peak_price=open_trade.highest_close,
     )
 
     completed_trade = CompletedTrade(

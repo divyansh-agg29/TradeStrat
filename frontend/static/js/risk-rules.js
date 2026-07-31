@@ -71,6 +71,29 @@ const STOP_LOSS_REGISTRY = {
             }
             return errors;
         }
+    },
+
+    trailing_stop: {
+        label: "Trailing Stop",
+        parameters: [
+            {key: "percent", label: "Trail %", type: "number", default: 5, min: 0.1, step: 0.1}
+        ],
+
+        toPayload(params) {
+            return {percent: params.percent / 100};
+        },
+
+        fromPayload(params) {
+            return {percent: params.percent * 100};
+        },
+
+        validate(params) {
+            const errors = [];
+            if (!params.percent || params.percent <= 0) {
+                errors.push("Trail % must be greater than zero.");
+            }
+            return errors;
+        }
     }
 
 };

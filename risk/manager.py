@@ -24,7 +24,12 @@ class RiskManager:
 
             self._rule = rule_class(**risk_config.stop_loss_parameters)
 
-    def should_stop(self, entry_price: float, current_price: float) -> bool:
+    def should_stop(
+        self,
+        entry_price: float,
+        current_price: float,
+        peak_price: float | None = None,
+    ) -> bool:
         """
         Return True when the active risk rule requests an exit.
         """
@@ -32,9 +37,13 @@ class RiskManager:
         if self._rule is None:
             return False
 
-        return self._rule.should_stop(entry_price, current_price)
+        return self._rule.should_stop(entry_price, current_price, peak_price)
 
-    def get_stop_loss_price(self, entry_price: float) -> float | None:
+    def get_stop_loss_price(
+        self,
+        entry_price: float,
+        peak_price: float | None = None,
+    ) -> float | None:
         """
         Return the stop-loss price for the active rule.
         """
@@ -42,4 +51,4 @@ class RiskManager:
         if self._rule is None:
             return None
 
-        return self._rule.get_stop_price(entry_price)
+        return self._rule.get_stop_price(entry_price, peak_price)
