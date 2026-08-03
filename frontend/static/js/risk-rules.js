@@ -26,32 +26,8 @@ const STOP_LOSS_REGISTRY = {
 
     },
 
-    absolute_price: {
-        label: "Absolute Price",
-        parameters: [
-            {key: "price", label: "Stop Price", type: "number", default: 0, min: 0.01, step: 0.01}
-        ],
-
-        toPayload(params) {
-            return {price: params.price};
-        },
-
-        fromPayload(params) {
-            return {price: params.price};
-        },
-
-        validate(params) {
-            const errors = [];
-            if (!params.price || params.price <= 0) {
-                errors.push("Stop Price must be greater than zero.");
-            }
-            return errors;
-        }
-
-    },
-
-    offset_from_entry: {
-        label: "Offset from Entry",
+    fixed_price_offset: {
+        label: "Fixed Price Offset",
         parameters: [
             {key: "offset", label: "Price Offset", type: "number", default: 5, min: 0.01, step: 0.01}
         ],

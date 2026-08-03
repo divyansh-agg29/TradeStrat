@@ -44,48 +44,9 @@ class FixedPercentageStopLoss:
 
 
 @dataclass(frozen=True)
-class AbsolutePriceStopLoss:
+class FixedPriceOffsetStopLoss:
     """
-    Absolute price stop-loss rule.
-
-    The stop is triggered when the current price falls to or below
-    a user-specified price level.
-    """
-
-    price: float
-
-    def __post_init__(self) -> None:
-        if self.price <= 0:
-            raise ValueError("price must be greater than zero")
-
-    def should_stop(
-        self,
-        entry_price: float,
-        current_price: float,
-        peak_price: float | None = None,
-    ) -> bool:
-        """
-        Determine whether the current price has hit the stop-loss threshold.
-        """
-
-        return current_price <= self.price
-
-    def get_stop_price(
-        self,
-        entry_price: float,
-        peak_price: float | None = None,
-    ) -> float:
-        """
-        Return the configured stop price.
-        """
-
-        return self.price
-
-
-@dataclass(frozen=True)
-class OffsetFromEntryStopLoss:
-    """
-    Fixed point offset stop-loss from entry price.
+    Fixed price offset stop-loss from entry price.
 
     For a long position, the stop is triggered when the current price
     falls to entry_price - offset or below.
@@ -155,7 +116,6 @@ class TrailingStopLoss:
 
 STOP_LOSS_REGISTRY: dict[str, type] = {
     "fixed_percentage": FixedPercentageStopLoss,
-    "absolute_price": AbsolutePriceStopLoss,
-    "offset_from_entry": OffsetFromEntryStopLoss,
+    "fixed_price_offset": FixedPriceOffsetStopLoss,
     "trailing_stop": TrailingStopLoss,
 }

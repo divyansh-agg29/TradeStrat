@@ -8,7 +8,7 @@ A web-based modular trading strategy analysis platform for backtesting, portfoli
 - **Technical Indicators** — SMA, EMA, RSI, MACD with automatic warm-up period handling
 - **Trading Strategies** — SMA Crossover, EMA Crossover, MACD Crossover, RSI Mean Reversion
 - **Portfolio Simulation** — Full trade lifecycle simulation with configurable initial capital
-- **Risk Management** — Pluggable stop-loss framework with dropdown selection and dynamic parameters (Fixed Percentage, Absolute Price, Offset from Entry, Trailing Stop)
+- **Risk Management** — Pluggable stop-loss framework with dropdown selection and dynamic parameters (Fixed Percentage, Fixed Price Offset, Trailing Stop)
 - **Performance Analytics** — Portfolio metrics, risk metrics, and trade statistics
 - **Benchmark Comparison** — Buy & Hold benchmark overlay with alpha calculation
 - **KPI Interpretation** — Color-coded KPI cards with interpretation levels and hover tooltips
@@ -105,19 +105,18 @@ graph TD
 
 ## Development Changelog
 
-### 2026-07-31 — Offset from Entry & Trailing Stop-Loss
-- Added `OffsetFromEntryStopLoss` rule: exits a long trade when price falls to `entry_price - offset`
+### 2026-07-31 — Fixed Price Offset & Trailing Stop-Loss
+- Added `FixedPriceOffsetStopLoss` rule: exits a long trade when price falls to `entry_price - offset`
 - Added `TrailingStopLoss` rule: exits a long trade when price falls `percent` below the highest close since entry
 - Extended stop-loss rule interface with optional `peak_price` so state-aware rules can reuse the registry
 - Simulator now tracks `highest_close` on `OpenTrade` and passes it to `RiskManager`
-- Registered `offset_from_entry` and `trailing_stop` in both backend and frontend `STOP_LOSS_REGISTRY`
-- Frontend dropdown now includes "Offset from Entry" with a single "Price Offset" parameter and "Trailing Stop" with a single "Trail %" parameter
+- Registered `fixed_price_offset` and `trailing_stop` in both backend and frontend `STOP_LOSS_REGISTRY`
+- Frontend dropdown now includes "Fixed Price Offset" and "Trailing Stop" with dynamic parameter fields
 - Added unit, simulator integration, and API route tests for both new stop-loss types
 
-### 2026-07-30 — Pluggable Stop-Loss Framework & Absolute Price Stop-Loss
+### 2026-07-30 — Pluggable Stop-Loss Framework
 - Refactored risk system into a registry-based architecture: `RiskConfig` now uses `stop_loss_type` + `stop_loss_parameters` instead of hard-coded fields
 - Added `STOP_LOSS_REGISTRY` (backend + frontend) so new stop-loss types require only a rule class and a registry entry
-- Implemented Absolute Price Stop-Loss: exits trade when price drops to or below a user-specified level
 - Frontend stop-loss selection now uses a dropdown with dynamic parameter fields (mirroring the strategy pattern)
 - Updated API payload shape: `{ "risk": { "stop_loss_type": "...", "parameters": { ... } } }`
 

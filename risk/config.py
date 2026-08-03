@@ -13,7 +13,7 @@ class RiskConfig:
     ----------
     stop_loss_type : str | None
         Key identifying the stop-loss rule (e.g. "fixed_percentage",
-        "absolute_price").  None means no stop-loss is applied.
+        "fixed_price_offset").  None means no stop-loss is applied.
 
     stop_loss_parameters : dict | None
         Parameters forwarded to the selected stop-loss rule.
