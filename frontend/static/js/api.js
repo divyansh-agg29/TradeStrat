@@ -25,11 +25,21 @@ function buildBacktestRequest(configuration) {
 
     };
 
-    if (configuration.risk && configuration.risk.stopLossType) {
-        request.risk = {
-            stop_loss_type: configuration.risk.stopLossType,
-            parameters: configuration.risk.parameters,
-        };
+    const hasStopLoss = configuration.risk && configuration.risk.stopLossType;
+    const hasTakeProfit = configuration.risk && configuration.risk.takeProfitType;
+
+    if (hasStopLoss || hasTakeProfit) {
+        request.risk = {};
+
+        if (hasStopLoss) {
+            request.risk.stop_loss_type = configuration.risk.stopLossType;
+            request.risk.parameters = configuration.risk.parameters;
+        }
+
+        if (hasTakeProfit) {
+            request.risk.take_profit_type = configuration.risk.takeProfitType;
+            request.risk.take_profit_parameters = configuration.risk.takeProfitParameters;
+        }
     }
 
     return request;

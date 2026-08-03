@@ -4,6 +4,8 @@ from .rules import (
     FixedPriceOffsetStopLoss,
     STOP_LOSS_REGISTRY,
     TrailingStopLoss,
+    FixedPercentageTakeProfit,
+    TAKE_PROFIT_REGISTRY,
 )
 from .manager import RiskManager
 
@@ -13,5 +15,7 @@ __all__ = [
     "FixedPriceOffsetStopLoss",
     "TrailingStopLoss",
     "STOP_LOSS_REGISTRY",
+    "FixedPercentageTakeProfit",
+    "TAKE_PROFIT_REGISTRY",
     "RiskManager",
 ]

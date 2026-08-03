@@ -776,3 +776,78 @@ def test_trailing_stop_loss_records_exit_details():
     assert trade["exit_price"] == 108
     assert trade["exit_reason"] == "stop_loss"
     assert trade["stop_loss_price"] == 108
+
+
+def test_take_profit_closes_trade():
+    """
+    Test that a take-profit closes the trade when price reaches the target.
+    """
+
+    df = create_sample_dataframe(
+        signals=["BUY", "HOLD", "HOLD"],
+        prices=[100, 110, 120],
+    )
+
+    result = simulate_portfolio(
+        df,
+        risk_config=RiskConfig(
+            take_profit_type="fixed_percentage",
+            take_profit_parameters={"percent": 0.20},
+        ),
+    )
+
+    assert result.summary["position"] == "FLAT"
+    assert result.summary["completed_trade_count"] == 1
+    assert result.summary["shares_held"] == 0
+
+
+def test_take_profit_records_exit_details():
+    """
+    Test that take-profit exits are recorded in trade history.
+    """
+
+    df = create_sample_dataframe(
+        signals=["BUY", "HOLD"],
+        prices=[100, 120],
+    )
+
+    result = simulate_portfolio(
+        df,
+        risk_config=RiskConfig(
+            take_profit_type="fixed_percentage",
+            take_profit_parameters={"percent": 0.20},
+        ),
+    )
+
+    trade = result.trade_history.iloc[0]
+
+    assert trade["entry_price"] == 100
+    assert trade["exit_price"] == 120
+    assert trade["exit_reason"] == "take_profit"
+    assert trade["take_profit_price"] == 120
+
+
+def test_stop_loss_takes_priority_over_take_profit():
+    """
+    When both stop-loss and take-profit are configured,
+    stop-loss should be evaluated first.
+    """
+
+    df = create_sample_dataframe(
+        signals=["BUY", "HOLD"],
+        prices=[100, 80],
+    )
+
+    result = simulate_portfolio(
+        df,
+        risk_config=RiskConfig(
+            stop_loss_type="fixed_percentage",
+            stop_loss_parameters={"percent": 0.10},
+            take_profit_type="fixed_percentage",
+            take_profit_parameters={"percent": 0.20},
+        ),
+    )
+
+    trade = result.trade_history.iloc[0]
+
+    assert trade["exit_reason"] == "stop_loss"

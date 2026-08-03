@@ -15,6 +15,8 @@ function initializeApplication() {
 
     populateStopLossDropdown();
 
+    populateTakeProfitDropdown();
+
     onStrategyChanged();
 
     restorePreviousConfiguration();

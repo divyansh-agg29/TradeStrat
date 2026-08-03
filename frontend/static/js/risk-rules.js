@@ -73,3 +73,30 @@ const STOP_LOSS_REGISTRY = {
     }
 
 };
+
+const TAKE_PROFIT_REGISTRY = {
+
+    fixed_percentage: {
+        label: "Fixed Percentage",
+        parameters: [
+            {key: "percent", label: "Take Profit %", type: "number", default: 10, min: 0.1, step: 0.1}
+        ],
+
+        toPayload(params) {
+            return {percent: params.percent / 100};
+        },
+
+        fromPayload(params) {
+            return {percent: params.percent * 100};
+        },
+
+        validate(params) {
+            const errors = [];
+            if (!params.percent || params.percent <= 0) {
+                errors.push("Take Profit % must be greater than zero.");
+            }
+            return errors;
+        }
+    }
+
+};

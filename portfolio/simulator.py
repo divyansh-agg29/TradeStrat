@@ -111,6 +111,7 @@ class CompletedTrade:
     holding_period: int
     exit_reason: str = "signal"
     stop_loss_price: float | None = None
+    take_profit_price: float | None = None
 
 
 def simulate_portfolio(
@@ -370,6 +371,23 @@ def _evaluate_risk_and_signal(
             risk_manager=risk_manager,
         )
 
+    if open_trade is not None and risk_manager.should_take_profit(
+        entry_price=open_trade.entry_price,
+        current_price=close_price,
+    ):
+        logger.debug(
+            "Take-profit triggered for open trade at %s.",
+            current_date,
+        )
+        return _execute_take_profit(
+            portfolio=portfolio,
+            open_trade=open_trade,
+            current_date=current_date,
+            current_index=current_index,
+            close_price=close_price,
+            risk_manager=risk_manager,
+        )
+
     if signal == BUY:
         new_trade = _execute_buy(
             portfolio,
@@ -486,6 +504,53 @@ def _execute_stop_loss(
     )
 
     logger.debug("Stop-loss executed: Position closed.")
+
+    return None, completed_trade
+
+
+def _execute_take_profit(
+    portfolio: PortfolioState,
+    open_trade: OpenTrade,
+    current_date: pd.Timestamp,
+    current_index: int,
+    close_price: float,
+    risk_manager: RiskManager,
+) -> tuple[OpenTrade | None, CompletedTrade | None]:
+    """
+    Close an open trade because the take-profit threshold was reached.
+    """
+
+    exit_value = open_trade.shares * close_price
+
+    portfolio.cash += exit_value
+    portfolio.shares = 0
+    portfolio.position = FLAT
+
+    investment = open_trade.entry_price * open_trade.shares
+    profit_loss = exit_value - investment
+    return_pct = (profit_loss / investment) * 100
+
+    holding_period = current_index - open_trade.entry_index
+    take_profit_price = risk_manager.get_take_profit_price(
+        open_trade.entry_price,
+    )
+
+    completed_trade = CompletedTrade(
+        entry_date=open_trade.entry_date,
+        exit_date=current_date,
+        entry_price=open_trade.entry_price,
+        exit_price=close_price,
+        shares=open_trade.shares,
+        investment=investment,
+        exit_value=exit_value,
+        profit_loss=profit_loss,
+        return_pct=return_pct,
+        holding_period=holding_period,
+        exit_reason="take_profit",
+        take_profit_price=take_profit_price,
+    )
+
+    logger.debug("Take-profit executed: Position closed.")
 
     return None, completed_trade
 

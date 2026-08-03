@@ -64,10 +64,15 @@ def _parse_request(data: dict) -> BacktestRequest:
     risk_data = data.get("risk", {})
     risk_config = None
 
-    if risk_data and risk_data.get("stop_loss_type"):
+    has_stop_loss = risk_data and risk_data.get("stop_loss_type")
+    has_take_profit = risk_data and risk_data.get("take_profit_type")
+
+    if has_stop_loss or has_take_profit:
         risk_config = RiskConfig(
-            stop_loss_type=risk_data["stop_loss_type"],
-            stop_loss_parameters=risk_data.get("parameters", {}),
+            stop_loss_type=risk_data.get("stop_loss_type"),
+            stop_loss_parameters=risk_data.get("parameters") or None,
+            take_profit_type=risk_data.get("take_profit_type"),
+            take_profit_parameters=risk_data.get("take_profit_parameters") or None,
         )
 
     return BacktestRequest(

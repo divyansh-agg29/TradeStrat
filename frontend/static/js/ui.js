@@ -29,6 +29,15 @@ const ui = {
     stopLossParametersContainer:
         document.getElementById("stop-loss-parameters"),
 
+    takeProfitEnabledCheckbox:
+        document.getElementById("take-profit-enabled"),
+
+    takeProfitTypeSelect:
+        document.getElementById("take-profit-type"),
+
+    takeProfitParametersContainer:
+        document.getElementById("take-profit-parameters"),
+
     runButton:
         document.getElementById("run-backtest-btn"),
 
@@ -151,6 +160,16 @@ function registerEventListeners() {
         onStopLossTypeChanged
     );
 
+    ui.takeProfitEnabledCheckbox.addEventListener(
+        "change",
+        onTakeProfitCheckboxChanged
+    );
+
+    ui.takeProfitTypeSelect.addEventListener(
+        "change",
+        onTakeProfitTypeChanged
+    );
+
 }
 
 function onStopLossCheckboxChanged() {
@@ -164,6 +183,81 @@ function onStopLossCheckboxChanged() {
         ui.stopLossParametersContainer.innerHTML = "";
     } else {
         onStopLossTypeChanged();
+    }
+
+}
+
+
+function onTakeProfitCheckboxChanged() {
+
+    const isEnabled = ui.takeProfitEnabledCheckbox.checked;
+
+    const fieldContainer = document.getElementById("take-profit-field-container");
+    fieldContainer.style.display = isEnabled ? "block" : "none";
+
+    if (!isEnabled) {
+        ui.takeProfitParametersContainer.innerHTML = "";
+    } else {
+        onTakeProfitTypeChanged();
+    }
+
+}
+
+
+function populateTakeProfitDropdown() {
+
+    ui.takeProfitTypeSelect.innerHTML = "";
+
+    for (const [key, rule] of Object.entries(TAKE_PROFIT_REGISTRY)) {
+
+        const option = document.createElement("option");
+        option.value = key;
+        option.textContent = rule.label;
+        ui.takeProfitTypeSelect.appendChild(option);
+
+    }
+
+}
+
+
+function onTakeProfitTypeChanged() {
+
+    const takeProfitType = ui.takeProfitTypeSelect.value;
+    const rule = TAKE_PROFIT_REGISTRY[takeProfitType];
+
+    ui.takeProfitParametersContainer.innerHTML = "";
+
+    if (!rule) {
+        return;
+    }
+
+    for (const param of rule.parameters) {
+
+        const group = document.createElement("div");
+        group.className = "form-group";
+
+        const label = document.createElement("label");
+        label.setAttribute("for", "tp-param-" + param.key);
+        label.textContent = param.label;
+
+        const input = document.createElement("input");
+        input.type = param.type;
+        input.id = "tp-param-" + param.key;
+        input.className = "form-input";
+        input.value = param.default;
+
+        if (param.min !== undefined) {
+            input.min = param.min;
+        }
+
+        if (param.step !== undefined) {
+            input.step = param.step;
+        }
+
+        group.appendChild(label);
+        group.appendChild(input);
+        ui.takeProfitParametersContainer.appendChild(group);
+
     }
 
 }
@@ -368,6 +462,27 @@ function readConfigurationForm() {
         }
     }
 
+    const takeProfitEnabled = ui.takeProfitEnabledCheckbox.checked;
+
+    if (takeProfitEnabled) {
+        const takeProfitType = ui.takeProfitTypeSelect.value;
+        const tpRule = TAKE_PROFIT_REGISTRY[takeProfitType];
+
+        if (tpRule) {
+            const rawTpParams = {};
+
+            for (const param of tpRule.parameters) {
+                const input = document.getElementById("tp-param-" + param.key);
+                if (input) {
+                    rawTpParams[param.key] = Number(input.value);
+                }
+            }
+
+            risk.takeProfitType = takeProfitType;
+            risk.takeProfitParameters = tpRule.toPayload(rawTpParams);
+        }
+    }
+
     return {
 
         ticker: ui.tickerInput.value.trim(),
@@ -434,6 +549,14 @@ function validateConfiguration(configuration) {
         }
     }
 
+    if (configuration.risk && configuration.risk.takeProfitType) {
+        const tpRule = TAKE_PROFIT_REGISTRY[configuration.risk.takeProfitType];
+        if (tpRule && tpRule.validate) {
+            const tpErrors = tpRule.validate(configuration.risk.takeProfitParameters || {});
+            errors.push(...tpErrors);
+        }
+    }
+
     const strategy =
         STRATEGY_REGISTRY[configuration.strategy.type];
 
@@ -491,6 +614,28 @@ function populateConfigurationForm(configuration) {
     } else {
         ui.stopLossEnabledCheckbox.checked = false;
         document.getElementById("stop-loss-field-container").style.display = "none";
+    }
+
+    if (configuration.risk && configuration.risk.takeProfitType) {
+        ui.takeProfitEnabledCheckbox.checked = true;
+        document.getElementById("take-profit-field-container").style.display = "block";
+
+        ui.takeProfitTypeSelect.value = configuration.risk.takeProfitType;
+        onTakeProfitTypeChanged();
+
+        const tpRule = TAKE_PROFIT_REGISTRY[configuration.risk.takeProfitType];
+        if (tpRule && configuration.risk.takeProfitParameters) {
+            const displayParams = tpRule.fromPayload(configuration.risk.takeProfitParameters);
+            for (const [key, value] of Object.entries(displayParams)) {
+                const input = document.getElementById("tp-param-" + key);
+                if (input) {
+                    input.value = value;
+                }
+            }
+        }
+    } else {
+        ui.takeProfitEnabledCheckbox.checked = false;
+        document.getElementById("take-profit-field-container").style.display = "none";
     }
 
     ui.strategySelect.value =

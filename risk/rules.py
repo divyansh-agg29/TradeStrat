@@ -119,3 +119,48 @@ STOP_LOSS_REGISTRY: dict[str, type] = {
     "fixed_price_offset": FixedPriceOffsetStopLoss,
     "trailing_stop": TrailingStopLoss,
 }
+
+
+@dataclass(frozen=True)
+class FixedPercentageTakeProfit:
+    """
+    Fixed percentage take-profit rule.
+
+    For a long position, the take-profit is triggered when the current price
+    rises to entry_price * (1 + percent) or above.
+    """
+
+    percent: float
+
+    def __post_init__(self) -> None:
+        if self.percent <= 0:
+            raise ValueError("percent must be greater than zero")
+
+    def should_take_profit(
+        self,
+        entry_price: float,
+        current_price: float,
+    ) -> bool:
+        """
+        Determine whether the current price has hit the take-profit threshold.
+        """
+
+        if entry_price <= 0:
+            return False
+
+        return current_price >= self.get_take_profit_price(entry_price)
+
+    def get_take_profit_price(
+        self,
+        entry_price: float,
+    ) -> float:
+        """
+        Return the take-profit price for the given entry price.
+        """
+
+        return entry_price * (1 + self.percent)
+
+
+TAKE_PROFIT_REGISTRY: dict[str, type] = {
+    "fixed_percentage": FixedPercentageTakeProfit,
+}

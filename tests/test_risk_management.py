@@ -7,6 +7,8 @@ from risk import (
     RiskManager,
     STOP_LOSS_REGISTRY,
     TrailingStopLoss,
+    FixedPercentageTakeProfit,
+    TAKE_PROFIT_REGISTRY,
 )
 
 
@@ -308,10 +310,151 @@ def test_risk_manager_rejects_unknown_type():
         )
 
 
-# ── Registry ─────────────────────────────────────────────────
+def test_risk_manager_rejects_unknown_take_profit_type():
+    """
+    An unknown take_profit_type should raise a ValueError.
+    """
+
+    with pytest.raises(
+        ValueError,
+        match="Unknown take_profit_type",
+    ):
+        RiskManager(
+            RiskConfig(
+                take_profit_type="unknown_rule",
+                take_profit_parameters={"x": 1},
+            )
+        )
 
 
-def test_registry_contains_expected_types():
+def test_risk_manager_resolves_fixed_percentage_take_profit():
+    """
+    RiskManager should resolve and apply the fixed percentage take-profit rule.
+    """
+
+    risk_manager = RiskManager(
+        RiskConfig(
+            take_profit_type="fixed_percentage",
+            take_profit_parameters={"percent": 0.20},
+        )
+    )
+
+    assert risk_manager.get_take_profit_price(100) == 120
+    assert risk_manager.should_take_profit(100, 120) is True
+    assert risk_manager.should_take_profit(100, 119.99) is False
+
+
+def test_risk_manager_take_profit_disabled_without_config():
+    """
+    Default risk manager should not request take-profit exits.
+    """
+
+    risk_manager = RiskManager()
+
+    assert risk_manager.should_take_profit(
+        entry_price=100,
+        current_price=200,
+    ) is False
+    assert risk_manager.get_take_profit_price(100) is None
+
+
+# ── FixedPercentageTakeProfit ────────────────────────────
+
+
+def test_fixed_percentage_take_profit_triggers_at_or_above_target():
+    """
+    Take-profit should fire when current price reaches or exceeds target.
+    """
+
+    rule = FixedPercentageTakeProfit(percent=0.20)
+
+    assert rule.should_take_profit(entry_price=100, current_price=120) is True
+    assert rule.should_take_profit(entry_price=100, current_price=121) is True
+
+
+def test_fixed_percentage_take_profit_does_not_trigger_below_target():
+    """
+    Take-profit should not fire while price is below target.
+    """
+
+    rule = FixedPercentageTakeProfit(percent=0.20)
+
+    assert rule.should_take_profit(entry_price=100, current_price=119.99) is False
+
+
+def test_fixed_percentage_take_profit_get_price():
+    """
+    get_take_profit_price should return entry_price * (1 + percent).
+    """
+
+    rule = FixedPercentageTakeProfit(percent=0.20)
+
+    assert rule.get_take_profit_price(100) == 120
+    assert rule.get_take_profit_price(500) == 600
+
+
+@pytest.mark.parametrize("percent", [0, -0.10])
+def test_fixed_percentage_take_profit_rejects_non_positive_percent(percent):
+    """
+    Percent must be positive.
+    """
+
+    with pytest.raises(
+        ValueError,
+        match="percent must be greater than zero",
+    ):
+        FixedPercentageTakeProfit(percent=percent)
+
+
+# ── RiskConfig Take Profit ───────────────────────────────
+
+
+def test_risk_config_accepts_take_profit_type_and_parameters():
+    """
+    RiskConfig should store take-profit type and parameters.
+    """
+
+    risk_config = RiskConfig(
+        take_profit_type="fixed_percentage",
+        take_profit_parameters={"percent": 0.20},
+    )
+
+    assert risk_config.take_profit_type == "fixed_percentage"
+    assert risk_config.take_profit_parameters == {"percent": 0.20}
+
+
+def test_risk_config_rejects_take_profit_type_without_parameters():
+    """
+    Setting take_profit_type without parameters should fail.
+    """
+
+    with pytest.raises(
+        ValueError,
+        match="take_profit_parameters are required",
+    ):
+        RiskConfig(take_profit_type="fixed_percentage")
+
+
+def test_risk_config_accepts_both_stop_loss_and_take_profit():
+    """
+    RiskConfig should accept both stop-loss and take-profit simultaneously.
+    """
+
+    risk_config = RiskConfig(
+        stop_loss_type="fixed_percentage",
+        stop_loss_parameters={"percent": 0.05},
+        take_profit_type="fixed_percentage",
+        take_profit_parameters={"percent": 0.20},
+    )
+
+    assert risk_config.stop_loss_type == "fixed_percentage"
+    assert risk_config.take_profit_type == "fixed_percentage"
+
+
+# ── Registry ─────────────────────────────────────────────
+
+
+def test_stop_loss_registry_contains_expected_types():
     """
     STOP_LOSS_REGISTRY should contain all implemented types.
     """
@@ -319,3 +462,11 @@ def test_registry_contains_expected_types():
     assert "fixed_percentage" in STOP_LOSS_REGISTRY
     assert "fixed_price_offset" in STOP_LOSS_REGISTRY
     assert "trailing_stop" in STOP_LOSS_REGISTRY
+
+
+def test_take_profit_registry_contains_expected_types():
+    """
+    TAKE_PROFIT_REGISTRY should contain all implemented types.
+    """
+
+    assert "fixed_percentage" in TAKE_PROFIT_REGISTRY
