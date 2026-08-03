@@ -8,7 +8,7 @@ A web-based modular trading strategy analysis platform for backtesting, portfoli
 - **Technical Indicators** — SMA, EMA, RSI, MACD with automatic warm-up period handling
 - **Trading Strategies** — SMA Crossover, EMA Crossover, MACD Crossover, RSI Mean Reversion
 - **Portfolio Simulation** — Full trade lifecycle simulation with configurable initial capital
-- **Risk Management** — Pluggable stop-loss framework with dropdown selection and dynamic parameters (Fixed Percentage, Fixed Price Offset, Trailing Stop)
+- **Risk Management** — Pluggable stop-loss and take-profit framework with dropdown selection and dynamic parameters (Stop-Loss: Fixed Percentage, Fixed Price Offset, Trailing Stop; Take-Profit: Fixed Percentage)
 - **Performance Analytics** — Portfolio metrics, risk metrics, and trade statistics
 - **Benchmark Comparison** — Buy & Hold benchmark overlay with alpha calculation
 - **KPI Interpretation** — Color-coded KPI cards with interpretation levels and hover tooltips
@@ -104,6 +104,15 @@ graph TD
 
 
 ## Development Changelog
+
+### 2026-08-03 — Take-Profit Framework
+- Added extensible take-profit system mirroring the stop-loss registry pattern (`TAKE_PROFIT_REGISTRY`)
+- Implemented `FixedPercentageTakeProfit` rule: exits a long trade when price rises to `entry_price * (1 + percent)`
+- Extended `RiskConfig` with `take_profit_type` and `take_profit_parameters`
+- Extended `RiskManager` with `should_take_profit` and `get_take_profit_price`
+- Simulator evaluates take-profit after stop-loss and before strategy signal; records `exit_reason="take_profit"`
+- Frontend Risk Management panel now includes an "Enable Take Profit" checkbox with type dropdown and dynamic parameters
+- Added unit, simulator integration, and API route tests for the new take-profit system
 
 ### 2026-07-31 — Fixed Price Offset & Trailing Stop-Loss
 - Added `FixedPriceOffsetStopLoss` rule: exits a long trade when price falls to `entry_price - offset`
