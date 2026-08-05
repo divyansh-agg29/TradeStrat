@@ -8,7 +8,7 @@ A web-based modular trading strategy analysis platform for backtesting, portfoli
 - **Technical Indicators** — SMA, EMA, RSI, MACD with automatic warm-up period handling
 - **Trading Strategies** — SMA Crossover, EMA Crossover, MACD Crossover, RSI Mean Reversion
 - **Portfolio Simulation** — Full trade lifecycle simulation with configurable initial capital
-- **Risk Management** — Pluggable stop-loss and take-profit framework with dropdown selection and dynamic parameters (Stop-Loss: Fixed Percentage, Fixed Price Offset, Trailing Stop; Take-Profit: Fixed Percentage)
+- **Risk Management** — Pluggable stop-loss and take-profit framework with dropdown selection and dynamic parameters (Stop-Loss: Fixed Percentage, Fixed Price Offset, Trailing Stop; Take-Profit: Fixed Percentage, Fixed Amount)
 - **Performance Analytics** — Portfolio metrics, risk metrics, and trade statistics
 - **Benchmark Comparison** — Buy & Hold benchmark overlay with alpha calculation
 - **KPI Interpretation** — Color-coded KPI cards with interpretation levels and hover tooltips
@@ -104,6 +104,11 @@ graph TD
 
 
 ## Development Changelog
+
+### 2026-08-05 — Fixed Amount Take-Profit
+- Added `FixedAmountTakeProfit` rule: exits a long trade when price rises to `entry_price + amount`
+- Registered `fixed_amount` in both backend and frontend `TAKE_PROFIT_REGISTRY`
+- Added unit tests for the new take-profit type
 
 ### 2026-08-03 — Take-Profit Framework
 - Added extensible take-profit system mirroring the stop-loss registry pattern (`TAKE_PROFIT_REGISTRY`)
