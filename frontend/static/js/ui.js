@@ -2,6 +2,8 @@
 
 const ui = {
 
+    // Base Configuration
+
     tickerInput:
         document.getElementById("ticker"),
 
@@ -14,11 +16,15 @@ const ui = {
     capitalInput:
         document.getElementById("capital"),
 
+    // Strategy Configuration
+
     strategySelect:
         document.getElementById("strategy-type"),
 
     strategyParametersContainer:
         document.getElementById("strategy-parameters"),
+    
+    // Stop Loss Configuration
 
     stopLossEnabledCheckbox:
         document.getElementById("stop-loss-enabled"),
@@ -28,6 +34,8 @@ const ui = {
 
     stopLossParametersContainer:
         document.getElementById("stop-loss-parameters"),
+    
+    // Take Profit Configuration
 
     takeProfitEnabledCheckbox:
         document.getElementById("take-profit-enabled"),
@@ -37,6 +45,8 @@ const ui = {
 
     takeProfitParametersContainer:
         document.getElementById("take-profit-parameters"),
+    
+    // Run Button
 
     runButton:
         document.getElementById("run-backtest-btn"),

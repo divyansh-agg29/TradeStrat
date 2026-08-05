@@ -8,6 +8,7 @@ from risk import (
     STOP_LOSS_REGISTRY,
     TrailingStopLoss,
     FixedPercentageTakeProfit,
+    FixedAmountTakeProfit,
     TAKE_PROFIT_REGISTRY,
 )
 
@@ -470,3 +471,52 @@ def test_take_profit_registry_contains_expected_types():
     """
 
     assert "fixed_percentage" in TAKE_PROFIT_REGISTRY
+    assert "fixed_amount" in TAKE_PROFIT_REGISTRY
+
+
+# ── FixedAmountTakeProfit ─────────────────────────────────
+
+
+def test_fixed_amount_take_profit_triggers_at_or_above_target():
+    """
+    Take-profit should fire when current price reaches or exceeds target.
+    """
+
+    rule = FixedAmountTakeProfit(amount=15)
+
+    assert rule.should_take_profit(entry_price=100, current_price=115) is True
+    assert rule.should_take_profit(entry_price=100, current_price=116) is True
+
+
+def test_fixed_amount_take_profit_does_not_trigger_below_target():
+    """
+    Take-profit should not fire while price is below target.
+    """
+
+    rule = FixedAmountTakeProfit(amount=15)
+
+    assert rule.should_take_profit(entry_price=100, current_price=114.99) is False
+
+
+def test_fixed_amount_take_profit_get_price():
+    """
+    get_take_profit_price should return entry_price + amount.
+    """
+
+    rule = FixedAmountTakeProfit(amount=15)
+
+    assert rule.get_take_profit_price(100) == 115
+    assert rule.get_take_profit_price(200) == 215
+
+
+@pytest.mark.parametrize("amount", [0, -10])
+def test_fixed_amount_take_profit_rejects_non_positive_amount(amount):
+    """
+    Amount must be positive.
+    """
+
+    with pytest.raises(
+        ValueError,
+        match="amount must be greater than zero",
+    ):
+        FixedAmountTakeProfit(amount=amount)

@@ -161,6 +161,38 @@ class FixedPercentageTakeProfit:
         return entry_price * (1 + self.percent)
 
 
+@dataclass(frozen=True)
+class FixedAmountTakeProfit:
+    """
+    Fixed amount take-profit rule.
+
+    For a long position, the take-profit is triggered when the current price
+    rises to entry_price + amount or above.
+    """
+
+    amount: float
+
+    def __post_init__(self) -> None:
+        if self.amount <= 0:
+            raise ValueError("amount must be greater than zero")
+
+    def should_take_profit(
+        self,
+        entry_price: float,
+        current_price: float,
+    ) -> bool:
+        if entry_price <= 0:
+            return False
+        return current_price >= self.get_take_profit_price(entry_price)
+
+    def get_take_profit_price(
+        self,
+        entry_price: float,
+    ) -> float:
+        return entry_price + self.amount
+
+
 TAKE_PROFIT_REGISTRY: dict[str, type] = {
     "fixed_percentage": FixedPercentageTakeProfit,
+    "fixed_amount": FixedAmountTakeProfit,
 }

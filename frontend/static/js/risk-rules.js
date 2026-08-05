@@ -97,6 +97,30 @@ const TAKE_PROFIT_REGISTRY = {
             }
             return errors;
         }
+    },
+
+
+    fixed_amount: {
+        label: "Fixed Amount",
+        parameters: [
+            {key: "amount", label: "Take Profit $", type: "number", default: 10, min: 0.01, step: 0.01}
+        ],
+
+        toPayload(params) {
+            return {amount: params.amount};
+        },
+
+        fromPayload(params) {
+            return {amount: params.amount};
+        },
+
+        validate(params) {
+            const errors = [];
+            if (!params.amount || params.amount <= 0) {
+                errors.push("Take Profit $ must be greater than zero.");
+            }
+            return errors;
+        }
     }
 
 };
