@@ -105,40 +105,28 @@ graph TD
 
 ## Development Changelog
 
-### 2026-08-05 — Fixed Amount Take-Profit
-- Added `FixedAmountTakeProfit` rule: exits a long trade when price rises to `entry_price + amount`
-- Registered `fixed_amount` in both backend and frontend `TAKE_PROFIT_REGISTRY`
-- Added unit tests for the new take-profit type
+### 2026-08-05 — Fixed Amount Take-Profit & Backend-Driven Charts
+- Added fixed-amount take-profit rule and extended the take-profit framework
+- Refactored chart rendering to be backend-driven; frontend now renders semantic chart specs
+- Price chart supports toggling between signal and execution markers (buy, sell, stop-loss, take-profit)
+- Added chart serializer and renderer modules with coverage tests
 
 ### 2026-08-03 — Take-Profit Framework
-- Added extensible take-profit system mirroring the stop-loss registry pattern (`TAKE_PROFIT_REGISTRY`)
-- Implemented `FixedPercentageTakeProfit` rule: exits a long trade when price rises to `entry_price * (1 + percent)`
-- Extended `RiskConfig` with `take_profit_type` and `take_profit_parameters`
-- Extended `RiskManager` with `should_take_profit` and `get_take_profit_price`
-- Simulator evaluates take-profit after stop-loss and before strategy signal; records `exit_reason="take_profit"`
-- Frontend Risk Management panel now includes an "Enable Take Profit" checkbox with type dropdown and dynamic parameters
-- Added unit, simulator integration, and API route tests for the new take-profit system
+- Added configurable take-profit exits that lock in gains once a target price is reached
+- Integrated take-profit controls into the risk management panel
+- Extended backtest results to distinguish take-profit exits from strategy signal exits
 
-### 2026-07-31 — Fixed Price Offset & Trailing Stop-Loss
-- Added `FixedPriceOffsetStopLoss` rule: exits a long trade when price falls to `entry_price - offset`
-- Added `TrailingStopLoss` rule: exits a long trade when price falls `percent` below the highest close since entry
-- Extended stop-loss rule interface with optional `peak_price` so state-aware rules can reuse the registry
-- Simulator now tracks `highest_close` on `OpenTrade` and passes it to `RiskManager`
-- Registered `fixed_price_offset` and `trailing_stop` in both backend and frontend `STOP_LOSS_REGISTRY`
-- Frontend dropdown now includes "Fixed Price Offset" and "Trailing Stop" with dynamic parameter fields
-- Added unit, simulator integration, and API route tests for both new stop-loss types
+### 2026-07-31 — Advanced Stop-Loss Rules
+- Added fixed-price-offset and trailing stop-loss options for more flexible downside protection
+- Trailing stop tracks the highest price since entry, letting winners run while protecting gains
 
 ### 2026-07-30 — Pluggable Stop-Loss Framework
-- Refactored risk system into a registry-based architecture: `RiskConfig` now uses `stop_loss_type` + `stop_loss_parameters` instead of hard-coded fields
-- Added `STOP_LOSS_REGISTRY` (backend + frontend) so new stop-loss types require only a rule class and a registry entry
-- Frontend stop-loss selection now uses a dropdown with dynamic parameter fields (mirroring the strategy pattern)
-- Updated API payload shape: `{ "risk": { "stop_loss_type": "...", "parameters": { ... } } }`
+- Replaced hard-coded stop-loss handling with an extensible registry so new stop-loss rules can be added without touching core code
+- UI stop-loss selection now uses a dynamic dropdown with per-rule parameter fields
 
-### 2026-07-29 — Fixed Stop-Loss Risk Support
-- Added risk configuration layer for backtest requests with optional fixed stop-loss settings
-- Portfolio simulation now supports automatic stop-loss exits with proper trade history recording
-- Improved stop-loss UI: field hidden by default, enabled with checkbox, validated to prevent empty submissions
-- Added "Exit Reason" column to trade history showing whether exit was via strategy signal or stop-loss trigger
+### 2026-07-29 — Stop-Loss Risk Support
+- Added optional stop-loss configuration to backtests with automatic exit logic
+- Trade history now records the exit reason, making it clear when a stop-loss triggered
 
 ### 2026-07-28 — Compare Tab Form Persistence
 - Added form persistence for the Compare tab via localStorage
