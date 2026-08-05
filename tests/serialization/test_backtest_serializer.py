@@ -180,6 +180,7 @@ def test_output_contains_all_expected_keys(mock_kpi):
         "trade_history",
         "benchmark_metrics",
         "kpi_cards",
+        "charts",
     }
 
     assert set(output.keys()) == expected_keys

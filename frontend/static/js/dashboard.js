@@ -133,6 +133,13 @@ function renderTradeStatistics(tradeMetrics) {
 
 function renderCharts(data) {
 
+    if (data.charts) {
+        renderChartFromSpec("price-chart", data.charts.price_chart, "price_chart");
+        renderChartFromSpec("equity-chart", data.charts.equity_chart, "equity_chart");
+        renderChartFromSpec("drawdown-chart", data.charts.drawdown_chart, "drawdown_chart");
+        return;
+    }
+
     renderPriceChart(data.portfolio_history);
 
     renderEquityChart(data.analytics_history);

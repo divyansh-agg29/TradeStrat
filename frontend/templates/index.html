@@ -255,6 +255,10 @@
 
                 <div class="section-header">
                     <h2>Price Chart</h2>
+                    <div id="price-chart-view-toggle" class="view-toggle">
+                        <button class="view-toggle-btn active" data-view="executions" onclick="onViewToggle(this)">Executions</button>
+                        <button class="view-toggle-btn" data-view="signals" onclick="onViewToggle(this)">Signals</button>
+                    </div>
                 </div>
 
                 <div id="price-chart" class="chart-container"></div>
@@ -686,6 +690,7 @@
 <script src="{{ url_for('static', filename='js/risk-rules.js') }}"></script>
 <script src="{{ url_for('static', filename='js/api.js') }}"></script>
 <script src="{{ url_for('static', filename='js/kpi-tooltips.js') }}"></script>
+<script src="{{ url_for('static', filename='js/chart-renderer.js') }}"></script>
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
 <script src="{{ url_for('static', filename='js/tables.js') }}"></script>

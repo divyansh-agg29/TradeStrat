@@ -16,6 +16,7 @@ from models import BacktestResult
 from utils.logger import get_logger
 from analytics import BenchmarkMetrics,PortfolioMetrics,RiskMetrics,TradeMetrics
 from interpretation import build_kpi_cards
+from serialization.chart_serializer import build_charts
 import pandas as pd
 
 logger = get_logger(__name__)
@@ -63,6 +64,11 @@ def serialize_backtest_result(
         ),
         "kpi_cards": build_kpi_cards(
             result.analytics_result
+        ),
+        "charts": build_charts(
+            result.simulation_result.portfolio_history,
+            result.simulation_result.trade_history,
+            result.analytics_result.analytics_history,
         ),
     }
 
