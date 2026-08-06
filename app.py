@@ -1,13 +1,27 @@
 """
 Application entry point.
 """
-
+import os
 from flask import Flask
+from config import DevelopmentConfig, ProductionConfig
 
 from api import api
 from utils.logger import get_logger
 
+
 logger = get_logger(__name__)
+
+def get_config():
+    """
+    Return the appropriate configuration class based on the environment.
+    """
+
+    environment = os.environ.get("FLASK_ENV", "development").lower()
+
+    if environment == "production":
+        return ProductionConfig
+
+    return DevelopmentConfig
 
 
 def create_app() -> Flask:
@@ -21,7 +35,8 @@ def create_app() -> Flask:
         static_folder="frontend/static"
     )
 
-    # Register API blueprint
+    app.config.from_object(get_config())
+
     app.register_blueprint(api)
 
     logger.info("Flask application initialized.")
@@ -36,7 +51,7 @@ if __name__ == "__main__":
     logger.info("Starting Flask development server...")
 
     app.run(
-        host="127.0.0.1",
-        port=5000,
-        debug=True,
+        host=app.config["HOST"],
+        port=app.config["PORT"],
+        debug=app.config["DEBUG"],
     )
