@@ -171,6 +171,15 @@ function renderChartFromSpec(containerId, chartSpec, chartKey) {
         }
     }
 
+    var hasSubplots = chartKey === "price_chart" && 
+                      chartSpec.subplots && 
+                      chartSpec.subplots.length > 1;
+
+    if (hasSubplots) {
+        renderPriceChartWithSubplots(containerId, chartSpec, activeView);
+        return;
+    }
+
     const traces = [];
 
     chartSpec.traces.forEach(function(traceSpec, index) {
@@ -211,6 +220,131 @@ function onChartTypeChange(chartType) {
     if (_priceChartSpec && _priceChartContainerId) {
         renderChartFromSpec(_priceChartContainerId, _priceChartSpec, "price_chart");
     }
+
+}
+
+
+function renderPriceChartWithSubplots(containerId, chartSpec, activeView) {
+
+    var subplots = chartSpec.subplots;
+    var numRows = subplots.length;
+
+    var subplotIdToRow = {};
+    subplots.forEach(function(subplot, index) {
+        subplotIdToRow[subplot.id] = index + 1;
+    });
+
+    var totalHeight = subplots.reduce(function(sum, s) {
+        return sum + s.height_ratio;
+    }, 0);
+
+    var rowHeights = subplots.map(function(s) {
+        return s.height_ratio / totalHeight;
+    });
+
+    var traces = [];
+
+    chartSpec.traces.forEach(function(traceSpec, index) {
+
+        var plotlyTrace = buildPlotlyTrace(traceSpec, "price_chart");
+
+        var subplotId = traceSpec.subplot || "main";
+        var row = subplotIdToRow[subplotId] || 1;
+
+        if (row === 1) {
+            plotlyTrace.yaxis = "y";
+            plotlyTrace.xaxis = "x";
+        } else {
+            plotlyTrace.yaxis = "y" + row;
+            plotlyTrace.xaxis = "x";
+        }
+
+        if (traceSpec.group) {
+            if (!_priceChartTraceGroups[traceSpec.group]) {
+                _priceChartTraceGroups[traceSpec.group] = [];
+            }
+            _priceChartTraceGroups[traceSpec.group].push(traces.length);
+
+            if (traceSpec.group !== activeView) {
+                plotlyTrace.visible = false;
+            }
+        }
+
+        traces.push(plotlyTrace);
+
+    });
+
+    var layout = buildSubplotLayout(subplots, rowHeights);
+
+    Plotly.newPlot(
+        document.getElementById(containerId),
+        traces,
+        layout,
+        CHART_CONFIG
+    );
+
+}
+
+
+function buildSubplotLayout(subplots, rowHeights) {
+
+    var layout = {
+        autosize: true,
+        paper_bgcolor: "transparent",
+        plot_bgcolor: "transparent",
+        font: {color: "#FFFFFF"},
+        showlegend: true,
+        dragmode: "pan",
+        margin: {l: 50, r: 20, t: 20, b: 40},
+        grid: {
+            rows: subplots.length,
+            columns: 1,
+            pattern: "independent",
+            roworder: "top to bottom"
+        }
+    };
+
+    var verticalSpacing = 0.03;
+    var availableHeight = 1 - (verticalSpacing * (subplots.length - 1));
+
+    var currentY = 1;
+
+    subplots.forEach(function(subplot, index) {
+
+        var height = rowHeights[index] * availableHeight;
+        var yAxisKey = index === 0 ? "yaxis" : "yaxis" + (index + 1);
+        var xAxisKey = index === 0 ? "xaxis" : "xaxis" + (index + 1);
+
+        var domain = [currentY - height, currentY];
+        currentY = currentY - height - verticalSpacing;
+
+        layout[yAxisKey] = {
+            domain: domain,
+            gridcolor: "#3b4659",
+            zeroline: false,
+            anchor: index === 0 ? "x" : "x" + (index + 1)
+        };
+
+        if (subplot.y_range) {
+            layout[yAxisKey].range = subplot.y_range;
+            layout[yAxisKey].fixedrange = true;
+        }
+
+        layout[xAxisKey] = {
+            gridcolor: "#3b4659",
+            anchor: index === 0 ? "y" : "y" + (index + 1),
+            matches: index === 0 ? undefined : "x"
+        };
+
+        if (index === 0) {
+            layout[xAxisKey].rangeslider = {visible: false};
+        } else {
+            layout[xAxisKey].showticklabels = false;
+        }
+
+    });
+
+    return layout;
 
 }
 

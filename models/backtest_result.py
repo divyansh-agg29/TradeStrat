@@ -1,4 +1,5 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import List
 
 from analytics import AnalyticsResult
 from portfolio import SimulationResult
@@ -17,3 +18,4 @@ class BacktestResult:
 
     simulation_result: SimulationResult
     analytics_result: AnalyticsResult
+    indicator_metadata: List = field(default_factory=list)

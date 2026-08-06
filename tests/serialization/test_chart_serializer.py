@@ -6,6 +6,7 @@ import pandas as pd
 import pytest
 
 from serialization.chart_serializer import build_charts
+from strategy import IndicatorConfig
 
 
 # ── Helpers ───────────────────────────────────────────────────
@@ -170,6 +171,60 @@ def test_build_price_chart_excludes_non_indicator_columns():
     assert "signal" not in trace_ids
     assert "cash" not in trace_ids
     assert "position" not in trace_ids
+
+
+def test_build_price_chart_uses_indicator_metadata():
+    """
+    When indicator_metadata is provided, traces should use metadata
+    instead of prefix detection.
+    """
+
+    indicator_metadata = [
+        IndicatorConfig(
+            column="SMA20",
+            name="Short SMA",
+            display="overlay",
+        ),
+        IndicatorConfig(
+            column="RSI14",
+            name="RSI",
+            display="subplot",
+            subplot_id="rsi",
+            y_range=(0, 100),
+        ),
+    ]
+
+    charts = build_charts(
+        _make_portfolio_history(
+            indicator_columns={
+                "SMA20": [100.0, 101.0, 102.0],
+                "RSI14": [30.0, 50.0, 70.0],
+            }
+        ),
+        _make_trade_history(),
+        _make_analytics_history(),
+        indicator_metadata,
+    )
+
+    price_traces = charts["price_chart"]["traces"]
+
+    sma_trace = next(t for t in price_traces if t["id"] == "sma20")
+    assert sma_trace["name"] == "Short SMA"
+    assert sma_trace["display"] == "overlay"
+
+    rsi_trace = next(t for t in price_traces if t["id"] == "rsi14")
+    assert rsi_trace["name"] == "RSI"
+    assert rsi_trace["display"] == "subplot"
+    assert rsi_trace["subplot"] == "rsi"
+    assert rsi_trace["y_range"] == (0, 100)
+
+    subplots = charts["price_chart"]["subplots"]
+    assert len(subplots) == 2
+    assert subplots[0]["id"] == "main"
+    assert subplots[0]["height_ratio"] == 3
+    assert subplots[1]["id"] == "rsi"
+    assert subplots[1]["height_ratio"] == 1
+    assert subplots[1]["y_range"] == (0, 100)
 
 
 def test_build_price_chart_includes_execution_markers():

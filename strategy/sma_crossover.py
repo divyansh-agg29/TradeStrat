@@ -17,6 +17,7 @@ Responsibilities
 import pandas as pd
 
 from indicators.moving_average import calculate_sma
+from strategy.result import IndicatorConfig, StrategyOutput
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -57,12 +58,8 @@ def generate_sma_crossover_signals(
 
     Returns
     -------
-    pandas.DataFrame
-        Copy of the supplied DataFrame containing:
-
-        - original columns
-        - required SMA columns
-        - Signal column
+    StrategyOutput
+        Contains the enriched DataFrame and indicator metadata.
 
     Raises
     ------
@@ -156,4 +153,17 @@ def generate_sma_crossover_signals(
         int(sell_mask.sum()),
     )
 
-    return result_df
+    indicators = [
+        IndicatorConfig(
+            column=short_column,
+            name=f"SMA {short_period}",
+            display="overlay",
+        ),
+        IndicatorConfig(
+            column=long_column,
+            name=f"SMA {long_period}",
+            display="overlay",
+        ),
+    ]
+
+    return StrategyOutput(df=result_df, indicators=indicators)

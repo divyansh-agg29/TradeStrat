@@ -40,6 +40,7 @@ def build_charts(
     portfolio_history: pd.DataFrame,
     trade_history: pd.DataFrame,
     analytics_history: pd.DataFrame,
+    indicator_metadata: list = None,
 ) -> dict:
     """
     Build chart specifications for the backtest dashboard.
@@ -48,8 +49,13 @@ def build_charts(
     and ``drawdown_chart``, each containing a list of traces.
     """
 
+    if indicator_metadata is None:
+        indicator_metadata = []
+
     return {
-        "price_chart": _build_price_chart(portfolio_history, trade_history),
+        "price_chart": _build_price_chart(
+            portfolio_history, trade_history, indicator_metadata
+        ),
         "equity_chart": _build_equity_chart(analytics_history),
         "drawdown_chart": _build_drawdown_chart(analytics_history),
     }
@@ -61,11 +67,13 @@ def build_charts(
 def _build_price_chart(
     portfolio_history: pd.DataFrame,
     trade_history: pd.DataFrame,
+    indicator_metadata: list,
 ) -> dict:
     """
     Build the price chart specification.
 
-    Includes close price, indicator overlays, and execution markers.
+    Includes close price, indicator overlays, execution markers,
+    and subplot layout for indicators that need separate y-axes.
     """
 
     history = portfolio_history.reset_index()
@@ -80,6 +88,7 @@ def _build_price_chart(
             "id": "ohlc",
             "type": "candlestick",
             "name": "Price",
+            "subplot": "main",
             "x": dates,
             "open": history["Open"].tolist(),
             "high": history["High"].tolist(),
@@ -91,22 +100,14 @@ def _build_price_chart(
             "id": "close",
             "type": "line",
             "name": "Close",
+            "subplot": "main",
             "x": dates,
             "y": history["Close"].tolist(),
         })
 
-    for column in history.columns:
-        if _is_indicator_column(column):
-            values = history[column].where(
-                pd.notnull(history[column]), None
-            ).tolist()
-            traces.append({
-                "id": column.lower().replace(" ", "_"),
-                "type": "indicator_line",
-                "name": column,
-                "x": dates,
-                "y": values,
-            })
+    traces.extend(
+        _build_indicator_traces(history, dates, indicator_metadata)
+    )
 
     traces.extend(
         _build_signal_markers(history, date_column)
@@ -116,7 +117,105 @@ def _build_price_chart(
         _build_execution_markers(trade_history, history)
     )
 
-    return {"traces": traces}
+    subplots = _build_subplot_layout(indicator_metadata)
+
+    return {"traces": traces, "subplots": subplots}
+
+
+def _build_subplot_layout(indicator_metadata: list) -> list:
+    """
+    Build subplot layout from indicator metadata.
+
+    Returns a list of subplot definitions with id, height_ratio,
+    and optional y_range.
+    """
+
+    subplots = [{"id": "main", "height_ratio": 3}]
+
+    seen_subplot_ids = set()
+
+    for indicator in indicator_metadata:
+        if indicator.display != "subplot":
+            continue
+
+        subplot_id = indicator.subplot_id or indicator.column.lower()
+
+        if subplot_id in seen_subplot_ids:
+            continue
+
+        seen_subplot_ids.add(subplot_id)
+
+        subplot_def = {
+            "id": subplot_id,
+            "height_ratio": 1,
+        }
+
+        if indicator.y_range:
+            subplot_def["y_range"] = indicator.y_range
+
+        subplots.append(subplot_def)
+
+    return subplots
+
+
+def _build_indicator_traces(
+    history: pd.DataFrame,
+    dates: list,
+    indicator_metadata: list,
+) -> list[dict]:
+    """
+    Build indicator traces from metadata or fallback to prefix detection.
+    """
+
+    traces = []
+
+    if indicator_metadata:
+        for indicator in indicator_metadata:
+            column = indicator.column
+            if column not in history.columns:
+                continue
+
+            values = history[column].where(
+                pd.notnull(history[column]), None
+            ).tolist()
+
+            if indicator.display == "subplot":
+                subplot = indicator.subplot_id or column.lower()
+            else:
+                subplot = "main"
+
+            trace = {
+                "id": column.lower().replace(" ", "_"),
+                "type": "indicator_line",
+                "name": indicator.name,
+                "subplot": subplot,
+                "x": dates,
+                "y": values,
+                "display": indicator.display,
+            }
+
+            if indicator.y_range:
+                trace["y_range"] = indicator.y_range
+
+            traces.append(trace)
+
+    else:
+        for column in history.columns:
+            if _is_indicator_column(column):
+                values = history[column].where(
+                    pd.notnull(history[column]), None
+                ).tolist()
+                traces.append({
+                    "id": column.lower().replace(" ", "_"),
+                    "type": "indicator_line",
+                    "name": column,
+                    "subplot": "main",
+                    "x": dates,
+                    "y": values,
+                    "display": "overlay",
+                })
+
+    return traces
 
 
 def _is_indicator_column(column: str) -> bool:
@@ -150,6 +249,7 @@ def _build_signal_markers(
             "id": "buy_signal",
             "type": "signal_marker",
             "category": "buy",
+            "subplot": "main",
             "group": "signals",
             "name": "BUY Signal",
             "x": _dates_to_strings(buy_rows[date_column]),
@@ -162,6 +262,7 @@ def _build_signal_markers(
             "id": "sell_signal",
             "type": "signal_marker",
             "category": "sell",
+            "subplot": "main",
             "group": "signals",
             "name": "SELL Signal",
             "x": _dates_to_strings(sell_rows[date_column]),
@@ -197,6 +298,7 @@ def _build_execution_markers(
             "id": "buy_executed",
             "type": "execution_marker",
             "category": "buy",
+            "subplot": "main",
             "group": "executions",
             "name": "BUY Executed",
             "x": entry_dates,
@@ -219,6 +321,7 @@ def _build_execution_markers(
             "id": trace_id,
             "type": "execution_marker",
             "category": category,
+            "subplot": "main",
             "group": "executions",
             "name": label,
             "x": _dates_to_strings(subset["exit_date"]),

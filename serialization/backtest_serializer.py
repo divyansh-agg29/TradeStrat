@@ -69,6 +69,7 @@ def serialize_backtest_result(
             result.simulation_result.portfolio_history,
             result.simulation_result.trade_history,
             result.analytics_result.analytics_history,
+            result.indicator_metadata,
         ),
     }
 

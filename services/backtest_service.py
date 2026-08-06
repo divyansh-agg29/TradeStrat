@@ -20,7 +20,7 @@ from data.service import get_stock_data
 from models import BacktestRequest, BacktestResult
 from portfolio import SimulationResult, simulate_portfolio
 from models import StrategyConfig
-from strategy import STRATEGY_REGISTRY
+from strategy import STRATEGY_REGISTRY, StrategyOutput
 from utils.logger import get_logger
 
 from datetime import datetime
@@ -56,20 +56,20 @@ def run_backtest(
 
     market_data = _get_market_data(request)
 
-    strategy_output = _execute_strategy(
+    strategy_result = _execute_strategy(
         market_data,
         strategy_function,
         request.strategy,
     )
 
-    strategy_output = _trim_to_requested_period(
-        strategy_output,
+    strategy_df = _trim_to_requested_period(
+        strategy_result.df,
         request.start_date,
         request.end_date,
     )
 
     simulation_result = _run_simulation(
-        strategy_output,
+        strategy_df,
         request.initial_capital,
         request.risk,
     )
@@ -84,6 +84,7 @@ def run_backtest(
     return BacktestResult(
         simulation_result=simulation_result,
         analytics_result=analytics_result,
+        indicator_metadata=strategy_result.indicators,
     )
 
 

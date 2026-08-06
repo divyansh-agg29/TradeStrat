@@ -31,7 +31,7 @@ def test_generate_signals_adds_signal_column():
 
     df = create_market_data(range(1, 101))
 
-    result = generate_rsi_mean_reversion_signals(df)
+    result = generate_rsi_mean_reversion_signals(df).df
 
     assert "Signal" in result.columns
 
@@ -41,7 +41,7 @@ def test_signal_column_contains_only_valid_values():
 
     df = create_market_data(range(1, 101))
 
-    result = generate_rsi_mean_reversion_signals(df)
+    result = generate_rsi_mean_reversion_signals(df).df
 
     assert set(result["Signal"].unique()).issubset(
         {"BUY", "SELL", "HOLD"}
@@ -53,7 +53,7 @@ def test_no_threshold_crossing_generates_hold_only():
 
     df = create_market_data([100] * 100)
 
-    result = generate_rsi_mean_reversion_signals(df)
+    result = generate_rsi_mean_reversion_signals(df).df
 
     assert set(result["Signal"].unique()) == {"HOLD"}
 
@@ -69,7 +69,7 @@ def test_existing_rsi_column_is_reused():
 
     df["RSI14"] = 50
 
-    result = generate_rsi_mean_reversion_signals(df)
+    result = generate_rsi_mean_reversion_signals(df).df
 
     assert (result["RSI14"] == 50).all()
 
@@ -79,7 +79,7 @@ def test_missing_rsi_column_is_created():
 
     df = create_market_data(range(1, 101))
 
-    result = generate_rsi_mean_reversion_signals(df)
+    result = generate_rsi_mean_reversion_signals(df).df
 
     assert "RSI14" in result.columns
 
@@ -92,7 +92,7 @@ def test_custom_period_creates_correct_column():
     result = generate_rsi_mean_reversion_signals(
         df,
         rsi_period=10,
-    )
+    ).df
 
     assert "RSI10" in result.columns
 
@@ -180,7 +180,7 @@ def test_returns_new_dataframe():
 
     df = create_market_data(range(1, 101))
 
-    result = generate_rsi_mean_reversion_signals(df)
+    result = generate_rsi_mean_reversion_signals(df).df
 
     assert result is not df
 
@@ -190,7 +190,7 @@ def test_original_columns_are_preserved():
 
     df = create_market_data(range(1, 101))
 
-    result = generate_rsi_mean_reversion_signals(df)
+    result = generate_rsi_mean_reversion_signals(df).df
 
     for column in df.columns:
         assert column in result.columns
@@ -206,7 +206,7 @@ def test_dataframe_index_is_preserved():
         freq="D",
     )
 
-    result = generate_rsi_mean_reversion_signals(df)
+    result = generate_rsi_mean_reversion_signals(df).df
 
     pd.testing.assert_index_equal(df.index, result.index)
 
@@ -220,7 +220,7 @@ def test_first_row_is_hold():
 
     df = create_market_data(range(1, 101))
 
-    result = generate_rsi_mean_reversion_signals(df)
+    result = generate_rsi_mean_reversion_signals(df).df
 
     assert result.iloc[0]["Signal"] == "HOLD"
 
@@ -230,6 +230,6 @@ def test_signal_column_contains_no_missing_values():
 
     df = create_market_data(range(1, 101))
 
-    result = generate_rsi_mean_reversion_signals(df)
+    result = generate_rsi_mean_reversion_signals(df).df
 
     assert result["Signal"].isna().sum() == 0

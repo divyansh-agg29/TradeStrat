@@ -17,6 +17,7 @@ Responsibilities
 import pandas as pd
 
 from indicators.momentum import calculate_macd
+from strategy.result import IndicatorConfig, StrategyOutput
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -61,12 +62,8 @@ def generate_macd_crossover_signals(
 
     Returns
     -------
-    pandas.DataFrame
-        Copy of the supplied DataFrame containing:
-
-        - original columns
-        - required MACD columns
-        - Signal column
+    StrategyOutput
+        Contains the enriched DataFrame and indicator metadata.
 
     Raises
     ------
@@ -163,4 +160,25 @@ def generate_macd_crossover_signals(
         int(sell_mask.sum()),
     )
 
-    return result_df
+    indicators = [
+        IndicatorConfig(
+            column=macd_column,
+            name="MACD",
+            display="subplot",
+            subplot_id="macd",
+        ),
+        IndicatorConfig(
+            column=signal_column,
+            name="Signal",
+            display="subplot",
+            subplot_id="macd",
+        ),
+        IndicatorConfig(
+            column=histogram_column,
+            name="Histogram",
+            display="subplot",
+            subplot_id="macd",
+        ),
+    ]
+
+    return StrategyOutput(df=result_df, indicators=indicators)

@@ -15,6 +15,7 @@ from models import (
 )
 from portfolio import SimulationResult
 from services import run_backtest
+from strategy import StrategyOutput
 
 
 def _create_request(
@@ -60,11 +61,14 @@ def test_run_backtest_success(
         }
     )
 
-    strategy_output = pd.DataFrame(
-        {
-            "Close": [100.0, 101.0],
-            "Signal": ["HOLD", "BUY"],
-        }
+    strategy_output = StrategyOutput(
+        df=pd.DataFrame(
+            {
+                "Close": [100.0, 101.0],
+                "Signal": ["HOLD", "BUY"],
+            }
+        ),
+        indicators=[],
     )
 
     simulation_result = SimulationResult(
@@ -131,7 +135,7 @@ def test_run_backtest_passes_risk_config_to_simulator(
     Backtest Service should forward request risk settings to the simulator.
     """
 
-    strategy_output = pd.DataFrame(
+    strategy_df = pd.DataFrame(
         {
             "Close": [100.0, 95.0],
             "Signal": ["BUY", "HOLD"],
@@ -142,6 +146,7 @@ def test_run_backtest_passes_risk_config_to_simulator(
             freq="D",
         ),
     )
+    strategy_output = StrategyOutput(df=strategy_df, indicators=[])
 
     simulation_result = SimulationResult(
         portfolio_history=pd.DataFrame(),
@@ -154,7 +159,7 @@ def test_run_backtest_passes_risk_config_to_simulator(
         stop_loss_parameters={"percent": 0.05},
     )
 
-    mock_get_stock_data.return_value = strategy_output
+    mock_get_stock_data.return_value = strategy_df
     mock_simulate_portfolio.return_value = simulation_result
     mock_analyze_performance.return_value = analytics_result
 
@@ -279,7 +284,7 @@ def test_run_backtest_propagates_analytics_errors(
     ) as mock_strategy:
 
         mock_strategy.return_value = (
-            lambda df, **kwargs: df
+            lambda df, **kwargs: StrategyOutput(df=df, indicators=[])
         )
 
         with pytest.raises(

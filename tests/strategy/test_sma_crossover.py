@@ -31,7 +31,7 @@ def test_generate_signals_adds_signal_column():
 
     df = create_market_data(range(1, 101))
 
-    result = generate_sma_crossover_signals(df)
+    result = generate_sma_crossover_signals(df).df
 
     assert "Signal" in result.columns
 
@@ -41,7 +41,7 @@ def test_signal_column_contains_only_valid_values():
 
     df = create_market_data(range(1, 101))
 
-    result = generate_sma_crossover_signals(df)
+    result = generate_sma_crossover_signals(df).df
 
     assert set(result["Signal"].unique()).issubset(
         {"BUY", "SELL", "HOLD"}
@@ -58,7 +58,7 @@ def test_buy_signal_generated():
 
     df = create_market_data(prices)
 
-    result = generate_sma_crossover_signals(df)
+    result = generate_sma_crossover_signals(df).df
 
     assert "BUY" in result["Signal"].values
 
@@ -73,7 +73,7 @@ def test_sell_signal_generated():
 
     df = create_market_data(prices)
 
-    result = generate_sma_crossover_signals(df)
+    result = generate_sma_crossover_signals(df).df
 
     assert "SELL" in result["Signal"].values
 
@@ -83,7 +83,7 @@ def test_no_crossover_generates_hold_only():
 
     df = create_market_data([100] * 100)
 
-    result = generate_sma_crossover_signals(df)
+    result = generate_sma_crossover_signals(df).df
 
     assert set(result["Signal"].unique()) == {"HOLD"}
 
@@ -100,7 +100,7 @@ def test_existing_sma_columns_are_reused():
     df["SMA20"] = 999
     df["SMA50"] = 888
 
-    result = generate_sma_crossover_signals(df)
+    result = generate_sma_crossover_signals(df).df
 
     assert (result["SMA20"] == 999).all()
     assert (result["SMA50"] == 888).all()
@@ -111,7 +111,7 @@ def test_missing_sma_columns_are_created():
 
     df = create_market_data(range(1, 101))
 
-    result = generate_sma_crossover_signals(df)
+    result = generate_sma_crossover_signals(df).df
 
     assert "SMA20" in result.columns
     assert "SMA50" in result.columns
@@ -126,7 +126,7 @@ def test_custom_periods_create_correct_columns():
         df,
         short_period=10,
         long_period=30,
-    )
+    ).df
 
     assert "SMA10" in result.columns
     assert "SMA30" in result.columns
@@ -203,7 +203,7 @@ def test_returns_new_dataframe():
 
     df = create_market_data(range(1, 101))
 
-    result = generate_sma_crossover_signals(df)
+    result = generate_sma_crossover_signals(df).df
 
     assert result is not df
 
@@ -213,7 +213,7 @@ def test_original_columns_are_preserved():
 
     df = create_market_data(range(1, 101))
 
-    result = generate_sma_crossover_signals(df)
+    result = generate_sma_crossover_signals(df).df
 
     for column in df.columns:
         assert column in result.columns
@@ -229,7 +229,7 @@ def test_dataframe_index_is_preserved():
         freq="D",
     )
 
-    result = generate_sma_crossover_signals(df)
+    result = generate_sma_crossover_signals(df).df
 
     pd.testing.assert_index_equal(df.index, result.index)
 
@@ -243,7 +243,7 @@ def test_small_dataset_returns_hold_only():
 
     df = create_market_data(range(10))
 
-    result = generate_sma_crossover_signals(df)
+    result = generate_sma_crossover_signals(df).df
 
     assert set(result["Signal"].unique()) == {"HOLD"}
 
@@ -253,7 +253,7 @@ def test_first_row_is_hold():
 
     df = create_market_data(range(1, 101))
 
-    result = generate_sma_crossover_signals(df)
+    result = generate_sma_crossover_signals(df).df
 
     assert result.iloc[0]["Signal"] == "HOLD"
 
@@ -263,6 +263,6 @@ def test_signal_column_contains_no_missing_values():
 
     df = create_market_data(range(1, 101))
 
-    result = generate_sma_crossover_signals(df)
+    result = generate_sma_crossover_signals(df).df
 
     assert result["Signal"].isna().sum() == 0
