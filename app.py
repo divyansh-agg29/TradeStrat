@@ -6,7 +6,7 @@ from flask import Flask
 from config import DevelopmentConfig, ProductionConfig
 
 from api import api
-from utils.logger import get_logger
+from utils.logger import get_logger, configure_logging
 
 
 logger = get_logger(__name__)
@@ -36,6 +36,7 @@ def create_app() -> Flask:
     )
 
     app.config.from_object(get_config())
+    configure_logging(app.config["LOG_LEVEL"])
 
     app.register_blueprint(api)
 

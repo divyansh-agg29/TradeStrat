@@ -17,6 +17,7 @@ class DevelopmentConfig(BaseConfig):
     DEBUG = True
     HOST = "127.0.0.1"
     PORT = 5000
+    LOG_LEVEL = "DEBUG"
 
 class ProductionConfig(BaseConfig):
     """
@@ -25,3 +26,4 @@ class ProductionConfig(BaseConfig):
     DEBUG = False
     HOST = "0.0.0.0"
     PORT = int(os.environ.get("PORT", 5000))
+    LOG_LEVEL = "INFO"

@@ -15,6 +15,19 @@ Usage:
 import logging
 
 
+def configure_logging(level: str) -> None:
+    """
+    Configure the global logging level.
+
+    Parameters
+    ----------
+    level : str
+        Logging level (e.g. "DEBUG", "INFO").
+    """
+
+    logging.getLogger().setLevel(level)
+
+
 def get_logger(name: str) -> logging.Logger:
     """
     Return a configured logger for the given module.
@@ -36,7 +49,6 @@ def get_logger(name: str) -> logging.Logger:
     if logger.handlers:
         return logger
 
-    logger.setLevel(logging.DEBUG)
 
     formatter = logging.Formatter(
         fmt="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
