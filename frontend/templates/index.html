@@ -255,9 +255,18 @@
 
                 <div class="section-header">
                     <h2>Price Chart</h2>
-                    <div id="price-chart-view-toggle" class="view-toggle">
-                        <button class="view-toggle-btn active" data-view="executions" onclick="onViewToggle(this)">Executions</button>
-                        <button class="view-toggle-btn" data-view="signals" onclick="onViewToggle(this)">Signals</button>
+                    <div class="chart-controls">
+                        <select id="price-chart-type" class="chart-type-select" onchange="onChartTypeChange(this.value)">
+                            <option value="candlestick">Candlestick</option>
+                            <option value="line_close">Line (Close)</option>
+                            <option value="line_open">Line (Open)</option>
+                            <option value="line_high">Line (High)</option>
+                            <option value="line_low">Line (Low)</option>
+                        </select>
+                        <div id="price-chart-view-toggle" class="view-toggle">
+                            <button class="view-toggle-btn active" data-view="executions" onclick="onViewToggle(this)">Executions</button>
+                            <button class="view-toggle-btn" data-view="signals" onclick="onViewToggle(this)">Signals</button>
+                        </div>
                     </div>
                 </div>
 

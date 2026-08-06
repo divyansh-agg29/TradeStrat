@@ -32,6 +32,32 @@
 
 
 /* ==========================================
+   Chart Controls
+========================================== */
+
+.chart-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.chart-type-select {
+    padding: 5px 10px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-bg);
+    color: var(--color-text, #ffffff);
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.chart-type-select:focus {
+    outline: none;
+    border-color: var(--color-accent, #2196F3);
+}
+
+
+/* ==========================================
    View Toggle
 ========================================== */
 

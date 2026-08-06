@@ -71,17 +71,29 @@ def _build_price_chart(
     history = portfolio_history.reset_index()
     date_column = _resolve_date_column(history)
     dates = _dates_to_strings(history[date_column])
-    close_prices = history["Close"].tolist()
 
     traces = []
 
-    traces.append({
-        "id": "close",
-        "type": "line",
-        "name": "Close",
-        "x": dates,
-        "y": close_prices,
-    })
+    ohlc_columns = {"Open", "High", "Low", "Close"}
+    if ohlc_columns.issubset(history.columns):
+        traces.append({
+            "id": "ohlc",
+            "type": "candlestick",
+            "name": "Price",
+            "x": dates,
+            "open": history["Open"].tolist(),
+            "high": history["High"].tolist(),
+            "low": history["Low"].tolist(),
+            "close": history["Close"].tolist(),
+        })
+    elif "Close" in history.columns:
+        traces.append({
+            "id": "close",
+            "type": "line",
+            "name": "Close",
+            "x": dates,
+            "y": history["Close"].tolist(),
+        })
 
     for column in history.columns:
         if _is_indicator_column(column):

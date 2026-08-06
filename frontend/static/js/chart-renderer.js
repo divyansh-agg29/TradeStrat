@@ -107,6 +107,11 @@ const CHART_LAYOUT_BASE = {
 
 const CHART_LAYOUT_OVERRIDES = {
 
+    price_chart: {
+        xaxis: {rangeslider: {visible: false}, gridcolor: "#3b4659"},
+        yaxis: {gridcolor: "#3b4659"}
+    },
+
     equity_chart: {
         xaxis: {title: "Date", gridcolor: "#3b4659", zeroline: false},
         yaxis: {title: "Portfolio Value", gridcolor: "#3b4659", zeroline: false},
@@ -134,6 +139,8 @@ const CHART_CONFIG = {
 
 var _priceChartTraceGroups = {};
 var _priceChartContainerId = null;
+var _priceChartSpec = null;
+var _priceChartType = "candlestick";
 
 
 function renderChartFromSpec(containerId, chartSpec, chartKey) {
@@ -148,6 +155,12 @@ function renderChartFromSpec(containerId, chartSpec, chartKey) {
     if (chartKey === "price_chart") {
         _priceChartContainerId = containerId;
         _priceChartTraceGroups = {};
+        _priceChartSpec = chartSpec;
+
+        var chartTypeSelect = document.getElementById("price-chart-type");
+        if (chartTypeSelect) {
+            _priceChartType = chartTypeSelect.value;
+        }
 
         var toggleContainer = document.getElementById("price-chart-view-toggle");
         if (toggleContainer) {
@@ -162,7 +175,7 @@ function renderChartFromSpec(containerId, chartSpec, chartKey) {
 
     chartSpec.traces.forEach(function(traceSpec, index) {
 
-        var plotlyTrace = buildPlotlyTrace(traceSpec);
+        var plotlyTrace = buildPlotlyTrace(traceSpec, chartKey);
 
         if (chartKey === "price_chart" && traceSpec.group) {
             if (!_priceChartTraceGroups[traceSpec.group]) {
@@ -187,6 +200,17 @@ function renderChartFromSpec(containerId, chartSpec, chartKey) {
         layout,
         CHART_CONFIG
     );
+
+}
+
+
+function onChartTypeChange(chartType) {
+
+    _priceChartType = chartType;
+
+    if (_priceChartSpec && _priceChartContainerId) {
+        renderChartFromSpec(_priceChartContainerId, _priceChartSpec, "price_chart");
+    }
 
 }
 
@@ -234,10 +258,14 @@ function togglePriceChartView(view) {
 // ── Trace Builder ───────────────────────────────────────────
 
 
-function buildPlotlyTrace(spec) {
+function buildPlotlyTrace(spec, chartKey) {
 
     if (spec.type === "execution_marker" || spec.type === "signal_marker") {
         return buildMarkerTrace(spec);
+    }
+
+    if (spec.type === "candlestick") {
+        return buildPriceTrace(spec, chartKey);
     }
 
     var style = TRACE_STYLE_DEFAULTS[spec.type];
@@ -257,6 +285,49 @@ function buildPlotlyTrace(spec) {
     }
 
     return trace;
+
+}
+
+
+function buildPriceTrace(spec, chartKey) {
+
+    if (chartKey === "price_chart" && _priceChartType !== "candlestick") {
+        var columnMap = {
+            "line_open": {data: spec.open, name: "Open"},
+            "line_high": {data: spec.high, name: "High"},
+            "line_low": {data: spec.low, name: "Low"},
+            "line_close": {data: spec.close, name: "Close"}
+        };
+
+        var selected = columnMap[_priceChartType] || columnMap["line_close"];
+
+        return {
+            x: spec.x,
+            y: selected.data,
+            name: selected.name,
+            mode: "lines",
+            line: {color: "#2196F3", width: 2}
+        };
+    }
+
+    return buildCandlestickTrace(spec);
+
+}
+
+
+function buildCandlestickTrace(spec) {
+
+    return {
+        type: "candlestick",
+        x: spec.x,
+        open: spec.open,
+        high: spec.high,
+        low: spec.low,
+        close: spec.close,
+        name: spec.name,
+        increasing: {line: {color: "#26A69A"}, fillcolor: "rgba(38, 166, 154, 0.7)"},
+        decreasing: {line: {color: "#EF5350"}, fillcolor: "rgba(239, 83, 80, 0.7)"}
+    };
 
 }
 

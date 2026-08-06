@@ -103,9 +103,9 @@ def _make_empty_trade_history():
 # ── Price Chart ──────────────────────────────────────────────
 
 
-def test_build_price_chart_includes_close_trace():
+def test_build_price_chart_includes_candlestick_trace():
     """
-    Price chart should always include a Close price line.
+    Price chart should always include a candlestick OHLC trace.
     """
 
     charts = build_charts(
@@ -115,12 +115,15 @@ def test_build_price_chart_includes_close_trace():
     )
 
     price_traces = charts["price_chart"]["traces"]
-    close_trace = next(t for t in price_traces if t["id"] == "close")
+    ohlc_trace = next(t for t in price_traces if t["id"] == "ohlc")
 
-    assert close_trace["type"] == "line"
-    assert close_trace["name"] == "Close"
-    assert len(close_trace["x"]) == 3
-    assert close_trace["y"] == [101.0, 103.0, 105.0]
+    assert ohlc_trace["type"] == "candlestick"
+    assert ohlc_trace["name"] == "Price"
+    assert len(ohlc_trace["x"]) == 3
+    assert ohlc_trace["open"] == [100.0, 101.0, 102.0]
+    assert ohlc_trace["high"] == [105.0, 106.0, 107.0]
+    assert ohlc_trace["low"] == [99.0, 100.0, 101.0]
+    assert ohlc_trace["close"] == [101.0, 103.0, 105.0]
 
 
 def test_build_price_chart_includes_indicator_traces():
