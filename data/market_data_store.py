@@ -109,7 +109,7 @@ def _safe_int(value) -> Optional[int]:
 
 
 def initialize_db(
-    db_path: str = "data/market_data.db",
+    db_path: str,
 ) -> sqlite3.Connection:
     """
     Open (or create) the SQLite database and ensure the schema exists.

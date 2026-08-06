@@ -15,6 +15,7 @@ Current workflow (Version 2A):
           ↓
     Return Standardized DataFrame
 """
+from flask import current_app
 
 import pandas as pd
 
@@ -84,7 +85,7 @@ def get_stock_data(
     # Step 2: Ensure database connection is available.
     global _DB_CONN
     if _DB_CONN is None:
-        _DB_CONN = initialize_db()
+        _DB_CONN = initialize_db(current_app.config["DATABASE_PATH"])
 
     # Step 3: Retrieve data (cache-first, download on miss).
     cleaned_data = retrieve_market_data(
