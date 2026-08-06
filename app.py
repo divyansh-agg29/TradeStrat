@@ -16,7 +16,7 @@ def get_config():
     Return the appropriate configuration class based on the environment.
     """
 
-    environment = os.environ.get("FLASK_ENV", "development").lower()
+    environment = os.environ.get("APP_ENV", "development").lower()
 
     if environment == "production":
         return ProductionConfig

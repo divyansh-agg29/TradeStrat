@@ -1,12 +1,15 @@
 import os
+from pathlib import Path
 
 class BaseConfig:
     """
     Base configuration shared across all environments.
     """
-    DATABASE_PATH = "data/market_data.db"
+    
+    PROJECT_ROOT = Path(__file__).resolve().parent
 
-\
+    DATABASE_PATH = PROJECT_ROOT / "data" / "market_data.db"
+
 class DevelopmentConfig(BaseConfig):
     """
     Development environment configuration.
