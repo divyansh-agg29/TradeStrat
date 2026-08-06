@@ -14,6 +14,7 @@ A web-based modular trading strategy analysis platform for backtesting, portfoli
 - **KPI Interpretation** — Color-coded KPI cards with interpretation levels and hover tooltips
 - **Strategy Comparison** — Run 2–6 strategies side-by-side with metrics matrix, equity/drawdown chart overlays, and per-strategy trade history tabs
 - **Interactive Dashboard** — Plotly charts (price, equity, drawdown), tabbed interface (Backtest / Compare), form persistence via localStorage
+- **Advanced Charting** — Candlestick/line chart toggle, indicator subplots (RSI, MACD) with linked x-axes, signal/execution marker overlays
 
 
 ## Architecture
@@ -104,6 +105,12 @@ graph TD
 
 
 ## Development Changelog
+
+### 2026-08-06 — Advanced Charting
+- Price chart now renders OHLC data as candlesticks instead of a simple close-price line
+- Dropdown to switch between Candlestick, Line (Open/High/Low/Close) views; preference persisted in localStorage
+- Strategies now return structured `StrategyOutput` with indicator metadata (display type, subplot assignment, y-axis range)
+- RSI and MACD rendered in separate subplots below the main price panel with linked x-axes and fixed y-ranges where applicable
 
 ### 2026-08-05 — Fixed Amount Take-Profit & Backend-Driven Charts
 - Added fixed-amount take-profit rule and extended the take-profit framework
