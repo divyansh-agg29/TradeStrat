@@ -97,6 +97,22 @@ def _parse_request(data: dict) -> BacktestRequest:
 def index():
     return render_template("index.html")
 
+@api.route("/health", methods=["GET"])
+def health():
+    """
+    Health check endpoint.
+    """
+    logger.info("Health check requested.")
+
+    return jsonify(
+        {
+            "success": True,
+            "data": {
+                "status": "healthy",
+            },
+        }
+    ), 200
+
 @api.route("/backtest", methods=["POST"])
 @limiter.limit("5 per minute")
 def backtest():
