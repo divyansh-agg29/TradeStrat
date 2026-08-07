@@ -179,6 +179,7 @@ def test_db_connection_reused_across_calls(
     mock_validate_request,
     mock_initialize_db,
     mock_retrieve,
+    app_context,
 ):
     """
     Verify that initialize_db is called only once even when
