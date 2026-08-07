@@ -18,6 +18,8 @@ from services import run_backtest
 from strategy import StrategyOutput
 
 
+
+
 def _create_request(
     strategy_type: str = "sma_crossover",
     risk: RiskConfig | None = None,
@@ -98,7 +100,8 @@ def test_run_backtest_success(
         )
 
         result = run_backtest(
-            _create_request()
+            _create_request(),
+            db_path="test.db",
         )
 
     assert isinstance(
@@ -172,7 +175,8 @@ def test_run_backtest_passes_risk_config_to_simulator(
         )
 
         run_backtest(
-            _create_request(risk=risk_config)
+            _create_request(risk=risk_config),
+            db_path="test.db",
         )
 
     _, kwargs = mock_simulate_portfolio.call_args
@@ -190,7 +194,7 @@ def test_run_backtest_invalid_request_type():
         TypeError,
         match="request must be a BacktestRequest.",
     ):
-        run_backtest(None)
+        run_backtest(None, db_path="test.db")
 
 def test_run_backtest_missing_strategy():
     """
@@ -209,7 +213,7 @@ def test_run_backtest_missing_strategy():
         ValueError,
         match="A strategy configuration must be provided.",
     ):
-        run_backtest(request)
+        run_backtest(request, db_path="test.db")
 
 def test_run_backtest_unsupported_strategy():
     """
@@ -225,7 +229,7 @@ def test_run_backtest_unsupported_strategy():
         ValueError,
         match="Unsupported strategy",
     ):
-        run_backtest(request)
+        run_backtest(request, db_path="test.db")
 
 @patch("services.backtest_service.get_stock_data")
 def test_run_backtest_propagates_data_errors(
@@ -245,7 +249,8 @@ def test_run_backtest_propagates_data_errors(
         match="Invalid ticker.",
     ):
         run_backtest(
-            _create_request()
+            _create_request(),
+            db_path="test.db",
         )
 
 @patch("services.backtest_service.analyze_performance")
@@ -292,5 +297,6 @@ def test_run_backtest_propagates_analytics_errors(
             match="Analytics failed.",
         ):
             run_backtest(
-                _create_request()
+                _create_request(),
+                db_path="test.db",
             )

@@ -60,7 +60,7 @@ def test_fewer_than_two_strategies_raises():
         ValueError,
         match="A comparison requires between 2 and 6 strategies.",
     ):
-        run_comparison(request)
+        run_comparison(request, db_path="test.db")
 
 
 def test_more_than_six_strategies_raises():
@@ -75,7 +75,7 @@ def test_more_than_six_strategies_raises():
         ValueError,
         match="A comparison requires between 2 and 6 strategies.",
     ):
-        run_comparison(request)
+        run_comparison(request, db_path="test.db")
 
 
 def test_empty_strategies_raises():
@@ -90,7 +90,7 @@ def test_empty_strategies_raises():
         ValueError,
         match="A comparison requires between 2 and 6 strategies.",
     ):
-        run_comparison(request)
+        run_comparison(request, db_path="test.db")
 
 
 # ── Success Tests ─────────────────────────────────────────────
@@ -105,7 +105,7 @@ def test_valid_comparison_two_strategies(mock_run_backtest):
     mock_run_backtest.return_value = _make_dummy_backtest_result()
 
     request = _make_comparison_request(num_strategies=2)
-    result = run_comparison(request)
+    result = run_comparison(request, db_path="test.db")
 
     assert isinstance(result, ComparisonResult)
     assert len(result.strategy_results) == 2
@@ -126,7 +126,7 @@ def test_valid_comparison_six_strategies(mock_run_backtest):
     mock_run_backtest.return_value = _make_dummy_backtest_result()
 
     request = _make_comparison_request(num_strategies=6)
-    result = run_comparison(request)
+    result = run_comparison(request, db_path="test.db")
 
     assert len(result.strategy_results) == 6
     assert all(sr.success for sr in result.strategy_results)
@@ -151,7 +151,7 @@ def test_failed_strategy_included_with_error(mock_run_backtest):
     ]
 
     request = _make_comparison_request(num_strategies=2)
-    result = run_comparison(request)
+    result = run_comparison(request, db_path="test.db")
 
     assert len(result.strategy_results) == 2
 
@@ -173,7 +173,7 @@ def test_all_strategies_fail(mock_run_backtest):
     mock_run_backtest.side_effect = Exception("Failed")
 
     request = _make_comparison_request(num_strategies=3)
-    result = run_comparison(request)
+    result = run_comparison(request, db_path="test.db")
 
     assert len(result.strategy_results) == 3
     assert all(not sr.success for sr in result.strategy_results)
@@ -211,7 +211,7 @@ def test_result_order_matches_request(mock_run_backtest):
         strategies=strategies,
     )
 
-    result = run_comparison(request)
+    result = run_comparison(request, db_path="test.db")
 
     for i, sr in enumerate(result.strategy_results):
         assert sr.strategy == request.strategies[i]
@@ -226,7 +226,7 @@ def test_request_echoed_in_result(mock_run_backtest):
     mock_run_backtest.return_value = _make_dummy_backtest_result()
 
     request = _make_comparison_request(num_strategies=2)
-    result = run_comparison(request)
+    result = run_comparison(request, db_path="test.db")
 
     assert result.request is request
 
@@ -258,7 +258,7 @@ def test_market_data_shared(mock_run_backtest):
         strategies=strategies,
     )
 
-    run_comparison(request)
+    run_comparison(request, db_path="test.db")
 
     assert mock_run_backtest.call_count == 3
 

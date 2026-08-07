@@ -102,9 +102,18 @@ graph TD
 | **Database** | SQLite (local market data cache) |
 | **Data Visualization** | Plotly, Plotly.js |
 | **Testing** | pytest |
+| **CI/CD** | GitHub Actions |
+| **Containerization** | Docker |
 
 
 ## Development Changelog
+
+### 2026-08-07 — Architecture Refactoring & DevOps
+- Refactored data and service layers to use dependency injection, decoupling business logic from Flask framework
+- Added environment-based configuration system for development and production settings
+- Added Docker support for containerized deployment
+- Added GitHub Actions CI/CD pipeline for automated testing on every commit
+- Simplified test infrastructure by removing Flask dependencies from data layer tests
 
 ### 2026-08-06 — Advanced Charting
 - Price chart now renders OHLC data as candlesticks instead of a simple close-price line

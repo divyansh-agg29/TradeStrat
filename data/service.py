@@ -15,7 +15,7 @@ Current workflow (Version 2A):
           ↓
     Return Standardized DataFrame
 """
-from flask import current_app
+
 
 import pandas as pd
 
@@ -33,6 +33,7 @@ def get_stock_data(
     ticker: str,
     start_date: str,
     end_date: str,
+    db_path: str,
 ) -> pd.DataFrame:
     """
     Retrieve historical market data for a stock.
@@ -49,6 +50,7 @@ def get_stock_data(
         ticker: NSE stock ticker (e.g. "RELIANCE.NS").
         start_date: Start date in YYYY-MM-DD format.
         end_date: End date in YYYY-MM-DD format.
+        db_path: Path to the SQLite database file.
 
     Returns:
         A standardized pandas DataFrame that satisfies the project's
@@ -85,7 +87,7 @@ def get_stock_data(
     # Step 2: Ensure database connection is available.
     global _DB_CONN
     if _DB_CONN is None:
-        _DB_CONN = initialize_db(current_app.config["DATABASE_PATH"])
+        _DB_CONN = initialize_db(db_path)
 
     # Step 3: Retrieve data (cache-first, download on miss).
     cleaned_data = retrieve_market_data(

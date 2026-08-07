@@ -9,16 +9,6 @@ import pytest
 
 from data.service import get_stock_data
 
-from app import create_app
-
-
-@pytest.fixture
-def app_context():
-    app = create_app()
-
-    with app.app_context():
-        yield app
-
 
 @patch("data.service.retrieve_market_data")
 @patch("data.service.initialize_db")
@@ -27,7 +17,6 @@ def test_get_stock_data_success(
     mock_validate_request,
     mock_initialize_db,
     mock_retrieve,
-    app_context,
 ):
     """
     Verify that the service validates the request, initialises the
@@ -54,6 +43,7 @@ def test_get_stock_data_success(
         "RELIANCE.NS",
         "2024-01-01",
         "2024-12-31",
+        "test.db",
     )
 
     mock_validate_request.assert_called_once_with(
@@ -81,7 +71,6 @@ def test_get_stock_data_validation_failure(
     mock_validate_request,
     mock_initialize_db,
     mock_retrieve,
-    app_context,
 ):
     """
     Verify that validation errors are propagated and no
@@ -97,6 +86,7 @@ def test_get_stock_data_validation_failure(
             "INVALID",
             "2024-01-01",
             "2024-12-31",
+            "test.db",
         )
 
     mock_initialize_db.assert_not_called()
@@ -110,7 +100,6 @@ def test_get_stock_data_retrieval_failure(
     mock_validate_request,
     mock_initialize_db,
     mock_retrieve,
-    app_context,
 ):
     """
     Verify that errors from retrieve_market_data are propagated.
@@ -130,6 +119,7 @@ def test_get_stock_data_retrieval_failure(
             "RELIANCE.NS",
             "2024-01-01",
             "2024-12-31",
+            "test.db",
         )
 
     mock_validate_request.assert_called_once()
@@ -144,7 +134,6 @@ def test_get_stock_data_cleaning_failure(
     mock_validate_request,
     mock_initialize_db,
     mock_retrieve,
-    app_context,
 ):
     """
     Verify that cleaning errors (raised inside retrieve_market_data)
@@ -165,6 +154,7 @@ def test_get_stock_data_cleaning_failure(
             "RELIANCE.NS",
             "2024-01-01",
             "2024-12-31",
+            "test.db",
         )
 
     mock_validate_request.assert_called_once()
@@ -179,7 +169,6 @@ def test_db_connection_reused_across_calls(
     mock_validate_request,
     mock_initialize_db,
     mock_retrieve,
-    app_context,
 ):
     """
     Verify that initialize_db is called only once even when
@@ -192,8 +181,8 @@ def test_db_connection_reused_across_calls(
     mock_initialize_db.return_value = mock_conn
     mock_retrieve.return_value = pd.DataFrame()
 
-    get_stock_data("RELIANCE.NS", "2024-01-01", "2024-06-30")
-    get_stock_data("TCS.NS", "2024-01-01", "2024-06-30")
+    get_stock_data("RELIANCE.NS", "2024-01-01", "2024-06-30", "test.db")
+    get_stock_data("TCS.NS", "2024-01-01", "2024-06-30", "test.db")
 
     mock_initialize_db.assert_called_once()
     assert mock_retrieve.call_count == 2

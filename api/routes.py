@@ -4,7 +4,7 @@ API routes.
 All REST endpoints are defined here.
 """
 
-from flask import jsonify, request, render_template
+from flask import jsonify, request, render_template, current_app
 
 
 from api import api
@@ -115,8 +115,11 @@ def backtest():
 
         backtest_request = _parse_request(data)
 
+        db_path = current_app.config["DATABASE_PATH"]
+
         result = run_backtest(
-            backtest_request
+            backtest_request,
+            db_path=db_path,
         )
 
         response = serialize_backtest_result(
@@ -185,8 +188,11 @@ def compare():
 
         comparison_request = _parse_comparison_request(data)
 
+        db_path = current_app.config["DATABASE_PATH"]
+
         comparison_result = run_comparison(
-            comparison_request
+            comparison_request,
+            db_path=db_path,
         )
 
         response = serialize_comparison_result(

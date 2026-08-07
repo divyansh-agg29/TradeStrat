@@ -31,6 +31,7 @@ logger = get_logger(__name__)
 
 def run_backtest(
     request: BacktestRequest,
+    db_path: str,
 ) -> BacktestResult:
     """
     Execute a complete trading strategy backtest.
@@ -39,6 +40,8 @@ def run_backtest(
     ----------
     request : BacktestRequest
         Configuration describing the requested backtest.
+    db_path : str
+        Path to the SQLite database file for market data storage.
 
     Returns
     -------
@@ -54,7 +57,7 @@ def run_backtest(
         request.strategy.type
     )
 
-    market_data = _get_market_data(request)
+    market_data = _get_market_data(request, db_path)
 
     strategy_result = _execute_strategy(
         market_data,
@@ -112,6 +115,7 @@ def _validate_request(
 
 def _get_market_data(
     request: BacktestRequest,
+    db_path: str,
 ):
     """
     Download market data including a warm-up period.
@@ -119,6 +123,13 @@ def _get_market_data(
     An additional one year of historical data is downloaded prior to
     the requested start date to allow recursive indicators (EMA, RSI,
     MACD, etc.) to stabilize before the backtest begins.
+
+    Parameters
+    ----------
+    request : BacktestRequest
+        The backtest request containing ticker and date information.
+    db_path : str
+        Path to the SQLite database file for market data storage.
     """
 
     warmup_start_date = _get_warmup_start_date(
@@ -137,6 +148,7 @@ def _get_market_data(
         ticker=request.ticker,
         start_date=warmup_start_date,
         end_date=request.end_date,
+        db_path=db_path,
     )
 
 def _get_warmup_start_date(

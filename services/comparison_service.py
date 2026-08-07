@@ -24,7 +24,10 @@ from utils.logger import get_logger
 logger = get_logger(__name__)
 
 
-def run_comparison(request: ComparisonRequest) -> ComparisonResult:
+def run_comparison(
+    request: ComparisonRequest,
+    db_path: str,
+) -> ComparisonResult:
     """
     Execute a strategy comparison.
 
@@ -32,7 +35,9 @@ def run_comparison(request: ComparisonRequest) -> ComparisonResult:
     ----------
     request : ComparisonRequest
         Comparison configuration containing shared parameters
-        and a list of 2–6 strategy configurations.
+        and a list of 2-6 strategy configurations.
+    db_path : str
+        Path to the SQLite database file for market data storage.
 
     Returns
     -------
@@ -76,7 +81,7 @@ def run_comparison(request: ComparisonRequest) -> ComparisonResult:
                 strategy_count,
                 strategy_config.type,
             )
-            result = run_backtest(backtest_request)
+            result = run_backtest(backtest_request, db_path)
             strategy_results.append(
                 StrategyResult(
                     strategy=strategy_config,
