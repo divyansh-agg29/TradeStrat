@@ -10,6 +10,7 @@ class BaseConfig:
 
     DATABASE_PATH = PROJECT_ROOT / "market_data.db"
 
+
 class DevelopmentConfig(BaseConfig):
     """
     Development environment configuration.
@@ -18,6 +19,14 @@ class DevelopmentConfig(BaseConfig):
     HOST = "127.0.0.1"
     PORT = 5000
     LOG_LEVEL = "DEBUG"
+    TESTING = False
+    RATELIMIT_ENABLED = True
+
+class TestConfig(DevelopmentConfig):
+    TESTING = True
+    RATELIMIT_ENABLED = False
+
+
 
 class ProductionConfig(BaseConfig):
     """
@@ -27,3 +36,5 @@ class ProductionConfig(BaseConfig):
     HOST = "0.0.0.0"
     PORT = int(os.environ.get("PORT", 5000))
     LOG_LEVEL = "INFO"
+    TESTING = False
+    RATELIMIT_ENABLED = True

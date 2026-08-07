@@ -6,16 +6,16 @@ from unittest.mock import patch
 
 import pytest
 
-from app import app
-
+from app import create_app
+from config import TestConfig
 
 @pytest.fixture
 def client():
     """
     Create a Flask test client.
     """
+    app = create_app(TestConfig)
 
-    app.config["TESTING"] = True
 
     with app.test_client() as client:
         yield client
@@ -335,6 +335,40 @@ def test_backtest_missing_strategy(client):
 
     assert "error" in data
 
+
+
+@patch("api.routes.run_backtest")
+def test_backtest_internal_server_error(
+    mock_run_backtest,
+    client,
+):
+    """
+    Unexpected exceptions should return HTTP 500.
+    """
+
+    mock_run_backtest.side_effect = RuntimeError(
+        "Unexpected failure."
+    )
+
+    response = client.post(
+        "/backtest",
+        json=_create_request_payload(),
+    )
+
+    assert response.status_code == 500
+
+    data = response.get_json()
+
+    assert data["success"] is False
+
+    assert data["error"]["type"] == "RuntimeError"
+
+    assert (
+        data["error"]["message"]
+        == "An unexpected internal error occurred."
+    )
+
+
 def test_backtest_invalid_json(client):
     """
     Invalid JSON should return HTTP 400.
@@ -387,34 +421,3 @@ def test_backtest_service_validation_error(
     assert data["error"]["type"] == "ValueError"
 
     assert data["error"]["message"] == "Invalid ticker."
-
-@patch("api.routes.run_backtest")
-def test_backtest_internal_server_error(
-    mock_run_backtest,
-    client,
-):
-    """
-    Unexpected exceptions should return HTTP 500.
-    """
-
-    mock_run_backtest.side_effect = RuntimeError(
-        "Unexpected failure."
-    )
-
-    response = client.post(
-        "/backtest",
-        json=_create_request_payload(),
-    )
-
-    assert response.status_code == 500
-
-    data = response.get_json()
-
-    assert data["success"] is False
-
-    assert data["error"]["type"] == "RuntimeError"
-
-    assert (
-        data["error"]["message"]
-        == "An unexpected internal error occurred."
-    )

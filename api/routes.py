@@ -9,6 +9,7 @@ from flask import jsonify, request, render_template, current_app
 
 from api import api
 from utils.logger import get_logger
+from utils.rate_limiter import limiter
 
 from models import BacktestRequest, ComparisonRequest, RiskConfig, StrategyConfig
 from serialization import serialize_backtest_result, serialize_comparison_result
@@ -97,6 +98,7 @@ def index():
     return render_template("index.html")
 
 @api.route("/backtest", methods=["POST"])
+@limiter.limit("5 per minute")
 def backtest():
     """
     Execute a complete strategy backtest.
@@ -169,6 +171,7 @@ def backtest():
 
 
 @api.route("/compare", methods=["POST"])
+@limiter.limit("5 per minute")
 def compare():
     """
     Execute a strategy comparison.

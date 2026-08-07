@@ -6,7 +6,8 @@ from unittest.mock import patch, MagicMock
 
 import pytest
 
-from app import app
+from app import create_app
+from config import TestConfig
 from models import BacktestResult
 
 
@@ -15,8 +16,7 @@ def client():
     """
     Create a Flask test client.
     """
-
-    app.config["TESTING"] = True
+    app = create_app(TestConfig)
 
     with app.test_client() as client:
         yield client
