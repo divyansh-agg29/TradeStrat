@@ -1,6 +1,8 @@
 # TradeStrat
 A web-based modular trading strategy analysis platform for backtesting, portfolio simulation and performance evaluation on historical stock market data.
 
+[Live Demo](https://tradestrat.onrender.com/) — Try the deployed application
+
 
 ## Features
 
@@ -104,6 +106,15 @@ graph TD
 | **Testing** | pytest |
 | **CI/CD** | GitHub Actions |
 | **Containerization** | Docker |
+
+
+# Additional Documentation
+
+For more information, refer to:
+
+* `docs/SETUP.md` — Project setup and configuration
+* `docs/API.md` — REST API documentation
+* `docs/adr/` — Architecture Decision Records
 
 
 ## Development Changelog
