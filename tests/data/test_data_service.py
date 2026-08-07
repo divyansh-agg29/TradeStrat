@@ -9,6 +9,16 @@ import pytest
 
 from data.service import get_stock_data
 
+from app import create_app
+
+
+@pytest.fixture
+def app_context():
+    app = create_app()
+
+    with app.app_context():
+        yield app
+
 
 @patch("data.service.retrieve_market_data")
 @patch("data.service.initialize_db")
@@ -17,6 +27,7 @@ def test_get_stock_data_success(
     mock_validate_request,
     mock_initialize_db,
     mock_retrieve,
+    app_context,
 ):
     """
     Verify that the service validates the request, initialises the
@@ -70,6 +81,7 @@ def test_get_stock_data_validation_failure(
     mock_validate_request,
     mock_initialize_db,
     mock_retrieve,
+    app_context,
 ):
     """
     Verify that validation errors are propagated and no
@@ -98,6 +110,7 @@ def test_get_stock_data_retrieval_failure(
     mock_validate_request,
     mock_initialize_db,
     mock_retrieve,
+    app_context,
 ):
     """
     Verify that errors from retrieve_market_data are propagated.
@@ -131,6 +144,7 @@ def test_get_stock_data_cleaning_failure(
     mock_validate_request,
     mock_initialize_db,
     mock_retrieve,
+    app_context,
 ):
     """
     Verify that cleaning errors (raised inside retrieve_market_data)
@@ -165,6 +179,7 @@ def test_db_connection_reused_across_calls(
     mock_validate_request,
     mock_initialize_db,
     mock_retrieve,
+    app_context,
 ):
     """
     Verify that initialize_db is called only once even when
