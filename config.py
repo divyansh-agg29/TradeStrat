@@ -8,7 +8,7 @@ class BaseConfig:
     
     PROJECT_ROOT = Path(__file__).resolve().parent
 
-    DATABASE_PATH = PROJECT_ROOT / "data" / "market_data.db"
+    DATABASE_PATH = PROJECT_ROOT / "market_data.db"
 
 class DevelopmentConfig(BaseConfig):
     """
