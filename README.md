@@ -108,11 +108,13 @@ graph TD
 
 ## Development Changelog
 
-### 2026-08-07 — Architecture Refactoring & DevOps
+### 2026-08-07 — Architecture, DevOps & API Production Hardening
 - Refactored data and service layers to use dependency injection, decoupling business logic from Flask framework
 - Added environment-based configuration system for development and production settings
 - Added Docker support for containerized deployment
 - Added GitHub Actions CI/CD pipeline for automated testing on every commit
+- Added rate limiting to API endpoints (5 requests per minute) with custom error handler
+- Added request/response logging with execution time tracking for all API requests
 - Simplified test infrastructure by removing Flask dependencies from data layer tests
 
 ### 2026-08-06 — Advanced Charting

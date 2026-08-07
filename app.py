@@ -2,7 +2,8 @@
 Application entry point.
 """
 import os
-from flask import Flask, jsonify
+import time
+from flask import Flask, jsonify, request, g
 from flask_limiter.errors import RateLimitExceeded
 from config import DevelopmentConfig, ProductionConfig
 
@@ -43,6 +44,53 @@ def create_app(config_object=None) -> Flask:
     configure_logging(app.config["LOG_LEVEL"])
 
     limiter.init_app(app)
+
+    @app.before_request
+    def log_request_start():
+        """
+        Record request start time and log the incoming request.
+        """
+
+        g.start_time = time.perf_counter()
+
+        logger.info(
+            "Request started: %s %s",
+            request.method,
+            request.path,
+        )
+
+    @app.after_request
+    def log_request_end(response):
+        """
+        Log request completion and execution time.
+        """
+
+        duration = None
+
+        if hasattr(g, "start_time"):
+            duration = time.perf_counter() - g.start_time
+
+        if duration is None:
+            logger.info(
+                "Request completed: %s %s | Status=%d",
+                request.method,
+                request.path,
+                response.status_code,
+            )
+        else:
+            logger.info(
+                (
+                    "Request completed: %s %s | "
+                    "Status=%d | Duration=%.3fs"
+                ),
+                request.method,
+                request.path,
+                response.status_code,
+                duration,
+            )
+
+        return response
+
 
     @app.errorhandler(RateLimitExceeded)
     def handle_rate_limit(error):
