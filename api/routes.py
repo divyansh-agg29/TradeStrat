@@ -102,7 +102,6 @@ def health():
     """
     Health check endpoint.
     """
-    logger.info("Health check requested.")
 
     return jsonify(
         {
