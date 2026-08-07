@@ -114,7 +114,6 @@ For more information, refer to:
 
 * `docs/SETUP.md` — Project setup and configuration
 * `docs/API.md` — REST API documentation
-* `docs/adr/` — Architecture Decision Records
 
 
 ## Development Changelog
