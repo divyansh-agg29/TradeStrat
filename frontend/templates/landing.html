@@ -19,6 +19,7 @@
             <div class="nav-links">
                 <a href="#features">Features</a>
                 <a href="#strategies">Strategies</a>
+                <a href="#coming-soon">Roadmap</a>
                 <a href="/app" class="nav-cta">Try Demo</a>
             </div>
         </div>
@@ -128,6 +129,39 @@
                 </div>
             </div>
 
+            <!-- Showcase 4: Strategy Comparison -->
+            <div class="showcase-row reverse">
+                <div class="showcase-visual">
+                    <img src="{{ url_for('static', filename='images/comparison-dashboard.png') }}" alt="Strategy Comparison Dashboard" class="showcase-screenshot">
+                </div>
+                <div class="showcase-text">
+                    <h3>Multi-Strategy Comparison</h3>
+                    <p>Select up to 6 strategies, run them against the same ticker and time period, and instantly see which one performs best.</p>
+                    <ul class="showcase-features-list">
+                        <li>Side-by-side metrics matrix</li>
+                        <li>Overlaid equity curves</li>
+                        <li>Drawdown comparison charts</li>
+                        <li>Per-strategy trade history</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Showcase 5: Benchmark Comparison -->
+            <div class="showcase-row">
+                <div class="showcase-visual">
+                    <img src="{{ url_for('static', filename='images/equity-curve-benchmark.png') }}" alt="Equity Curve - Strategy vs Benchmark" class="showcase-screenshot">
+                </div>
+                <div class="showcase-text">
+                    <h3>Beat the Market?</h3>
+                    <p>Compare your strategy against Buy &amp; Hold to measure real alpha and see if your strategy truly outperforms a passive investment approach.</p>
+                    <ul class="showcase-features-list">
+                        <li>Strategy vs Buy &amp; Hold comparison</li>
+                        <li>Alpha calculation</li>
+                        <li>Overlaid equity curves</li>
+                    </ul>
+                </div>
+            </div>
+
         </div>
     </section>
 
@@ -158,48 +192,55 @@
                     <p>Overbought/oversold reversal trading</p>
                 </div>
 
-                <div class="strategy-card coming-soon-card">
-                    <h4>More Coming Soon</h4>
-                    <p>Additional strategies are actively being developed</p>
-                </div>
-
             </div>
         </div>
     </section>
 
-    <!-- ================= STRATEGY COMPARISON ================= -->
+    <!-- ================= COMING SOON ================= -->
 
-    <section id="compare">
+    <section id="coming-soon">
         <div class="section-container">
-            <h2 class="section-heading">Compare Strategies Side by Side</h2>
-            <p class="section-subheading">Run multiple strategies on the same dataset and compare their performance head-to-head</p>
+            <h2 class="section-heading">Coming Soon</h2>
+            <p class="section-subheading">Features currently in development</p>
 
-            <div class="showcase-row">
-                <div class="showcase-visual">
-                    <img src="{{ url_for('static', filename='images/comparison-dashboard.png') }}" alt="Strategy Comparison Dashboard" class="showcase-screenshot">
+            <div class="coming-soon-grid">
+
+                <div class="coming-soon-item">
+                    <div class="coming-soon-badge">Improvement</div>
+                    <h4>More Indicators & Strategies</h4>
+                    <p>Expand the strategy library with Bollinger Bands, Stochastic Oscillator, and custom combinations</p>
                 </div>
-                <div class="showcase-text">
-                    <h3>Multi-Strategy Comparison</h3>
-                    <p>Select up to 6 strategies, run them against the same ticker and time period, and instantly see which one performs best.</p>
-                    <ul class="showcase-features-list">
-                        <li>Side-by-side metrics matrix</li>
-                        <li>Overlaid equity curves</li>
-                        <li>Drawdown comparison charts</li>
-                        <li>Per-strategy trade history</li>
-                    </ul>
+
+                <div class="coming-soon-item">
+                    <div class="coming-soon-badge">Improvement</div>
+                    <h4>Flexible Stop-Loss & Take-Profit</h4>
+                    <p>Advanced exit rules including trailing stops, time-based exits, and conditional triggers</p>
                 </div>
-            </div>
-        </div>
-    </section>
 
-    <!-- ================= BENCHMARK HIGHLIGHT ================= -->
+                <div class="coming-soon-item">
+                    <div class="coming-soon-badge">New</div>
+                    <h4>Position Sizing</h4>
+                    <p>Control risk with fixed percentage, fixed amount, and Kelly Criterion position sizing methods</p>
+                </div>
 
-    <section id="benchmark">
-        <div class="section-container">
-            <h2 class="section-heading">Beat the Market?</h2>
-            <p class="section-subheading">Compare your strategy against Buy &amp; Hold to measure real alpha</p>
-            <div class="benchmark-visual">
-                <img src="{{ url_for('static', filename='images/equity-curve-benchmark.png') }}" alt="Equity Curve - Strategy vs Benchmark" class="benchmark-screenshot">
+                <div class="coming-soon-item">
+                    <div class="coming-soon-badge">New</div>
+                    <h4>Parameter Grid Search</h4>
+                    <p>Automatically find optimal strategy parameters by testing thousands of combinations</p>
+                </div>
+
+                <div class="coming-soon-item">
+                    <div class="coming-soon-badge">New</div>
+                    <h4>Monte Carlo Simulation</h4>
+                    <p>Test strategy robustness with thousands of randomized scenarios and confidence intervals</p>
+                </div>
+
+                <div class="coming-soon-item">
+                    <div class="coming-soon-badge">New</div>
+                    <h4>PDF & HTML Reports</h4>
+                    <p>Export professional backtest reports with charts, metrics, and trade logs</p>
+                </div>
+
             </div>
         </div>
     </section>

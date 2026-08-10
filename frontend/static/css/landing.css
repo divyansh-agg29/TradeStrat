@@ -427,33 +427,6 @@ body {
 }
 
 
-/* ==========================================
-   Compare Section
-========================================== */
-
-#compare {
-    padding: 100px 0;
-    background: var(--landing-bg-alt);
-}
-
-
-/* ==========================================
-   Benchmark Section
-========================================== */
-
-#benchmark {
-    padding: 100px 0;
-    text-align: center;
-}
-
-.benchmark-visual {
-    max-width: 900px;
-    margin: 0 auto;
-}
-
-.benchmark-visual .screenshot-placeholder {
-    min-height: 360px;
-}
 
 
 /* ==========================================
@@ -586,11 +559,8 @@ body {
         grid-template-columns: repeat(2, 1fr);
     }
 
-    #compare .showcase-row,
-    #compare .showcase-row.reverse {
-        grid-template-columns: 1fr;
-        gap: 32px;
-        direction: ltr;
+    .coming-soon-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 
     .section-heading {
@@ -620,21 +590,57 @@ body {
 
 
 /* ==========================================
-   Coming Soon Card
+   Coming Soon Section
 ========================================== */
 
-.coming-soon-card {
-    border-style: dashed;
-    border-color: var(--landing-border);
-    opacity: 0.7;
+#coming-soon {
+    padding: 100px 0;
 }
 
-.coming-soon-card h4 {
-    color: var(--landing-text-muted);
+.coming-soon-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+    margin-top: 48px;
 }
 
-.coming-soon-card p {
-    color: var(--landing-text-muted);
+.coming-soon-item {
+    background: var(--landing-bg-alt);
+    border: 1px solid var(--landing-border);
+    border-radius: var(--landing-radius);
+    padding: 32px 28px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.coming-soon-item:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--landing-shadow);
+}
+
+.coming-soon-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+    background: rgba(108, 117, 247, 0.15);
+    color: var(--landing-primary);
+}
+
+.coming-soon-item h4 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--landing-text);
+    margin-bottom: 10px;
+}
+
+.coming-soon-item p {
+    font-size: 0.9rem;
+    color: var(--landing-text-secondary);
+    line-height: 1.6;
 }
 
 
@@ -662,13 +668,16 @@ body {
     #features,
     #showcase,
     #strategies,
-    #compare,
-    #benchmark,
+    #coming-soon,
     #cta {
         padding: 64px 0;
     }
 
     .strategies-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .coming-soon-grid {
         grid-template-columns: 1fr;
     }
 
@@ -678,9 +687,5 @@ body {
 
     .showcase-visual .screenshot-placeholder {
         min-height: 220px;
-    }
-
-    .benchmark-visual .screenshot-placeholder {
-        min-height: 240px;
     }
 }
