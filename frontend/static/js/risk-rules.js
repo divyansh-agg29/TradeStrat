@@ -29,7 +29,7 @@ const STOP_LOSS_REGISTRY = {
     fixed_price_offset: {
         label: "Fixed Price Offset",
         parameters: [
-            {key: "offset", label: "Price Offset", type: "number", default: 5, min: 0.01, step: 0.01}
+            {key: "offset", label: "Price Offset", type: "number", default: 100, min: 0.1, step: 0.1}
         ],
 
         toPayload(params) {
@@ -103,7 +103,7 @@ const TAKE_PROFIT_REGISTRY = {
     fixed_amount: {
         label: "Fixed Amount",
         parameters: [
-            {key: "amount", label: "Take Profit $", type: "number", default: 10, min: 0.01, step: 0.01}
+            {key: "amount", label: "Take Profit Amount", type: "number", default: 100, min: 0.1, step: 0.1}
         ],
 
         toPayload(params) {
@@ -117,7 +117,7 @@ const TAKE_PROFIT_REGISTRY = {
         validate(params) {
             const errors = [];
             if (!params.amount || params.amount <= 0) {
-                errors.push("Take Profit $ must be greater than zero.");
+                errors.push("Take Profit amount must be greater than zero.");
             }
             return errors;
         }

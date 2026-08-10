@@ -118,6 +118,13 @@ For more information, refer to:
 
 ## Development Changelog
 
+### 2026-08-10 — Landing Page & Marketing Site
+- Created professional dark-themed landing page as the new home route (`/`)
+- Moved existing dashboard application to `/app` route
+- Landing page features: hero section, feature cards, product showcase, strategy grid, comparison section, benchmark highlight
+- Integrated app screenshots for all sections
+- Dashboard title now links back to landing page
+
 ### 2026-08-07 — Architecture, DevOps & API Production Hardening
 - Refactored data and service layers to use dependency injection, decoupling business logic from Flask framework
 - Added environment-based configuration system for development and production settings

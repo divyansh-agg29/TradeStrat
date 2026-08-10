@@ -94,8 +94,14 @@ def _parse_request(data: dict) -> BacktestRequest:
 
 
 @api.route("/", methods=["GET"])
-def index():
-    return render_template("index.html")
+def landing():
+    """Landing page"""
+    return render_template("landing.html")
+
+@api.route("/app", methods=["GET"])
+def dashboard():
+    """Dashboard application"""
+    return render_template("app.html")
 
 @api.route("/health", methods=["GET"])
 def health():

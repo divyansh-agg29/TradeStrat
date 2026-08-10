@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TradeStrat - Trading Strategy Analysis Platform</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- ================= NAVIGATION ================= -->
+
+    <nav id="landing-nav">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">TradeStrat</a>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#strategies">Strategies</a>
+                <a href="/app" class="nav-cta">Try Demo</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ================= HERO ================= -->
+
+    <section id="hero">
+        <div class="hero-container">
+            <h1 class="hero-title">TradeStrat</h1>
+            <p class="hero-subtitle">Analyze and compare trading strategies using historical market data</p>
+            <div class="hero-actions">
+                <a href="/app" class="btn-primary-lg">Try Demo</a>
+                <a href="https://github.com/divyansh-agg29/TradeStrat" target="_blank" rel="noopener" class="btn-secondary-lg">View GitHub</a>
+            </div>
+            <div class="hero-visual">
+                <img src="{{ url_for('static', filename='images/dashboard-hero.png') }}" alt="TradeStrat Dashboard" class="hero-screenshot">
+            </div>
+        </div>
+    </section>
+
+    <!-- ================= CORE FEATURES ================= -->
+
+    <section id="features">
+        <div class="section-container">
+            <h2 class="section-heading">Everything you need to evaluate a strategy</h2>
+            <div class="features-grid">
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                    </div>
+                    <h3>Historical Backtesting</h3>
+                    <p>Run trading strategies against years of historical market data</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                    </div>
+                    <h3>Performance Analytics</h3>
+                    <p>Evaluate returns, risk metrics, benchmark comparison, and trade statistics</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
+                    </div>
+                    <h3>Interactive Visualization</h3>
+                    <p>Explore price charts, equity curves, drawdown analysis, and trade history</p>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ================= PRODUCT SHOWCASE ================= -->
+
+    <section id="showcase">
+        <div class="section-container">
+
+            <!-- Showcase 1: Price Chart Analysis -->
+            <div class="showcase-row">
+                <div class="showcase-visual">
+                    <img src="{{ url_for('static', filename='images/price-chart.png') }}" alt="Price Chart with Candlesticks and Indicators" class="showcase-screenshot">
+                </div>
+                <div class="showcase-text">
+                    <h3>Price Chart Analysis</h3>
+                    <p>Visualize market data with candlestick charts, overlay technical indicators, and see exactly where your strategy generates buy and sell signals.</p>
+                    <ul class="showcase-features-list">
+                        <li>Candlestick &amp; line charts</li>
+                        <li>Technical indicator overlays</li>
+                        <li>Signal markers for entries &amp; exits</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Showcase 2: Portfolio Analytics -->
+            <div class="showcase-row reverse">
+                <div class="showcase-visual">
+                    <img src="{{ url_for('static', filename='images/kpi-metrics.png') }}" alt="KPI Cards and Metrics Panels" class="showcase-screenshot">
+                </div>
+                <div class="showcase-text">
+                    <h3>Portfolio Analytics</h3>
+                    <p>Get a comprehensive breakdown of your strategy's performance with KPI cards, risk metrics, and benchmark comparisons at a glance.</p>
+                    <ul class="showcase-features-list">
+                        <li>KPI cards with interpretations</li>
+                        <li>Portfolio &amp; risk metrics panels</li>
+                        <li>Alpha &amp; benchmark analysis</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Showcase 3: Trade Execution History -->
+            <div class="showcase-row">
+                <div class="showcase-visual">
+                    <img src="{{ url_for('static', filename='images/trade-history.png') }}" alt="Trade History Table" class="showcase-screenshot">
+                </div>
+                <div class="showcase-text">
+                    <h3>Trade Execution History</h3>
+                    <p>Drill into every trade your strategy executed. See entry/exit dates, prices, holding periods, and individual profit/loss details.</p>
+                    <ul class="showcase-features-list">
+                        <li>Completed trades log</li>
+                        <li>P/L tracking per trade</li>
+                        <li>Execution details &amp; exit reasons</li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ================= STRATEGIES GRID ================= -->
+
+    <section id="strategies">
+        <div class="section-container">
+            <h2 class="section-heading">Powerful Strategies Built-In</h2>
+            <div class="strategies-grid">
+
+                <div class="strategy-card">
+                    <h4>SMA Crossover</h4>
+                    <p>Buy/sell based on simple moving average crossovers</p>
+                </div>
+
+                <div class="strategy-card">
+                    <h4>EMA Crossover</h4>
+                    <p>Exponential moving average trend following</p>
+                </div>
+
+                <div class="strategy-card">
+                    <h4>MACD Crossover</h4>
+                    <p>Momentum-based entry and exit signals</p>
+                </div>
+
+                <div class="strategy-card">
+                    <h4>RSI Mean Reversion</h4>
+                    <p>Overbought/oversold reversal trading</p>
+                </div>
+
+                <div class="strategy-card coming-soon-card">
+                    <h4>More Coming Soon</h4>
+                    <p>Additional strategies are actively being developed</p>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ================= STRATEGY COMPARISON ================= -->
+
+    <section id="compare">
+        <div class="section-container">
+            <h2 class="section-heading">Compare Strategies Side by Side</h2>
+            <p class="section-subheading">Run multiple strategies on the same dataset and compare their performance head-to-head</p>
+
+            <div class="showcase-row">
+                <div class="showcase-visual">
+                    <img src="{{ url_for('static', filename='images/comparison-dashboard.png') }}" alt="Strategy Comparison Dashboard" class="showcase-screenshot">
+                </div>
+                <div class="showcase-text">
+                    <h3>Multi-Strategy Comparison</h3>
+                    <p>Select up to 6 strategies, run them against the same ticker and time period, and instantly see which one performs best.</p>
+                    <ul class="showcase-features-list">
+                        <li>Side-by-side metrics matrix</li>
+                        <li>Overlaid equity curves</li>
+                        <li>Drawdown comparison charts</li>
+                        <li>Per-strategy trade history</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ================= BENCHMARK HIGHLIGHT ================= -->
+
+    <section id="benchmark">
+        <div class="section-container">
+            <h2 class="section-heading">Beat the Market?</h2>
+            <p class="section-subheading">Compare your strategy against Buy &amp; Hold to measure real alpha</p>
+            <div class="benchmark-visual">
+                <img src="{{ url_for('static', filename='images/equity-curve-benchmark.png') }}" alt="Equity Curve - Strategy vs Benchmark" class="benchmark-screenshot">
+            </div>
+        </div>
+    </section>
+
+    <!-- ================= FINAL CTA ================= -->
+
+    <section id="cta">
+        <div class="section-container cta-container">
+            <h2 class="cta-heading">Ready to explore?</h2>
+            <p class="cta-subtext">Start backtesting your strategies in seconds</p>
+            <div class="cta-actions">
+                <a href="/app" class="btn-primary-lg">Get Started</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ================= FOOTER ================= -->
+
+    <footer id="landing-footer">
+        <div class="footer-container">
+            
+            <div class="footer-center">
+                <a href="https://github.com/divyansh-agg29/TradeStrat" target="_blank" rel="noopener">GitHub</a>
+            </div>
+            <div class="footer-right">
+                TradeStrat
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
+
+</body>
+
+</html>
