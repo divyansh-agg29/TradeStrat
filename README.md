@@ -3,6 +3,9 @@ A web-based modular trading strategy analysis platform for backtesting, portfoli
 
 [Live Demo](https://tradestrat.onrender.com/) — Try the deployed application
 
+![Tests](https://github.com/divyansh-agg29/TradeStrat/actions/workflows/tests.yml/badge.svg)
+[![Coverage](https://github.com/divyansh-agg29/TradeStrat/branch/main/graph/badge.svg)](https://codecov.io/gh/divyansh-agg29/TradeStrat)
+
 
 ## Features
 
