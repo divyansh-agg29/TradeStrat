@@ -544,8 +544,9 @@ function renderCompareMatrix(results) {
 function renderCompareEquityChart(results, benchmark) {
 
     const traces = [];
+    let colorIndex = 0;
 
-    results.forEach(function(result, i) {
+    results.forEach(function(result) {
 
         if (!result.success || !result.analytics_history) {
             return;
@@ -556,8 +557,10 @@ function renderCompareEquityChart(results, benchmark) {
             y: result.analytics_history.map(function(r) { return r["Portfolio Value"]; }),
             mode: "lines",
             name: getStrategyLabel(result.strategy),
-            line: { color: STRATEGY_COLORS[i % STRATEGY_COLORS.length] },
+            line: { color: STRATEGY_COLORS[colorIndex % STRATEGY_COLORS.length] },
         });
+
+        colorIndex++;
 
     });
 
@@ -600,8 +603,9 @@ function renderCompareEquityChart(results, benchmark) {
 function renderCompareDrawdownChart(results) {
 
     const traces = [];
+    let colorIndex = 0;
 
-    results.forEach(function(result, i) {
+    results.forEach(function(result) {
 
         if (!result.success || !result.analytics_history) {
             return;
@@ -613,8 +617,10 @@ function renderCompareDrawdownChart(results) {
             mode: "lines",
             fill: "tozeroy",
             name: getStrategyLabel(result.strategy),
-            line: { color: STRATEGY_COLORS[i % STRATEGY_COLORS.length] },
+            line: { color: STRATEGY_COLORS[colorIndex % STRATEGY_COLORS.length] },
         });
+
+        colorIndex++;
 
     });
 
