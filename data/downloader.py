@@ -16,6 +16,8 @@ This module intentionally does NOT:
     - Perform business logic
 """
 
+import time
+
 import pandas as pd
 import yfinance as yf
 
@@ -28,21 +30,30 @@ def download_stock_data(
     ticker: str,
     start_date: str,
     end_date: str,
+    max_retries: int = 3,
+    initial_delay: float = 1.0,
 ) -> pd.DataFrame:
     """
-    Download historical market data for a stock.
+    Download historical market data for a stock with retry logic.
+
+    This function implements exponential backoff to handle transient
+    failures, particularly the cold-start issues on platforms like Render
+    where the first yfinance request often fails after deployment.
 
     Args:
         ticker: NSE ticker symbol (e.g. 'RELIANCE.NS').
         start_date: Start date in YYYY-MM-DD format.
         end_date: End date in YYYY-MM-DD format.
+        max_retries: Maximum number of retry attempts (default: 3).
+        initial_delay: Initial delay in seconds before first retry (default: 1.0).
 
     Returns:
         Raw historical market data as returned by Yahoo Finance.
 
     Raises:
         ConnectionError:
-            If Yahoo Finance cannot be reached or the download fails.
+            If Yahoo Finance cannot be reached or the download fails
+            after all retry attempts.
 
         ValueError:
             If no historical data is available for the requested
@@ -55,35 +66,58 @@ def download_stock_data(
         end_date,
     )
 
-    try:
-        stock = yf.Ticker(ticker)
+    last_exception = None
 
-        data = stock.history(
-            start=start_date,
-            end=end_date,
-        )
+    for attempt in range(max_retries):
+        try:
+            stock = yf.Ticker(ticker)
 
-    except Exception as exc:
-        logger.exception(
-            "Failed to download market data for '%s'.",
-            ticker,
-        )
-        raise ConnectionError(
-            f"Failed to download market data for '{ticker}'."
-        ) from exc
+            data = stock.history(
+                start=start_date,
+                end=end_date,
+            )
 
-    if data.empty:
-        logger.warning(
-            "No market data returned for '%s'.",
-            ticker,
-        )
-        raise ValueError(
-            f"No historical market data found for '{ticker}'."
-        )
+            if data.empty:
+                logger.warning(
+                    "No market data returned for '%s'.",
+                    ticker,
+                )
+                raise ValueError(
+                    f"No historical market data found for '{ticker}'."
+                )
 
-    logger.info(
-        "Download completed successfully. Rows downloaded: %d",
-        len(data),
-    )
+            logger.info(
+                "Download completed successfully. Rows downloaded: %d",
+                len(data),
+            )
 
-    return data
+            return data
+
+        except ValueError:
+            raise
+
+        except Exception as exc:
+            last_exception = exc
+            
+            if attempt < max_retries - 1:
+                delay = initial_delay * (2 ** attempt)
+                logger.warning(
+                    "Download attempt %d/%d failed for '%s'. "
+                    "Retrying in %.1f seconds... Error: %s",
+                    attempt + 1,
+                    max_retries,
+                    ticker,
+                    delay,
+                    str(exc),
+                )
+                time.sleep(delay)
+            else:
+                logger.exception(
+                    "Failed to download market data for '%s' after %d attempts.",
+                    ticker,
+                    max_retries,
+                )
+
+    raise ConnectionError(
+        f"Failed to download market data for '{ticker}' after {max_retries} attempts."
+    ) from last_exception
