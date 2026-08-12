@@ -21,7 +21,7 @@ def _parse_comparison_request(data: dict) -> ComparisonRequest:
     """
     Parse raw JSON dict into a ComparisonRequest.
 
-    Extracts common parameters (ticker, dates, capital, risk_free_rate)
+    Extracts common parameters (ticker, dates, capital, risk_free_rate, interval)
     and builds a list of StrategyConfig objects from the strategies array.
     """
 
@@ -42,6 +42,7 @@ def _parse_comparison_request(data: dict) -> ComparisonRequest:
         initial_capital=float(data.get("initial_capital", 100000)),
         risk_free_rate=float(data.get("risk_free_rate", 0.0)),
         strategies=strategies,
+        interval=data.get("interval", "1d"),
     )
 
 
@@ -90,6 +91,7 @@ def _parse_request(data: dict) -> BacktestRequest:
         ),
         strategy=strategy_config,
         risk=risk_config,
+        interval=data.get("interval", "1d"),
     )
 
 

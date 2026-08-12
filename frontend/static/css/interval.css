@@ -1,0 +1,38 @@
+/* Interval selector styling */
+
+.form-hint {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.85em;
+    color: var(--text-secondary, #666);
+    font-style: italic;
+}
+
+#interval,
+#compare-interval {
+    font-weight: 500;
+}
+
+#interval option,
+#compare-interval option {
+    padding: 8px;
+}
+
+/* Highlight selected interval */
+#interval:focus,
+#compare-interval:focus {
+    border-color: var(--primary-color, #4CAF50);
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
+}
+
+/* Interval validation error state */
+.interval-error {
+    border-color: #f44336 !important;
+}
+
+.interval-error-message {
+    color: #f44336;
+    font-size: 0.85em;
+    margin-top: 4px;
+    display: block;
+}

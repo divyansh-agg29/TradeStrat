@@ -15,6 +15,8 @@ function buildBacktestRequest(configuration) {
 
         initial_capital: configuration.initialCapital,
 
+        interval: configuration.interval || "1d",
+
         strategy: {
 
             type: configuration.strategy.type,

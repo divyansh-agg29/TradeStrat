@@ -57,9 +57,10 @@ def run_comparison(
         )
 
     logger.info(
-        "Starting comparison with %d strategies for %s.",
+        "Starting comparison with %d strategies for %s (interval=%s).",
         strategy_count,
         request.ticker,
+        request.interval,
     )
 
     strategy_results: list[StrategyResult] = []
@@ -72,6 +73,7 @@ def run_comparison(
             initial_capital=request.initial_capital,
             risk_free_rate=request.risk_free_rate,
             strategy=strategy_config,
+            interval=request.interval,
         )
 
         try:

@@ -82,7 +82,7 @@ class TestRetrieveMarketData:
         raw_df = _make_raw_df(dates)
         cleaned_df = _make_cleaned_df(dates)
 
-        store_data(db_conn, "RELIANCE.NS", raw_df, "2024-01-02", "2024-01-04")
+        store_data(db_conn, "RELIANCE.NS", raw_df, "2024-01-02", "2024-01-04", "1d")
 
         mock_clean.return_value = cleaned_df
 
@@ -118,6 +118,7 @@ class TestRetrieveMarketData:
             ticker="RELIANCE.NS",
             start_date="2024-01-02",
             end_date="2024-01-04",
+            interval="1d",
         )
         mock_clean.assert_called_once()
         pd.testing.assert_frame_equal(result, cleaned_df)
@@ -138,7 +139,7 @@ class TestRetrieveMarketData:
         raw_df = _make_raw_df(dates)
         cleaned_df = _make_cleaned_df(dates)
 
-        store_data(db_conn, "RELIANCE.NS", raw_df, "2024-01-02", "2024-01-03")
+        store_data(db_conn, "RELIANCE.NS", raw_df, "2024-01-02", "2024-01-03", "1d")
 
         # First clean call (on cached data) fails, second (on downloaded) succeeds.
         mock_clean.side_effect = [

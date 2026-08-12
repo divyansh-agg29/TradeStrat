@@ -50,6 +50,7 @@ def test_get_stock_data_success(
         ticker="RELIANCE.NS",
         start_date="2024-01-01",
         end_date="2024-12-31",
+        interval="1d",
     )
 
     mock_initialize_db.assert_called_once()
@@ -59,6 +60,7 @@ def test_get_stock_data_success(
         start_date="2024-01-01",
         end_date="2024-12-31",
         conn=mock_conn,
+        interval="1d",
     )
 
     pd.testing.assert_frame_equal(result, cleaned_df)

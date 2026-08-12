@@ -9,6 +9,42 @@
  */
 
 
+// ── Helpers ─────────────────────────────────────────────────
+
+
+function isIntradayData(chartSpec) {
+    // Detect intraday data by checking if timestamps have non-midnight times.
+    // Daily data uses isoformat() which produces "2024-01-01T00:00:00" (midnight).
+    // Intraday data has actual times like "2024-01-01T09:15:00+05:30".
+    
+    if (!chartSpec || !chartSpec.traces || chartSpec.traces.length === 0) {
+        return false;
+    }
+    
+    for (var i = 0; i < chartSpec.traces.length; i++) {
+        var trace = chartSpec.traces[i];
+        if (trace.x && trace.x.length > 1) {
+            // Check a few timestamps (skip first in case it's an edge case)
+            for (var j = 1; j < Math.min(trace.x.length, 5); j++) {
+                var ts = String(trace.x[j]);
+                // Extract time portion after 'T' or space
+                var timeMatch = ts.match(/[T ]\s*(\d{2}):(\d{2})/);
+                if (timeMatch) {
+                    var hours = parseInt(timeMatch[1], 10);
+                    var minutes = parseInt(timeMatch[2], 10);
+                    // Non-midnight time means intraday data
+                    if (hours !== 0 || minutes !== 0) {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    
+    return false;
+}
+
+
 // ── Style Registry ──────────────────────────────────────────
 
 
@@ -108,18 +144,29 @@ const CHART_LAYOUT_BASE = {
 const CHART_LAYOUT_OVERRIDES = {
 
     price_chart: {
-        xaxis: {rangeslider: {visible: false}, gridcolor: "#3b4659"},
+        xaxis: {
+            rangeslider: {visible: false},
+            gridcolor: "#3b4659"
+        },
         yaxis: {gridcolor: "#3b4659"}
     },
 
     equity_chart: {
-        xaxis: {title: "Date", gridcolor: "#3b4659", zeroline: false},
+        xaxis: {
+            title: "Date",
+            gridcolor: "#3b4659",
+            zeroline: false
+        },
         yaxis: {title: "Portfolio Value", gridcolor: "#3b4659", zeroline: false},
         margin: {l: 60, r: 20, t: 20, b: 70}
     },
 
     drawdown_chart: {
-        xaxis: {title: "Date", gridcolor: "#3b4659", zeroline: false},
+        xaxis: {
+            title: "Date",
+            gridcolor: "#3b4659",
+            zeroline: false
+        },
         yaxis: {title: "Drawdown", gridcolor: "#3b4659", zeroline: true, rangemode: "tozero"},
         margin: {l: 60, r: 20, t: 20, b: 70}
     }
@@ -201,7 +248,7 @@ function renderChartFromSpec(containerId, chartSpec, chartKey) {
 
     });
 
-    const layout = buildLayout(chartKey);
+    const layout = buildLayout(chartKey, chartSpec);
 
     Plotly.newPlot(
         document.getElementById(containerId),
@@ -274,7 +321,7 @@ function renderPriceChartWithSubplots(containerId, chartSpec, activeView) {
 
     });
 
-    var layout = buildSubplotLayout(subplots, rowHeights);
+    var layout = buildSubplotLayout(subplots, rowHeights, chartSpec);
 
     Plotly.newPlot(
         document.getElementById(containerId),
@@ -286,7 +333,9 @@ function renderPriceChartWithSubplots(containerId, chartSpec, activeView) {
 }
 
 
-function buildSubplotLayout(subplots, rowHeights) {
+function buildSubplotLayout(subplots, rowHeights, chartSpec) {
+
+    var isIntraday = isIntradayData(chartSpec);
 
     var layout = {
         autosize: true,
@@ -335,6 +384,14 @@ function buildSubplotLayout(subplots, rowHeights) {
             anchor: index === 0 ? "y" : "y" + (index + 1),
             matches: index === 0 ? undefined : "x"
         };
+
+        // Only add rangebreaks for intraday data
+        if (isIntraday) {
+            layout[xAxisKey].rangebreaks = [
+                {bounds: ["sat", "mon"]},
+                {bounds: [15.5, 9.25], pattern: "hour"}
+            ];
+        }
 
         if (index === 0) {
             layout[xAxisKey].rangeslider = {visible: false};
@@ -499,9 +556,10 @@ function buildMarkerTrace(spec) {
 // ── Layout Builder ──────────────────────────────────────────
 
 
-function buildLayout(chartKey) {
+function buildLayout(chartKey, chartSpec) {
 
     var layout = {};
+    var isIntraday = isIntradayData(chartSpec);
 
     for (var key in CHART_LAYOUT_BASE) {
         layout[key] = CHART_LAYOUT_BASE[key];
@@ -511,8 +569,21 @@ function buildLayout(chartKey) {
 
     if (overrides) {
         for (var key in overrides) {
-            layout[key] = overrides[key];
+            if (key === 'xaxis' && layout.xaxis) {
+                // Merge xaxis properties
+                layout.xaxis = Object.assign({}, layout.xaxis, overrides.xaxis);
+            } else {
+                layout[key] = overrides[key];
+            }
         }
+    }
+
+    // Add rangebreaks only for intraday data
+    if (isIntraday && layout.xaxis) {
+        layout.xaxis.rangebreaks = [
+            {bounds: ["sat", "mon"]},
+            {bounds: [15.5, 9.25], pattern: "hour"}
+        ];
     }
 
     return layout;

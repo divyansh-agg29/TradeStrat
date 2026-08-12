@@ -191,6 +191,7 @@ function collectComparisonRequest() {
         end_date: document.getElementById("compare-end-date").value,
         initial_capital: parseFloat(document.getElementById("compare-capital").value),
         risk_free_rate: 0.0,
+        interval: document.getElementById("compare-interval").value,
         strategies: collectStrategyConfigs(),
     };
 
@@ -245,6 +246,19 @@ function validateComparisonRequest(request) {
 
     if (request.start_date && request.end_date && request.start_date >= request.end_date) {
         errors.push("Start date must be before end date.");
+    }
+
+    // Validate interval and date range compatibility
+    if (request.interval && request.start_date && request.end_date) {
+        const intervalValidation = validateIntervalDateRange(
+            request.interval,
+            request.start_date,
+            request.end_date
+        );
+
+        if (!intervalValidation.valid) {
+            errors.push(intervalValidation.error);
+        }
     }
 
     request.strategies.forEach(function(s, i) {
@@ -328,6 +342,11 @@ function restoreCompareConfiguration() {
     document.getElementById("compare-start-date").value = saved.start_date || "";
     document.getElementById("compare-end-date").value = saved.end_date || "";
     document.getElementById("compare-capital").value = saved.initial_capital || 100000;
+    
+    const intervalValue = saved.interval || "1d";
+    document.getElementById("compare-interval").value = intervalValue;
+    // Update the interval hint to match the restored value
+    updateIntervalHint(intervalValue, "compare-interval-hint");
 
     const strategies = saved.strategies || [];
 
@@ -580,7 +599,16 @@ function renderCompareEquityChart(results, benchmark) {
         paper_bgcolor: "rgba(0,0,0,0)",
         plot_bgcolor: "rgba(0,0,0,0)",
         margin: { l: 60, r: 20, t: 40, b: 50 },
-        xaxis: { title: "Date", gridcolor: "#3b4659", zeroline: false, nticks: 12 },
+        xaxis: {
+            title: "Date",
+            gridcolor: "#3b4659",
+            zeroline: false,
+            nticks: 12,
+            rangebreaks: [
+                {bounds: ["sat", "mon"]},
+                {bounds: [15.5, 9.25], pattern: "hour"}
+            ]
+        },
         yaxis: { title: "Portfolio Value", gridcolor: "#3b4659", zeroline: false },
         font: { color: "#FFFFFF" },
         legend: { orientation: "h", x: 0, y: 1.05 },
@@ -628,7 +656,16 @@ function renderCompareDrawdownChart(results) {
         paper_bgcolor: "rgba(0,0,0,0)",
         plot_bgcolor: "rgba(0,0,0,0)",
         margin: { l: 60, r: 20, t: 40, b: 50 },
-        xaxis: { title: "Date", gridcolor: "#3b4659", zeroline: false, nticks: 12 },
+        xaxis: {
+            title: "Date",
+            gridcolor: "#3b4659",
+            zeroline: false,
+            nticks: 12,
+            rangebreaks: [
+                {bounds: ["sat", "mon"]},
+                {bounds: [15.5, 9.25], pattern: "hour"}
+            ]
+        },
         yaxis: { title: "Drawdown (%)", gridcolor: "#3b4659", zeroline: true, rangemode: "tozero" },
         font: { color: "#FFFFFF" },
         legend: { orientation: "h", x: 0, y: 1.05 },

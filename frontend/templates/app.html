@@ -20,6 +20,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/loading.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/error-modal.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/compare.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/interval.css') }}">
 </head>
 
 <body>
@@ -88,6 +89,23 @@
                         id="capital"
                         class="form-input"
                         value="100000">
+                </div>
+
+                <div class="form-group">
+                    <label for="interval">Interval</label>
+                    <select id="interval" class="form-select">
+                        <option value="1m">1 Minute</option>
+                        <option value="5m">5 Minutes</option>
+                        <option value="15m">15 Minutes</option>
+                        <option value="30m">30 Minutes</option>
+                        <option value="1h">1 Hour</option>
+                        <option value="1d" selected>1 Day (Default)</option>
+                        <option value="1wk">1 Week</option>
+                        <option value="1mo">1 Month</option>
+                    </select>
+                    <small class="form-hint" id="interval-hint">
+                        1 Day: Unlimited range, 1 year warmup
+                    </small>
                 </div>
 
             </section>
@@ -566,6 +584,23 @@
                         <label for="compare-capital">Initial Capital</label>
                         <input type="number" id="compare-capital" class="form-input" value="100000">
                     </div>
+
+                    <div class="form-group">
+                        <label for="compare-interval">Interval</label>
+                        <select id="compare-interval" class="form-select">
+                            <option value="1m">1 Minute</option>
+                            <option value="5m">5 Minutes</option>
+                            <option value="15m">15 Minutes</option>
+                            <option value="30m">30 Minutes</option>
+                            <option value="1h">1 Hour</option>
+                            <option value="1d" selected>1 Day (Default)</option>
+                            <option value="1wk">1 Week</option>
+                            <option value="1mo">1 Month</option>
+                        </select>
+                        <small class="form-hint" id="compare-interval-hint">
+                            1 Day: Unlimited range, 1 year warmup
+                        </small>
+                    </div>
                 </section>
 
                 <!-- Strategy List -->
@@ -703,6 +738,7 @@
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
 <script src="{{ url_for('static', filename='js/tables.js') }}"></script>
+<script src="{{ url_for('static', filename='js/interval-validator.js') }}"></script>
 <script src="{{ url_for('static', filename='js/ui.js') }}"></script>
 <script src="{{ url_for('static', filename='js/compare.js') }}"></script>
 <script src="{{ url_for('static', filename='js/app.js') }}"></script>

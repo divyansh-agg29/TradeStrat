@@ -1,6 +1,13 @@
 
 ## Development Changelog
 
+### 2026-08-12 — Multi-Timeframe Support & Intraday Trading
+- Added support for 8 trading intervals: 1m, 5m, 15m, 30m, 1h, 1d, 1wk, 1mo
+- Implemented interval-specific data availability limits and validation (frontend and backend)
+- Added automatic rangebreaks to remove visual gaps from non-trading hours and weekends on intraday charts
+- Fixed intraday data storage to preserve hourly timestamps in SQLite cache
+- Updated UI to display interval constraints (max range, data availability)
+
 ### 2026-08-11 — Data download retry logic
 - Added exponential backoff retry logic for data downloader from yfinance
 

@@ -27,12 +27,11 @@ from dataclasses import dataclass, field
 
 import pandas as pd
 
+from interval_config.intervals import get_interval_config
 from portfolio.simulator import SimulationResult
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
-
-TRADING_DAYS_PER_YEAR = 252
 
 
 # ============================================================================
@@ -128,12 +127,33 @@ class AnalyticsResult:
 
 
 # ============================================================================
+# Helper Functions
+# ============================================================================
+
+def _get_periods_per_year(interval: str) -> int:
+    """
+    Get the number of trading periods per year for a given interval.
+    
+    This is used for annualization calculations in risk metrics and CAGR.
+    
+    Args:
+        interval: Interval string (e.g., '1m', '5m', '1h', '1d')
+    
+    Returns:
+        Number of trading periods per year for the interval.
+    """
+    config = get_interval_config(interval)
+    return config.periods_per_year
+
+
+# ============================================================================
 # Public API
 # ============================================================================
 
 def analyze_performance(
     simulation_result: SimulationResult,
     risk_free_rate: float = 0.0,
+    interval: str = "1d",
 ) -> AnalyticsResult:
     """
     Analyze the performance of a completed portfolio simulation.
@@ -147,6 +167,10 @@ def analyze_performance(
         Annual risk-free rate expressed as a decimal.
         Example:
             0.06 = 6%
+    
+    interval : str, default="1d"
+        Data interval used in the backtest (e.g., '1m', '5m', '1h', '1d').
+        Used for annualization calculations.
 
     Returns
     -------
@@ -155,12 +179,13 @@ def analyze_performance(
         derived analytical time series.
     """
 
-    logger.info("Starting performance analysis.")
+    logger.info("Starting performance analysis (interval=%s).", interval)
 
     _validate_inputs(simulation_result)
 
     portfolio_metrics = _calculate_portfolio_metrics(
-        simulation_result
+        simulation_result,
+        interval,
     )
 
     initial_capital = simulation_result.summary["initial_capital"]
@@ -173,6 +198,7 @@ def analyze_performance(
     risk_metrics = _calculate_risk_metrics(
         analytics_history,
         risk_free_rate,
+        interval,
     )
 
     trade_metrics = _calculate_trade_metrics(
@@ -282,6 +308,7 @@ def _validate_inputs(
 
 def _calculate_portfolio_metrics(
     simulation_result: SimulationResult,
+    interval: str,
 ) -> PortfolioMetrics:
     """
     Calculate overall portfolio performance metrics.
@@ -290,6 +317,9 @@ def _calculate_portfolio_metrics(
     ----------
     simulation_result : SimulationResult
         Completed portfolio simulation.
+    
+    interval : str
+        Data interval used in the backtest.
 
     Returns
     -------
@@ -318,13 +348,14 @@ def _calculate_portfolio_metrics(
     start_date = portfolio_history.index[0]
     end_date = portfolio_history.index[-1]
 
-    trading_days = len(portfolio_history)
+    trading_periods = len(portfolio_history)
+    periods_per_year = _get_periods_per_year(interval)
 
-    if trading_days <= 1:
+    if trading_periods <= 1:
         cagr = 0.0
 
     else:
-        years = trading_days / TRADING_DAYS_PER_YEAR
+        years = trading_periods / periods_per_year
 
         cagr = (
             (
@@ -501,6 +532,7 @@ def _calculate_benchmark_metrics(
 def _calculate_risk_metrics(
     analytics_history: pd.DataFrame,
     risk_free_rate: float,
+    interval: str,
 ) -> RiskMetrics:
     """
     Calculate portfolio risk metrics.
@@ -514,6 +546,9 @@ def _calculate_risk_metrics(
         Annual risk-free rate expressed as a decimal.
         Example:
             0.06 = 6%
+    
+    interval : str
+        Data interval used in the backtest.
 
     Returns
     -------
@@ -525,13 +560,15 @@ def _calculate_risk_metrics(
         "Calculating risk metrics."
     )
 
-    daily_returns = analytics_history["Daily Return %"] / 100
+    periods_per_year = _get_periods_per_year(interval)
 
-    daily_volatility = daily_returns.std()
+    period_returns = analytics_history["Daily Return %"] / 100
+
+    period_volatility = period_returns.std()
 
     annualized_volatility = (
-        daily_volatility
-        * (TRADING_DAYS_PER_YEAR ** 0.5)
+        period_volatility
+        * (periods_per_year ** 0.5)
         * 100
     )
 
@@ -539,15 +576,15 @@ def _calculate_risk_metrics(
         analytics_history["Drawdown %"].max()
     )
 
-    daily_risk_free_rate = (
-        risk_free_rate / TRADING_DAYS_PER_YEAR
+    period_risk_free_rate = (
+        risk_free_rate / periods_per_year
     )
 
     excess_returns = (
-        daily_returns - daily_risk_free_rate
+        period_returns - period_risk_free_rate
     )
 
-    if daily_volatility == 0:
+    if period_volatility == 0:
 
         if excess_returns.mean() > 0:
             sharpe_ratio = float("inf")
@@ -561,15 +598,15 @@ def _calculate_risk_metrics(
     else:
         sharpe_ratio = (
             excess_returns.mean()
-            / daily_volatility
-        ) * (TRADING_DAYS_PER_YEAR ** 0.5)
+            / period_volatility
+        ) * (periods_per_year ** 0.5)
 
     # --------------------------------------------------------
     # Sortino Ratio
     # --------------------------------------------------------
 
-    downside_returns = daily_returns[
-        daily_returns < daily_risk_free_rate
+    downside_returns = period_returns[
+        period_returns < period_risk_free_rate
     ]
 
     if downside_returns.empty:
@@ -586,7 +623,7 @@ def _calculate_risk_metrics(
     else:
         downside_deviation = (
             (
-                (downside_returns - daily_risk_free_rate)
+                (downside_returns - period_risk_free_rate)
                 ** 2
             ).mean()
             ** 0.5
@@ -598,7 +635,7 @@ def _calculate_risk_metrics(
             sortino_ratio = (
                 excess_returns.mean()
                 / downside_deviation
-            ) * (TRADING_DAYS_PER_YEAR ** 0.5)
+            ) * (periods_per_year ** 0.5)
 
     # --------------------------------------------------------
     # Calmar Ratio
@@ -617,8 +654,8 @@ def _calculate_risk_metrics(
             / portfolio_value.iloc[0]
         )
 
-        trading_days = len(analytics_history)
-        years = trading_days / TRADING_DAYS_PER_YEAR
+        trading_periods = len(analytics_history)
+        years = trading_periods / periods_per_year
 
         if years > 0 and total_return_ratio > 0:
             cagr = (

@@ -30,6 +30,7 @@ def download_stock_data(
     ticker: str,
     start_date: str,
     end_date: str,
+    interval: str = "1d",
     max_retries: int = 3,
     initial_delay: float = 1.0,
 ) -> pd.DataFrame:
@@ -44,6 +45,7 @@ def download_stock_data(
         ticker: NSE ticker symbol (e.g. 'RELIANCE.NS').
         start_date: Start date in YYYY-MM-DD format.
         end_date: End date in YYYY-MM-DD format.
+        interval: Data interval (e.g., '1m', '5m', '1h', '1d'). Default: '1d'.
         max_retries: Maximum number of retry attempts (default: 3).
         initial_delay: Initial delay in seconds before first retry (default: 1.0).
 
@@ -57,13 +59,14 @@ def download_stock_data(
 
         ValueError:
             If no historical data is available for the requested
-            ticker/date range.
+            ticker/date range/interval.
     """
     logger.info(
-        "Downloading market data: ticker=%s, start=%s, end=%s",
+        "Downloading market data: ticker=%s, start=%s, end=%s, interval=%s",
         ticker,
         start_date,
         end_date,
+        interval,
     )
 
     last_exception = None
@@ -75,6 +78,7 @@ def download_stock_data(
             data = stock.history(
                 start=start_date,
                 end=end_date,
+                interval=interval,
             )
 
             if data.empty:

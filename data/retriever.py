@@ -34,6 +34,7 @@ def retrieve_market_data(
     start_date: str,
     end_date: str,
     conn: sqlite3.Connection,
+    interval: str = "1d",
 ) -> pd.DataFrame:
     """
     Retrieve market data, using the local cache when possible.
@@ -43,6 +44,7 @@ def retrieve_market_data(
         start_date: Start date in YYYY-MM-DD format.
         end_date:   End date   in YYYY-MM-DD format.
         conn:       Active SQLite connection to the market-data store.
+        interval:   Data interval (e.g., '1m', '5m', '1h', '1d'). Default: '1d'.
 
     Returns:
         A cleaned ``pd.DataFrame`` that satisfies the project data contract.
@@ -55,15 +57,16 @@ def retrieve_market_data(
     """
 
     # ---- Cache hit path ------------------------------------------------- #
-    if is_range_cached(conn, ticker, start_date, end_date):
+    if is_range_cached(conn, ticker, start_date, end_date, interval):
         logger.info(
-            "Cache hit for '%s' (%s → %s). Retrieving from store.",
+            "Cache hit for '%s' (%s → %s) [%s]. Retrieving from store.",
             ticker,
             start_date,
             end_date,
+            interval,
         )
 
-        cached_df = retrieve_data(conn, ticker, start_date, end_date)
+        cached_df = retrieve_data(conn, ticker, start_date, end_date, interval)
 
         if cached_df is not None:
             try:
@@ -78,16 +81,18 @@ def retrieve_market_data(
 
     # ---- Cache miss path ------------------------------------------------ #
     logger.info(
-        "Cache miss for '%s' (%s → %s). Downloading from Yahoo Finance.",
+        "Cache miss for '%s' (%s → %s) [%s]. Downloading from Yahoo Finance.",
         ticker,
         start_date,
         end_date,
+        interval,
     )
 
     raw_df = download_stock_data(
         ticker=ticker,
         start_date=start_date,
         end_date=end_date,
+        interval=interval,
     )
 
     # Store the raw data *before* cleaning so that all yfinance fields
@@ -98,6 +103,7 @@ def retrieve_market_data(
         df=raw_df,
         start_date=start_date,
         end_date=end_date,
+        interval=interval,
     )
 
     cleaned_df = clean_market_data(raw_df)

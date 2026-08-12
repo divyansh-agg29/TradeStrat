@@ -34,6 +34,7 @@ def get_stock_data(
     start_date: str,
     end_date: str,
     db_path: str,
+    interval: str = "1d",
 ) -> pd.DataFrame:
     """
     Retrieve historical market data for a stock.
@@ -51,6 +52,7 @@ def get_stock_data(
         start_date: Start date in YYYY-MM-DD format.
         end_date: End date in YYYY-MM-DD format.
         db_path: Path to the SQLite database file.
+        interval: Data interval (e.g., '1m', '5m', '1h', '1d'). Default: '1d'.
 
     Returns:
         A standardized pandas DataFrame that satisfies the project's
@@ -69,10 +71,11 @@ def get_stock_data(
     """
     logger.info(
         "Received market data request: "
-        "ticker=%s, start_date=%s, end_date=%s",
+        "ticker=%s, start_date=%s, end_date=%s, interval=%s",
         ticker,
         start_date,
         end_date,
+        interval,
     )
 
     # Step 1: Validate the request.
@@ -80,6 +83,7 @@ def get_stock_data(
         ticker=ticker,
         start_date=start_date,
         end_date=end_date,
+        interval=interval,
     )
 
     logger.debug("Request validation completed successfully.")
@@ -95,6 +99,7 @@ def get_stock_data(
         start_date=start_date,
         end_date=end_date,
         conn=_DB_CONN,
+        interval=interval,
     )
 
     logger.info("Market data request completed successfully.")

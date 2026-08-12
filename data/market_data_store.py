@@ -8,9 +8,9 @@ date range is fully cached, and retrieve cached data.
 
 Database tables
 ---------------
-market_data        — one row per (ticker, date) with all yfinance fields.
-market_data_ranges — metadata rows recording which contiguous date ranges
-                     have been downloaded for each ticker.
+Separate tables per interval (e.g., market_data_1day, market_data_1hour):
+    - One row per (ticker, date) with all yfinance fields
+    - Corresponding ranges table for cache management
 """
 
 import os
@@ -20,6 +20,7 @@ from typing import Optional
 
 import pandas as pd
 
+from interval_config.intervals import SUPPORTED_INTERVALS, get_interval_config
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -28,37 +29,61 @@ logger = get_logger(__name__)
 # Schema helpers
 # ------------------------------------------------------------------ #
 
-_SCHEMA_SQL = """
-CREATE TABLE IF NOT EXISTS market_data (
-    ticker        TEXT    NOT NULL,
-    date          TEXT    NOT NULL,
-    open          REAL,
-    high          REAL,
-    low           REAL,
-    close         REAL,
-    volume        INTEGER,
-    dividends     REAL,
-    stock_splits  REAL,
-    capital_gains REAL,
-    PRIMARY KEY (ticker, date)
-);
+def _get_table_name(interval: str) -> str:
+    """
+    Get the database table name for a given interval.
+    
+    Args:
+        interval: Interval string (e.g., "1m", "1d")
+    
+    Returns:
+        Table name (e.g., "market_data_1min", "market_data_1day")
+    """
+    config = get_interval_config(interval)
+    return config.table_name
 
-CREATE INDEX IF NOT EXISTS idx_market_data_ticker
-    ON market_data (ticker);
 
-CREATE INDEX IF NOT EXISTS idx_market_data_date
-    ON market_data (date);
+def _create_tables_for_interval(conn: sqlite3.Connection, table_name: str) -> None:
+    """
+    Create market data and ranges tables for a specific interval.
+    
+    Args:
+        conn: Active database connection
+        table_name: Base table name (e.g., "market_data_1day")
+    """
+    schema_sql = f"""
+    CREATE TABLE IF NOT EXISTS {table_name} (
+        ticker        TEXT    NOT NULL,
+        date          TEXT    NOT NULL,
+        open          REAL,
+        high          REAL,
+        low           REAL,
+        close         REAL,
+        volume        INTEGER,
+        dividends     REAL,
+        stock_splits  REAL,
+        capital_gains REAL,
+        PRIMARY KEY (ticker, date)
+    );
 
-CREATE TABLE IF NOT EXISTS market_data_ranges (
-    id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    ticker     TEXT NOT NULL,
-    start_date TEXT NOT NULL,
-    end_date   TEXT NOT NULL
-);
+    CREATE INDEX IF NOT EXISTS idx_{table_name}_ticker
+        ON {table_name} (ticker);
 
-CREATE INDEX IF NOT EXISTS idx_ranges_ticker
-    ON market_data_ranges (ticker);
-"""
+    CREATE INDEX IF NOT EXISTS idx_{table_name}_date
+        ON {table_name} (date);
+
+    CREATE TABLE IF NOT EXISTS {table_name}_ranges (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        ticker     TEXT NOT NULL,
+        start_date TEXT NOT NULL,
+        end_date   TEXT NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_{table_name}_ranges_ticker
+        ON {table_name}_ranges (ticker);
+    """
+    
+    conn.executescript(schema_sql)
 
 # Mapping from yfinance DataFrame column names → SQLite column names
 _COLUMN_MAP = {
@@ -85,6 +110,10 @@ def _normalize_ticker(ticker: str) -> str:
 def _parse_date(date_str: str) -> datetime:
     """Parse a YYYY-MM-DD string to a datetime object."""
     return datetime.strptime(date_str, "%Y-%m-%d")
+
+
+# Intervals where each row represents a full day (no intraday timestamps).
+_DAILY_OR_ABOVE = frozenset({"1d", "5d", "1wk", "1mo", "3mo"})
 
 
 def _safe_float(value) -> Optional[float]:
@@ -114,6 +143,7 @@ def initialize_db(
     """
     Open (or create) the SQLite database and ensure the schema exists.
 
+    Creates separate tables for each supported interval (1m, 5m, 15m, etc.).
     If the database file is corrupted, it is deleted and recreated so
     that subsequent queries simply behave as cache misses.
 
@@ -127,9 +157,17 @@ def initialize_db(
 
     try:
         conn = sqlite3.connect(db_path, check_same_thread=False)
-        conn.executescript(_SCHEMA_SQL)
+        
+        # Create tables for all supported intervals
+        for config in SUPPORTED_INTERVALS.values():
+            _create_tables_for_interval(conn, config.table_name)
+        
         conn.commit()
-        logger.info("Market data database initialised at '%s'.", db_path)
+        logger.info(
+            "Market data database initialised at '%s' with %d interval tables.",
+            db_path,
+            len(SUPPORTED_INTERVALS),
+        )
         return conn
 
     except sqlite3.DatabaseError:
@@ -142,7 +180,11 @@ def initialize_db(
             os.remove(db_path)
 
         conn = sqlite3.connect(db_path, check_same_thread=False)
-        conn.executescript(_SCHEMA_SQL)
+        
+        # Create tables for all supported intervals
+        for config in SUPPORTED_INTERVALS.values():
+            _create_tables_for_interval(conn, config.table_name)
+        
         conn.commit()
         return conn
 
@@ -153,14 +195,15 @@ def store_data(
     df: pd.DataFrame,
     start_date: str,
     end_date: str,
+    interval: str,
 ) -> None:
     """
     Store a DataFrame of market data with upsert behaviour.
 
     Existing rows for the same ``(ticker, date)`` are replaced.
     After inserting the rows, the requested ``(start_date, end_date)``
-    is recorded in ``market_data_ranges`` and overlapping / adjacent
-    ranges are merged.
+    is recorded in the interval-specific ranges table and overlapping /
+    adjacent ranges are merged.
 
     Args:
         conn:       Active database connection.
@@ -168,23 +211,29 @@ def store_data(
         df:         DataFrame with a DatetimeIndex and yfinance columns.
         start_date: Requested range start (YYYY-MM-DD).
         end_date:   Requested range end   (YYYY-MM-DD).
+        interval:   Interval string (e.g., "1m", "1d").
     """
     norm_ticker = _normalize_ticker(ticker)
+    table_name = _get_table_name(interval)
+    ranges_table = f"{table_name}_ranges"
 
     df_copy = df.copy()
 
-    # Strip timezone info so we get clean YYYY-MM-DD strings.
+    # Strip timezone info so we get clean timestamp strings.
     if getattr(df_copy.index, "tz", None) is not None:
         df_copy.index = df_copy.index.tz_localize(None)
+
+    # Intraday intervals need full timestamps; daily+ only needs dates.
+    date_fmt = "%Y-%m-%d" if interval in _DAILY_OR_ABOVE else "%Y-%m-%d %H:%M:%S"
 
     cursor = conn.cursor()
 
     for idx, row in df_copy.iterrows():
-        date_str = idx.strftime("%Y-%m-%d")
+        date_str = idx.strftime(date_fmt)
 
         cursor.execute(
-            """
-            INSERT INTO market_data
+            f"""
+            INSERT INTO {table_name}
                 (ticker, date, open, high, low, close,
                  volume, dividends, stock_splits, capital_gains)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -214,8 +263,8 @@ def store_data(
 
     # Record the downloaded range and merge with existing ranges.
     cursor.execute(
-        """
-        INSERT INTO market_data_ranges (ticker, start_date, end_date)
+        f"""
+        INSERT INTO {ranges_table} (ticker, start_date, end_date)
         VALUES (?, ?, ?)
         """,
         (norm_ticker, start_date, end_date),
@@ -223,14 +272,15 @@ def store_data(
 
     conn.commit()
 
-    _merge_ranges(conn, norm_ticker)
+    _merge_ranges(conn, norm_ticker, interval)
 
     logger.info(
-        "Stored %d rows for '%s' (%s → %s).",
+        "Stored %d rows for '%s' (%s → %s) [%s].",
         len(df_copy),
         norm_ticker,
         start_date,
         end_date,
+        interval,
     )
 
 
@@ -239,20 +289,33 @@ def is_range_cached(
     ticker: str,
     start_date: str,
     end_date: str,
+    interval: str,
 ) -> bool:
     """
     Return ``True`` if a **single** stored range fully contains the
-    requested ``[start_date, end_date]`` interval.
+    requested ``[start_date, end_date]`` interval for the given interval.
 
     A request that spans multiple disjoint stored ranges is considered
     a cache miss so that only one API call is made.
+    
+    Args:
+        conn: Active database connection.
+        ticker: Stock symbol.
+        start_date: Start date (YYYY-MM-DD).
+        end_date: End date (YYYY-MM-DD).
+        interval: Interval string (e.g., "1m", "1d").
+    
+    Returns:
+        True if range is cached, False otherwise.
     """
     norm_ticker = _normalize_ticker(ticker)
+    table_name = _get_table_name(interval)
+    ranges_table = f"{table_name}_ranges"
 
     cursor = conn.execute(
-        """
+        f"""
         SELECT 1
-        FROM   market_data_ranges
+        FROM   {ranges_table}
         WHERE  ticker     = ?
           AND  start_date <= ?
           AND  end_date   >= ?
@@ -269,29 +332,50 @@ def retrieve_data(
     ticker: str,
     start_date: str,
     end_date: str,
+    interval: str,
 ) -> Optional[pd.DataFrame]:
     """
-    Retrieve cached market data for ``ticker`` in ``[start_date, end_date]``.
+    Retrieve cached market data for ``ticker`` in ``[start_date, end_date]``
+    for the specified interval.
 
     Returns ``None`` when the range is not fully cached (the caller
     should treat this as a cache miss and download from yfinance).
+    
+    Args:
+        conn: Active database connection.
+        ticker: Stock symbol.
+        start_date: Start date (YYYY-MM-DD).
+        end_date: End date (YYYY-MM-DD).
+        interval: Interval string (e.g., "1m", "1d").
+    
+    Returns:
+        DataFrame with market data, or None if not cached.
     """
-    if not is_range_cached(conn, ticker, start_date, end_date):
+    if not is_range_cached(conn, ticker, start_date, end_date, interval):
         return None
 
     norm_ticker = _normalize_ticker(ticker)
+    table_name = _get_table_name(interval)
 
-    query = """
+    # For intraday data stored with timestamps (e.g. "2024-01-02 09:15:00"),
+    # a plain date upper bound ("2024-01-02") would exclude all rows on that
+    # day because "2024-01-02 09:15:00" > "2024-01-02" in string comparison.
+    # Pad the end bound so all intraday timestamps on that date are included.
+    end_date_upper = (
+        end_date if " " in end_date else end_date + " 23:59:59"
+    )
+
+    query = f"""
         SELECT date, open, high, low, close,
                volume, dividends, stock_splits, capital_gains
-        FROM   market_data
+        FROM   {table_name}
         WHERE  ticker = ?
           AND  date  >= ?
           AND  date  <= ?
         ORDER BY date
     """
 
-    rows = conn.execute(query, (norm_ticker, start_date, end_date)).fetchall()
+    rows = conn.execute(query, (norm_ticker, start_date, end_date_upper)).fetchall()
 
     if not rows:
         return None
@@ -316,16 +400,25 @@ def retrieve_data(
 def _merge_ranges(
     conn: sqlite3.Connection,
     ticker: str,
+    interval: str,
 ) -> None:
     """
     Merge overlapping or adjacent date ranges for *ticker* in the
-    ``market_data_ranges`` table so that ``is_range_cached`` only
+    interval-specific ranges table so that ``is_range_cached`` only
     needs to find a single covering row.
+    
+    Args:
+        conn: Active database connection.
+        ticker: Stock symbol.
+        interval: Interval string (e.g., "1m", "1d").
     """
+    table_name = _get_table_name(interval)
+    ranges_table = f"{table_name}_ranges"
+    
     cursor = conn.execute(
-        """
+        f"""
         SELECT start_date, end_date
-        FROM   market_data_ranges
+        FROM   {ranges_table}
         WHERE  ticker = ?
         ORDER BY start_date
         """,
@@ -357,13 +450,13 @@ def _merge_ranges(
 
     # Replace old rows with the merged set.
     conn.execute(
-        "DELETE FROM market_data_ranges WHERE ticker = ?",
+        f"DELETE FROM {ranges_table} WHERE ticker = ?",
         (ticker,),
     )
 
     conn.executemany(
-        """
-        INSERT INTO market_data_ranges (ticker, start_date, end_date)
+        f"""
+        INSERT INTO {ranges_table} (ticker, start_date, end_date)
         VALUES (?, ?, ?)
         """,
         [

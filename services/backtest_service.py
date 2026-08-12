@@ -16,6 +16,7 @@ Each processing stage is delegated to the appropriate module.
 """
 
 from analytics import AnalyticsResult, analyze_performance
+from interval_config.intervals import get_interval_config
 from data.service import get_stock_data
 from models import BacktestRequest, BacktestResult
 from portfolio import SimulationResult, simulate_portfolio
@@ -23,7 +24,7 @@ from models import StrategyConfig
 from strategy import STRATEGY_REGISTRY, StrategyOutput
 from utils.logger import get_logger
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 
 logger = get_logger(__name__)
@@ -49,15 +50,15 @@ def run_backtest(
         Complete simulation and analytics output.
     """
 
-    logger.info("Starting backtest.")
-
     _validate_request(request)
+
+    logger.info("Starting backtest (interval=%s).", request.interval)
 
     strategy_function = _get_strategy_function(
         request.strategy.type
     )
 
-    market_data = _get_market_data(request, db_path)
+    market_data = _get_market_data(request, db_path, request.interval)
 
     strategy_result = _execute_strategy(
         market_data,
@@ -80,6 +81,7 @@ def run_backtest(
     analytics_result = _run_analytics(
         simulation_result,
         request.risk_free_rate,
+        request.interval,
     )
 
     logger.info("Backtest completed.")
@@ -116,13 +118,14 @@ def _validate_request(
 def _get_market_data(
     request: BacktestRequest,
     db_path: str,
+    interval: str,
 ):
     """
     Download market data including a warm-up period.
 
-    An additional one year of historical data is downloaded prior to
-    the requested start date to allow recursive indicators (EMA, RSI,
-    MACD, etc.) to stabilize before the backtest begins.
+    The warmup period is calculated based on the interval to allow
+    recursive indicators (EMA, RSI, MACD, etc.) to stabilize before
+    the backtest begins.
 
     Parameters
     ----------
@@ -130,18 +133,22 @@ def _get_market_data(
         The backtest request containing ticker and date information.
     db_path : str
         Path to the SQLite database file for market data storage.
+    interval : str
+        Data interval (e.g., '1m', '5m', '1h', '1d').
     """
 
-    warmup_start_date = _get_warmup_start_date(
-        request.start_date
+    warmup_start_date = _calculate_warmup_start(
+        request.start_date,
+        interval,
     )
 
     logger.info(
         "Retrieving market data for %s "
-        "(warm-up start=%s, requested start=%s).",
+        "(warm-up start=%s, requested start=%s, interval=%s).",
         request.ticker,
         warmup_start_date,
         request.start_date,
+        interval,
     )
 
     return get_stock_data(
@@ -149,25 +156,54 @@ def _get_market_data(
         start_date=warmup_start_date,
         end_date=request.end_date,
         db_path=db_path,
+        interval=interval,
     )
 
-def _get_warmup_start_date(
+def _calculate_warmup_start(
     start_date: str,
+    interval: str,
 ) -> str:
     """
     Calculate the extended start date used for indicator warm-up.
 
-    One calendar year of additional historical data is requested
-    before the user-specified start date.
+    The warmup period is determined by the interval configuration,
+    providing enough historical data for indicators to stabilize.
+    Also ensures warmup doesn't exceed yfinance data availability limits.
+
+    Parameters
+    ----------
+    start_date : str
+        User-requested start date (YYYY-MM-DD).
+    interval : str
+        Data interval (e.g., '1m', '5m', '1h', '1d').
+
+    Returns
+    -------
+    str
+        Warmup start date (YYYY-MM-DD).
     """
-
-    requested_start = datetime.strptime(
-        start_date,
-        "%Y-%m-%d",
-    )
-
-    warmup_start = requested_start - relativedelta(years=1)
-
+    config = get_interval_config(interval)
+    requested_start = datetime.strptime(start_date, "%Y-%m-%d")
+    
+    # Calculate warmup start based on interval configuration
+    warmup_delta = config.warmup_period
+    warmup_start = requested_start - warmup_delta
+    
+    # Ensure warmup doesn't exceed yfinance data availability
+    if config.max_lookback_days is not None:
+        today = datetime.now()
+        earliest_available = today - timedelta(days=config.max_lookback_days)
+        
+        if warmup_start < earliest_available:
+            logger.warning(
+                "Warmup period for %s would exceed data availability. "
+                "Adjusting warmup start from %s to %s",
+                interval,
+                warmup_start.date(),
+                earliest_available.date(),
+            )
+            warmup_start = earliest_available
+    
     return warmup_start.strftime("%Y-%m-%d")
 
 def _trim_to_requested_period(
@@ -248,9 +284,19 @@ def _run_simulation(
 def _run_analytics(
     simulation_result: SimulationResult,
     risk_free_rate: float,
+    interval: str,
 ) -> AnalyticsResult:
     """
     Execute the Analytics Engine.
+    
+    Parameters
+    ----------
+    simulation_result : SimulationResult
+        Completed portfolio simulation.
+    risk_free_rate : float
+        Annual risk-free rate.
+    interval : str
+        Data interval used in the backtest.
     """
 
     logger.info("Running performance analytics.")
@@ -258,4 +304,5 @@ def _run_analytics(
     return analyze_performance(
         simulation_result,
         risk_free_rate=risk_free_rate,
+        interval=interval,
     )

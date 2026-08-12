@@ -49,6 +49,7 @@ def serialize_comparison_result(result: ComparisonResult) -> dict:
         "end_date": result.request.end_date,
         "initial_capital": result.request.initial_capital,
         "risk_free_rate": result.request.risk_free_rate,
+        "interval": result.request.interval,
     }
 
     benchmark = _extract_benchmark(result)

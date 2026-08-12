@@ -16,6 +16,9 @@ const ui = {
     capitalInput:
         document.getElementById("capital"),
 
+    intervalSelect:
+        document.getElementById("interval"),
+
     // Strategy Configuration
 
     strategySelect:
@@ -505,6 +508,8 @@ function readConfigurationForm() {
             ui.capitalInput.value
         ),
 
+        interval: ui.intervalSelect.value,
+
         strategy: {
 
             type: strategyType,
@@ -549,6 +554,19 @@ function validateConfiguration(configuration) {
             "Start date must be before end date."
         );
 
+    }
+
+    // Validate interval and date range compatibility
+    if (configuration.interval && configuration.startDate && configuration.endDate) {
+        const intervalValidation = validateIntervalDateRange(
+            configuration.interval,
+            configuration.startDate,
+            configuration.endDate
+        );
+
+        if (!intervalValidation.valid) {
+            errors.push(intervalValidation.error);
+        }
     }
 
     if (configuration.risk && configuration.risk.stopLossType) {
@@ -603,6 +621,12 @@ function populateConfigurationForm(configuration) {
 
     ui.capitalInput.value =
         configuration.initialCapital;
+
+    if (configuration.interval) {
+        ui.intervalSelect.value = configuration.interval;
+        // Update the interval hint to match the restored value
+        updateIntervalHint(configuration.interval, "interval-hint");
+    }
 
     if (configuration.risk && configuration.risk.stopLossType) {
         ui.stopLossEnabledCheckbox.checked = true;

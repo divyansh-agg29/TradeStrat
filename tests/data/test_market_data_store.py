@@ -71,8 +71,13 @@ class TestInitializeDb:
         ).fetchall()
         table_names = {t[0] for t in tables}
 
-        assert "market_data" in table_names
-        assert "market_data_ranges" in table_names
+        # Check for interval-specific tables (multi-table schema)
+        assert "market_data_1day" in table_names
+        assert "market_data_1day_ranges" in table_names
+        assert "market_data_1hour" in table_names
+        assert "market_data_1min" in table_names
+        # Should have 16 tables total (8 intervals × 2 tables each)
+        assert len([t for t in table_names if t.startswith("market_data")]) == 16
 
         conn.close()
         os.remove(path)
@@ -89,7 +94,8 @@ class TestInitializeDb:
             "SELECT name FROM sqlite_master WHERE type='table'"
         ).fetchall()
         table_names = {t[0] for t in tables}
-        assert "market_data" in table_names
+        # Check for default 1d interval table
+        assert "market_data_1day" in table_names
 
         conn.close()
 
@@ -105,10 +111,10 @@ class TestStoreAndRetrieve:
         dates = ["2024-01-02", "2024-01-03", "2024-01-04"]
         df = _make_sample_df(dates)
 
-        store_data(db_conn, "RELIANCE.NS", df, "2024-01-02", "2024-01-04")
+        store_data(db_conn, "RELIANCE.NS", df, "2024-01-02", "2024-01-04", "1d")
 
         result = retrieve_data(
-            db_conn, "RELIANCE.NS", "2024-01-02", "2024-01-04",
+            db_conn, "RELIANCE.NS", "2024-01-02", "2024-01-04", "1d",
         )
 
         assert result is not None
@@ -120,7 +126,7 @@ class TestStoreAndRetrieve:
 
     def test_retrieve_returns_none_when_not_cached(self, db_conn):
         result = retrieve_data(
-            db_conn, "RELIANCE.NS", "2024-01-02", "2024-01-04",
+            db_conn, "RELIANCE.NS", "2024-01-02", "2024-01-04", "1d",
         )
         assert result is None
 
@@ -128,7 +134,7 @@ class TestStoreAndRetrieve:
         dates = ["2024-01-02", "2024-01-03"]
         df1 = _make_sample_df(dates)
 
-        store_data(db_conn, "RELIANCE.NS", df1, "2024-01-02", "2024-01-03")
+        store_data(db_conn, "RELIANCE.NS", df1, "2024-01-02", "2024-01-03", "1d")
 
         # Create updated data with different prices.
         df2 = pd.DataFrame(
@@ -145,10 +151,10 @@ class TestStoreAndRetrieve:
             index=pd.DatetimeIndex(dates, name="Date"),
         )
 
-        store_data(db_conn, "RELIANCE.NS", df2, "2024-01-02", "2024-01-03")
+        store_data(db_conn, "RELIANCE.NS", df2, "2024-01-02", "2024-01-03", "1d")
 
         result = retrieve_data(
-            db_conn, "RELIANCE.NS", "2024-01-02", "2024-01-03",
+            db_conn, "RELIANCE.NS", "2024-01-02", "2024-01-03", "1d",
         )
 
         assert result is not None
@@ -171,10 +177,10 @@ class TestStoreAndRetrieve:
             index=pd.DatetimeIndex(dates, name="Date"),
         )
 
-        store_data(db_conn, "RELIANCE.NS", df, "2024-01-02", "2024-01-02")
+        store_data(db_conn, "RELIANCE.NS", df, "2024-01-02", "2024-01-02", "1d")
 
         result = retrieve_data(
-            db_conn, "RELIANCE.NS", "2024-01-02", "2024-01-02",
+            db_conn, "RELIANCE.NS", "2024-01-02", "2024-01-02", "1d",
         )
 
         assert result is not None
@@ -193,33 +199,33 @@ class TestIsRangeCached:
     def test_returns_true_for_exact_match(self, db_conn):
         dates = ["2024-01-02", "2024-01-03", "2024-01-04"]
         df = _make_sample_df(dates)
-        store_data(db_conn, "RELIANCE.NS", df, "2024-01-02", "2024-01-04")
+        store_data(db_conn, "RELIANCE.NS", df, "2024-01-02", "2024-01-04", "1d")
 
         assert is_range_cached(
-            db_conn, "RELIANCE.NS", "2024-01-02", "2024-01-04",
+            db_conn, "RELIANCE.NS", "2024-01-02", "2024-01-04", "1d",
         )
 
     def test_returns_true_for_subset_of_cached_range(self, db_conn):
         dates = ["2024-01-02", "2024-01-03", "2024-01-04", "2024-01-05"]
         df = _make_sample_df(dates)
-        store_data(db_conn, "RELIANCE.NS", df, "2024-01-02", "2024-01-05")
+        store_data(db_conn, "RELIANCE.NS", df, "2024-01-02", "2024-01-05", "1d")
 
         assert is_range_cached(
-            db_conn, "RELIANCE.NS", "2024-01-03", "2024-01-04",
+            db_conn, "RELIANCE.NS", "2024-01-03", "2024-01-04", "1d",
         )
 
     def test_returns_false_when_no_data(self, db_conn):
         assert not is_range_cached(
-            db_conn, "RELIANCE.NS", "2024-01-02", "2024-01-04",
+            db_conn, "RELIANCE.NS", "2024-01-02", "2024-01-04", "1d",
         )
 
     def test_returns_false_when_range_extends_beyond_cached(self, db_conn):
         dates = ["2024-01-02", "2024-01-03"]
         df = _make_sample_df(dates)
-        store_data(db_conn, "RELIANCE.NS", df, "2024-01-02", "2024-01-03")
+        store_data(db_conn, "RELIANCE.NS", df, "2024-01-02", "2024-01-03", "1d")
 
         assert not is_range_cached(
-            db_conn, "RELIANCE.NS", "2024-01-01", "2024-01-04",
+            db_conn, "RELIANCE.NS", "2024-01-01", "2024-01-04", "1d",
         )
 
     def test_returns_false_for_disjoint_ranges(self, db_conn):
@@ -229,22 +235,22 @@ class TestIsRangeCached:
         single range covers it.
         """
         df1 = _make_sample_df(["2024-01-02", "2024-01-03"])
-        store_data(db_conn, "RELIANCE.NS", df1, "2024-01-02", "2024-01-03")
+        store_data(db_conn, "RELIANCE.NS", df1, "2024-01-02", "2024-01-03", "1d")
 
         df2 = _make_sample_df(["2024-01-08", "2024-01-09"])
-        store_data(db_conn, "RELIANCE.NS", df2, "2024-01-08", "2024-01-09")
+        store_data(db_conn, "RELIANCE.NS", df2, "2024-01-08", "2024-01-09", "1d")
 
         assert not is_range_cached(
-            db_conn, "RELIANCE.NS", "2024-01-02", "2024-01-09",
+            db_conn, "RELIANCE.NS", "2024-01-02", "2024-01-09", "1d",
         )
 
     def test_ticker_case_insensitive(self, db_conn):
         dates = ["2024-01-02"]
         df = _make_sample_df(dates)
-        store_data(db_conn, "reliance.ns", df, "2024-01-02", "2024-01-02")
+        store_data(db_conn, "reliance.ns", df, "2024-01-02", "2024-01-02", "1d")
 
         assert is_range_cached(
-            db_conn, "RELIANCE.NS", "2024-01-02", "2024-01-02",
+            db_conn, "RELIANCE.NS", "2024-01-02", "2024-01-02", "1d",
         )
 
 
@@ -257,13 +263,13 @@ class TestRangeMerging:
 
     def test_adjacent_ranges_are_merged(self, db_conn):
         df1 = _make_sample_df(["2024-01-02", "2024-01-03"])
-        store_data(db_conn, "RELIANCE.NS", df1, "2024-01-02", "2024-01-03")
+        store_data(db_conn, "RELIANCE.NS", df1, "2024-01-02", "2024-01-03", "1d")
 
         df2 = _make_sample_df(["2024-01-04", "2024-01-05"])
-        store_data(db_conn, "RELIANCE.NS", df2, "2024-01-04", "2024-01-05")
+        store_data(db_conn, "RELIANCE.NS", df2, "2024-01-04", "2024-01-05", "1d")
 
         rows = db_conn.execute(
-            "SELECT start_date, end_date FROM market_data_ranges "
+            "SELECT start_date, end_date FROM market_data_1day_ranges "
             "WHERE ticker = 'RELIANCE.NS'"
         ).fetchall()
 
@@ -272,13 +278,13 @@ class TestRangeMerging:
 
     def test_overlapping_ranges_are_merged(self, db_conn):
         df1 = _make_sample_df(["2024-01-02", "2024-01-03", "2024-01-04"])
-        store_data(db_conn, "RELIANCE.NS", df1, "2024-01-02", "2024-01-04")
+        store_data(db_conn, "RELIANCE.NS", df1, "2024-01-02", "2024-01-04", "1d")
 
         df2 = _make_sample_df(["2024-01-03", "2024-01-04", "2024-01-05"])
-        store_data(db_conn, "RELIANCE.NS", df2, "2024-01-03", "2024-01-05")
+        store_data(db_conn, "RELIANCE.NS", df2, "2024-01-03", "2024-01-05", "1d")
 
         rows = db_conn.execute(
-            "SELECT start_date, end_date FROM market_data_ranges "
+            "SELECT start_date, end_date FROM market_data_1day_ranges "
             "WHERE ticker = 'RELIANCE.NS'"
         ).fetchall()
 
@@ -287,13 +293,13 @@ class TestRangeMerging:
 
     def test_disjoint_ranges_stay_separate(self, db_conn):
         df1 = _make_sample_df(["2024-01-02", "2024-01-03"])
-        store_data(db_conn, "RELIANCE.NS", df1, "2024-01-02", "2024-01-03")
+        store_data(db_conn, "RELIANCE.NS", df1, "2024-01-02", "2024-01-03", "1d")
 
         df2 = _make_sample_df(["2024-01-08", "2024-01-09"])
-        store_data(db_conn, "RELIANCE.NS", df2, "2024-01-08", "2024-01-09")
+        store_data(db_conn, "RELIANCE.NS", df2, "2024-01-08", "2024-01-09", "1d")
 
         rows = db_conn.execute(
-            "SELECT start_date, end_date FROM market_data_ranges "
+            "SELECT start_date, end_date FROM market_data_1day_ranges "
             "WHERE ticker = 'RELIANCE.NS' ORDER BY start_date"
         ).fetchall()
 
@@ -305,18 +311,18 @@ class TestRangeMerging:
         All three should merge into a single [Jan 2-9].
         """
         df1 = _make_sample_df(["2024-01-02", "2024-01-03"])
-        store_data(db_conn, "RELIANCE.NS", df1, "2024-01-02", "2024-01-03")
+        store_data(db_conn, "RELIANCE.NS", df1, "2024-01-02", "2024-01-03", "1d")
 
         df2 = _make_sample_df(["2024-01-08", "2024-01-09"])
-        store_data(db_conn, "RELIANCE.NS", df2, "2024-01-08", "2024-01-09")
+        store_data(db_conn, "RELIANCE.NS", df2, "2024-01-08", "2024-01-09", "1d")
 
         df3 = _make_sample_df(
             ["2024-01-04", "2024-01-05", "2024-01-06", "2024-01-07"],
         )
-        store_data(db_conn, "RELIANCE.NS", df3, "2024-01-04", "2024-01-07")
+        store_data(db_conn, "RELIANCE.NS", df3, "2024-01-04", "2024-01-07", "1d")
 
         rows = db_conn.execute(
-            "SELECT start_date, end_date FROM market_data_ranges "
+            "SELECT start_date, end_date FROM market_data_1day_ranges "
             "WHERE ticker = 'RELIANCE.NS'"
         ).fetchall()
 

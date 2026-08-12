@@ -15,11 +15,21 @@ execution_marker  Trade entry / exit marker (buy, sell_signal,
                   stop_loss, take_profit)
 """
 
+import math
+
 import pandas as pd
 
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+
+def _safe_tolist(series: pd.Series) -> list:
+    """Convert a Series to a list, replacing NaN/Inf with None."""
+    return [
+        None if isinstance(v, float) and (math.isnan(v) or math.isinf(v)) else v
+        for v in series
+    ]
 
 _NON_INDICATOR_COLUMNS = frozenset([
     "Date", "Open", "High", "Low", "Close", "Volume",
@@ -90,10 +100,10 @@ def _build_price_chart(
             "name": "Price",
             "subplot": "main",
             "x": dates,
-            "open": history["Open"].tolist(),
-            "high": history["High"].tolist(),
-            "low": history["Low"].tolist(),
-            "close": history["Close"].tolist(),
+            "open": _safe_tolist(history["Open"]),
+            "high": _safe_tolist(history["High"]),
+            "low": _safe_tolist(history["Low"]),
+            "close": _safe_tolist(history["Close"]),
         })
     elif "Close" in history.columns:
         traces.append({
@@ -102,7 +112,7 @@ def _build_price_chart(
             "name": "Close",
             "subplot": "main",
             "x": dates,
-            "y": history["Close"].tolist(),
+            "y": _safe_tolist(history["Close"]),
         })
 
     traces.extend(
@@ -175,9 +185,7 @@ def _build_indicator_traces(
             if column not in history.columns:
                 continue
 
-            values = history[column].where(
-                pd.notnull(history[column]), None
-            ).tolist()
+            values = _safe_tolist(history[column])
 
             if indicator.display == "subplot":
                 subplot = indicator.subplot_id or column.lower()
@@ -202,9 +210,7 @@ def _build_indicator_traces(
     else:
         for column in history.columns:
             if _is_indicator_column(column):
-                values = history[column].where(
-                    pd.notnull(history[column]), None
-                ).tolist()
+                values = _safe_tolist(history[column])
                 traces.append({
                     "id": column.lower().replace(" ", "_"),
                     "type": "indicator_line",
@@ -253,7 +259,7 @@ def _build_signal_markers(
             "group": "signals",
             "name": "BUY Signal",
             "x": _dates_to_strings(buy_rows[date_column]),
-            "y": buy_rows["Close"].tolist(),
+            "y": _safe_tolist(buy_rows["Close"]),
         })
 
     sell_rows = portfolio_history[portfolio_history["Signal"] == "SELL"]
@@ -266,7 +272,7 @@ def _build_signal_markers(
             "group": "signals",
             "name": "SELL Signal",
             "x": _dates_to_strings(sell_rows[date_column]),
-            "y": sell_rows["Close"].tolist(),
+            "y": _safe_tolist(sell_rows["Close"]),
         })
 
     return markers
@@ -291,7 +297,7 @@ def _build_execution_markers(
     markers = []
 
     entry_dates = _dates_to_strings(trade_history["entry_date"])
-    entry_prices = trade_history["entry_price"].tolist()
+    entry_prices = _safe_tolist(trade_history["entry_price"])
 
     if entry_dates:
         markers.append({
@@ -325,7 +331,7 @@ def _build_execution_markers(
             "group": "executions",
             "name": label,
             "x": _dates_to_strings(subset["exit_date"]),
-            "y": subset["exit_price"].tolist(),
+            "y": _safe_tolist(subset["exit_price"]),
         })
 
     return markers
@@ -353,14 +359,14 @@ def _build_equity_chart(
             "type": "line",
             "name": "Strategy",
             "x": dates,
-            "y": history["Portfolio Value"].tolist(),
+            "y": _safe_tolist(history["Portfolio Value"]),
         },
         {
             "id": "benchmark",
             "type": "benchmark_line",
             "name": "Buy & Hold",
             "x": dates,
-            "y": history["Buy & Hold Value"].tolist(),
+            "y": _safe_tolist(history["Buy & Hold Value"]),
         },
     ]
 
@@ -382,7 +388,7 @@ def _build_drawdown_chart(
     dates = _dates_to_strings(history[date_column])
 
     drawdown_column = _resolve_drawdown_column(history)
-    drawdown_values = history[drawdown_column].tolist() if drawdown_column else []
+    drawdown_values = _safe_tolist(history[drawdown_column]) if drawdown_column else []
 
     traces = [
         {

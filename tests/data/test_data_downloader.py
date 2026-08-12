@@ -40,6 +40,7 @@ def test_download_stock_data_success(mock_ticker):
     mock_stock.history.assert_called_once_with(
         start="2024-01-01",
         end="2024-12-31",
+        interval="1d",
     )
 
     pd.testing.assert_frame_equal(data, mock_history)

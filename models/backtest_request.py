@@ -20,3 +20,4 @@ class BacktestRequest:
     risk_free_rate: float = 0.0
     strategy: StrategyConfig = None
     risk: RiskConfig | None = None
+    interval: str = "1d"

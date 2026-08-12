@@ -16,3 +16,4 @@ class ComparisonRequest:
     initial_capital: float = 100000.0
     risk_free_rate: float = 0.0
     strategies: list[StrategyConfig] = field(default_factory=list)
+    interval: str = "1d"
