@@ -1,6 +1,9 @@
 
 ## Development Changelog
 
+### 2026-08-11 — Data download retry logic
+- Added exponential backoff retry logic for data downloader from yfinance
+
 ### 2026-08-10 — Landing Page & Marketing Site
 - Created professional dark-themed landing page as the new home route (`/`)
 - Moved existing dashboard application to `/app` route
