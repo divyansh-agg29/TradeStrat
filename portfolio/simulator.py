@@ -165,12 +165,12 @@ def simulate_portfolio(
     portfolio_value_history = []
     position_history = []
 
-    for row_number, (index, row) in enumerate(
-        portfolio_history.iterrows()
+    for row_number, row in enumerate(
+        portfolio_history.itertuples()
     ):
-
-        signal = row["Signal"]
-        close_price = row["Close"]
+        index = row.Index
+        signal = row.Signal
+        close_price = row.Close
 
         if open_trade is not None:
             open_trade.highest_close = max(

@@ -1,8 +1,9 @@
 
 ## Development Changelog
 
-### 2026-08-16 — Bollinger Bands indicator
+### 2026-08-16 — Bollinger Bands indicator and speed optimisations
 - Added new Bollinger Bands indicator in moving_average indicator module
+- Significantly reduced runtime of backtest simulation
 
 ### 2026-08-12 — Multi-Timeframe Support & Intraday Trading
 - Added support for 8 trading intervals: 1m, 5m, 15m, 30m, 1h, 1d, 1wk, 1mo
