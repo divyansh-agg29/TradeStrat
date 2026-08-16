@@ -158,14 +158,25 @@ def simulate_portfolio(
 
     portfolio_history = df.copy()
 
+    # Store portfolio history in Python lists during the simulation.
+    cash_history = []
+    shares_history = []
+    holdings_value_history = []
+    portfolio_value_history = []
+    position_history = []
 
-    for row_number, (index, row) in enumerate( portfolio_history.iterrows() ):
+    for row_number, (index, row) in enumerate(
+        portfolio_history.iterrows()
+    ):
 
         signal = row["Signal"]
         close_price = row["Close"]
 
         if open_trade is not None:
-            open_trade.highest_close = max(open_trade.highest_close, close_price)
+            open_trade.highest_close = max(
+                open_trade.highest_close,
+                close_price,
+            )
 
         logger.debug(
             f"Processing {index}: "
@@ -191,14 +202,22 @@ def simulate_portfolio(
             close_price,
         )
 
-        _record_portfolio_state(
-            portfolio_history,
-            index,
-            portfolio,
-            holdings_value,
-            portfolio_value,
-        )
-    
+        # Record the current state in Python lists.
+        # The portfolio itself is still updated every iteration.
+        cash_history.append(portfolio.cash)
+        shares_history.append(portfolio.shares)
+        holdings_value_history.append(holdings_value)
+        portfolio_value_history.append(portfolio_value)
+        position_history.append(portfolio.position)
+
+    # Write the completed portfolio history to the DataFrame once
+    # after the simulation loop.
+    portfolio_history["Cash"] = cash_history
+    portfolio_history["Shares"] = shares_history
+    portfolio_history["Holdings Value"] = holdings_value_history
+    portfolio_history["Portfolio Value"] = portfolio_value_history
+    portfolio_history["Position"] = position_history
+
     trade_history = pd.DataFrame(
         [vars(trade) for trade in completed_trades]
     )
@@ -322,23 +341,6 @@ def _update_portfolio_state(
     portfolio_value = portfolio.cash + holdings_value
 
     return holdings_value, portfolio_value
-
-def _record_portfolio_state(
-    df: pd.DataFrame,
-    index,
-    portfolio: PortfolioState,
-    holdings_value: float,
-    portfolio_value: float,
-) -> None:
-    """
-    Record the portfolio state for a trading day.
-    """
-
-    df.at[index, "Cash"] = portfolio.cash
-    df.at[index, "Shares"] = portfolio.shares
-    df.at[index, "Holdings Value"] = holdings_value
-    df.at[index, "Portfolio Value"] = portfolio_value
-    df.at[index, "Position"] = portfolio.position
 
 def _evaluate_risk_and_signal(
     signal: str,
