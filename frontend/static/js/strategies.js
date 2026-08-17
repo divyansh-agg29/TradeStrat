@@ -70,6 +70,22 @@ const STRATEGY_REGISTRY = {
             return errors;
         }
 
+    },
+
+    bb_bounce: {
+        label: "BB Bounce",
+        parameters: [
+            {key: "period", label: "BB Period", type: "number", default: 20, min: 1},
+            {key: "std_multiplier", label: "Std Multiplier", type: "number", default: 2.0, min: 0.1, step: 0.1}
+        ],
+
+        validate(params) {
+            const errors = [];
+            if (params.period <= 0) {errors.push("BB period must be positive.");}
+            if (params.std_multiplier <= 0) {errors.push("Std multiplier must be positive.");}
+            return errors;
+        }
+
     }
 
 };

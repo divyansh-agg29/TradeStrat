@@ -1,6 +1,11 @@
 
 ## Development Changelog
 
+### 2026-08-17 — Bollinger Bands Bounce strategy
+- Added new BB Bounce trading strategy based on mean reversion
+- Strategy generates BUY signals when price crosses below lower band and SELL signals when price crosses above upper band
+- Integrated strategy into frontend with configurable period and std_multiplier parameters
+
 ### 2026-08-16 — Bollinger Bands indicator and speed optimisations
 - Added new Bollinger Bands indicator in moving_average indicator module
 - Significantly reduced runtime of backtest simulation
