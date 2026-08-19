@@ -29,9 +29,6 @@ const ui = {
     
     // Stop Loss Configuration
 
-    stopLossEnabledCheckbox:
-        document.getElementById("stop-loss-enabled"),
-
     stopLossTypeSelect:
         document.getElementById("stop-loss-type"),
 
@@ -40,9 +37,6 @@ const ui = {
     
     // Take Profit Configuration
 
-    takeProfitEnabledCheckbox:
-        document.getElementById("take-profit-enabled"),
-
     takeProfitTypeSelect:
         document.getElementById("take-profit-type"),
 
@@ -50,9 +44,6 @@ const ui = {
         document.getElementById("take-profit-parameters"),
     
     // Position Sizing Configuration
-
-    positionSizingEnabledCheckbox:
-        document.getElementById("position-sizing-enabled"),
 
     positionSizingTypeSelect:
         document.getElementById("position-sizing-type"),
@@ -174,29 +165,14 @@ function registerEventListeners() {
         onStrategyChanged
     );
 
-    ui.stopLossEnabledCheckbox.addEventListener(
-        "change",
-        onStopLossCheckboxChanged
-    );
-
     ui.stopLossTypeSelect.addEventListener(
         "change",
         onStopLossTypeChanged
     );
 
-    ui.takeProfitEnabledCheckbox.addEventListener(
-        "change",
-        onTakeProfitCheckboxChanged
-    );
-
     ui.takeProfitTypeSelect.addEventListener(
         "change",
         onTakeProfitTypeChanged
-    );
-
-    ui.positionSizingEnabledCheckbox.addEventListener(
-        "change",
-        onPositionSizingCheckboxChanged
     );
 
     ui.positionSizingTypeSelect.addEventListener(
@@ -206,41 +182,14 @@ function registerEventListeners() {
 
 }
 
-function onStopLossCheckboxChanged() {
-
-    const isEnabled = ui.stopLossEnabledCheckbox.checked;
-
-    const fieldContainer = document.getElementById("stop-loss-field-container");
-    fieldContainer.style.display = isEnabled ? "block" : "none";
-
-    if (!isEnabled) {
-        ui.stopLossParametersContainer.innerHTML = "";
-    } else {
-        onStopLossTypeChanged();
-    }
-
-}
-
-
-function onTakeProfitCheckboxChanged() {
-
-    const isEnabled = ui.takeProfitEnabledCheckbox.checked;
-
-    const fieldContainer = document.getElementById("take-profit-field-container");
-    fieldContainer.style.display = isEnabled ? "block" : "none";
-
-    if (!isEnabled) {
-        ui.takeProfitParametersContainer.innerHTML = "";
-    } else {
-        onTakeProfitTypeChanged();
-    }
-
-}
-
-
 function populateTakeProfitDropdown() {
 
     ui.takeProfitTypeSelect.innerHTML = "";
+
+    const noneOption = document.createElement("option");
+    noneOption.value = "none";
+    noneOption.textContent = "None";
+    ui.takeProfitTypeSelect.appendChild(noneOption);
 
     for (const [key, rule] of Object.entries(TAKE_PROFIT_REGISTRY)) {
 
@@ -257,9 +206,14 @@ function populateTakeProfitDropdown() {
 function onTakeProfitTypeChanged() {
 
     const takeProfitType = ui.takeProfitTypeSelect.value;
-    const rule = TAKE_PROFIT_REGISTRY[takeProfitType];
 
     ui.takeProfitParametersContainer.innerHTML = "";
+
+    if (takeProfitType === "none") {
+        return;
+    }
+
+    const rule = TAKE_PROFIT_REGISTRY[takeProfitType];
 
     if (!rule) {
         return;
@@ -297,25 +251,14 @@ function onTakeProfitTypeChanged() {
 }
 
 
-function onPositionSizingCheckboxChanged() {
-
-    const isEnabled = ui.positionSizingEnabledCheckbox.checked;
-
-    const fieldContainer = document.getElementById("position-sizing-field-container");
-    fieldContainer.style.display = isEnabled ? "block" : "none";
-
-    if (!isEnabled) {
-        ui.positionSizingParametersContainer.innerHTML = "";
-    } else {
-        onPositionSizingTypeChanged();
-    }
-
-}
-
-
 function populatePositionSizingDropdown() {
 
     ui.positionSizingTypeSelect.innerHTML = "";
+
+    const noneOption = document.createElement("option");
+    noneOption.value = "none";
+    noneOption.textContent = "All-In (Default)";
+    ui.positionSizingTypeSelect.appendChild(noneOption);
 
     for (const [key, rule] of Object.entries(POSITION_SIZING_REGISTRY)) {
 
@@ -332,9 +275,14 @@ function populatePositionSizingDropdown() {
 function onPositionSizingTypeChanged() {
 
     const sizingType = ui.positionSizingTypeSelect.value;
-    const rule = POSITION_SIZING_REGISTRY[sizingType];
 
     ui.positionSizingParametersContainer.innerHTML = "";
+
+    if (sizingType === "none") {
+        return;
+    }
+
+    const rule = POSITION_SIZING_REGISTRY[sizingType];
 
     if (!rule) {
         return;
@@ -376,6 +324,11 @@ function populateStopLossDropdown() {
 
     ui.stopLossTypeSelect.innerHTML = "";
 
+    const noneOption = document.createElement("option");
+    noneOption.value = "none";
+    noneOption.textContent = "None";
+    ui.stopLossTypeSelect.appendChild(noneOption);
+
     for (const [key, rule] of Object.entries(STOP_LOSS_REGISTRY)) {
 
         const option = document.createElement("option");
@@ -391,9 +344,14 @@ function populateStopLossDropdown() {
 function onStopLossTypeChanged() {
 
     const stopLossType = ui.stopLossTypeSelect.value;
-    const rule = STOP_LOSS_REGISTRY[stopLossType];
 
     ui.stopLossParametersContainer.innerHTML = "";
+
+    if (stopLossType === "none") {
+        return;
+    }
+
+    const rule = STOP_LOSS_REGISTRY[stopLossType];
 
     if (!rule) {
         return;
@@ -549,11 +507,10 @@ function readConfigurationForm() {
 
     }
 
-    const stopLossEnabled = ui.stopLossEnabledCheckbox.checked;
     const risk = {};
+    const stopLossType = ui.stopLossTypeSelect.value;
 
-    if (stopLossEnabled) {
-        const stopLossType = ui.stopLossTypeSelect.value;
+    if (stopLossType !== "none") {
         const rule = STOP_LOSS_REGISTRY[stopLossType];
 
         if (rule) {
@@ -571,10 +528,9 @@ function readConfigurationForm() {
         }
     }
 
-    const takeProfitEnabled = ui.takeProfitEnabledCheckbox.checked;
+    const takeProfitType = ui.takeProfitTypeSelect.value;
 
-    if (takeProfitEnabled) {
-        const takeProfitType = ui.takeProfitTypeSelect.value;
+    if (takeProfitType !== "none") {
         const tpRule = TAKE_PROFIT_REGISTRY[takeProfitType];
 
         if (tpRule) {
@@ -592,11 +548,10 @@ function readConfigurationForm() {
         }
     }
 
-    const positionSizingEnabled = ui.positionSizingEnabledCheckbox.checked;
     const positionSizing = {};
+    const sizingType = ui.positionSizingTypeSelect.value;
 
-    if (positionSizingEnabled) {
-        const sizingType = ui.positionSizingTypeSelect.value;
+    if (sizingType !== "none") {
         const sizingRule = POSITION_SIZING_REGISTRY[sizingType];
 
         if (sizingRule) {
@@ -757,9 +712,6 @@ function populateConfigurationForm(configuration) {
     }
 
     if (configuration.risk && configuration.risk.stopLossType) {
-        ui.stopLossEnabledCheckbox.checked = true;
-        document.getElementById("stop-loss-field-container").style.display = "block";
-
         ui.stopLossTypeSelect.value = configuration.risk.stopLossType;
         onStopLossTypeChanged();
 
@@ -774,14 +726,11 @@ function populateConfigurationForm(configuration) {
             }
         }
     } else {
-        ui.stopLossEnabledCheckbox.checked = false;
-        document.getElementById("stop-loss-field-container").style.display = "none";
+        ui.stopLossTypeSelect.value = "none";
+        ui.stopLossParametersContainer.innerHTML = "";
     }
 
     if (configuration.risk && configuration.risk.takeProfitType) {
-        ui.takeProfitEnabledCheckbox.checked = true;
-        document.getElementById("take-profit-field-container").style.display = "block";
-
         ui.takeProfitTypeSelect.value = configuration.risk.takeProfitType;
         onTakeProfitTypeChanged();
 
@@ -796,14 +745,11 @@ function populateConfigurationForm(configuration) {
             }
         }
     } else {
-        ui.takeProfitEnabledCheckbox.checked = false;
-        document.getElementById("take-profit-field-container").style.display = "none";
+        ui.takeProfitTypeSelect.value = "none";
+        ui.takeProfitParametersContainer.innerHTML = "";
     }
 
     if (configuration.positionSizing && configuration.positionSizing.sizingType) {
-        ui.positionSizingEnabledCheckbox.checked = true;
-        document.getElementById("position-sizing-field-container").style.display = "block";
-
         ui.positionSizingTypeSelect.value = configuration.positionSizing.sizingType;
         onPositionSizingTypeChanged();
 
@@ -818,8 +764,8 @@ function populateConfigurationForm(configuration) {
             }
         }
     } else {
-        ui.positionSizingEnabledCheckbox.checked = false;
-        document.getElementById("position-sizing-field-container").style.display = "none";
+        ui.positionSizingTypeSelect.value = "none";
+        ui.positionSizingParametersContainer.innerHTML = "";
     }
 
     ui.strategySelect.value =

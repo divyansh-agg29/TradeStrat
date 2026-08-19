@@ -117,48 +117,20 @@
                 <h3>Risk Management</h3>
 
                 <div class="form-group">
-                    <label for="stop-loss-enabled" style="display: flex; align-items: center; cursor: pointer; gap: 8px;">
-                        <input
-                            type="checkbox"
-                            id="stop-loss-enabled"
-                            style="cursor: pointer; width: 18px; height: 18px;">
-                        <span>Enable Stop Loss</span>
-                    </label>
+                    <label for="stop-loss-type">Stop Loss</label>
+                    <select id="stop-loss-type" class="form-select">
+                    </select>
                 </div>
 
-                <div id="stop-loss-field-container" style="display: none;">
-
-                    <div class="form-group">
-                        <label for="stop-loss-type">Stop Loss Type</label>
-                        <select id="stop-loss-type" class="form-select">
-                        </select>
-                    </div>
-
-                    <div id="stop-loss-parameters"></div>
-
-                </div>
+                <div id="stop-loss-parameters"></div>
 
                 <div class="form-group">
-                    <label for="take-profit-enabled" style="display: flex; align-items: center; cursor: pointer; gap: 8px;">
-                        <input
-                            type="checkbox"
-                            id="take-profit-enabled"
-                            style="cursor: pointer; width: 18px; height: 18px;">
-                        <span>Enable Take Profit</span>
-                    </label>
+                    <label for="take-profit-type">Take Profit</label>
+                    <select id="take-profit-type" class="form-select">
+                    </select>
                 </div>
 
-                <div id="take-profit-field-container" style="display: none;">
-
-                    <div class="form-group">
-                        <label for="take-profit-type">Take Profit Type</label>
-                        <select id="take-profit-type" class="form-select">
-                        </select>
-                    </div>
-
-                    <div id="take-profit-parameters"></div>
-
-                </div>
+                <div id="take-profit-parameters"></div>
 
             </section>
 
@@ -169,26 +141,12 @@
                 <h3>Position Sizing</h3>
 
                 <div class="form-group">
-                    <label for="position-sizing-enabled" style="display: flex; align-items: center; cursor: pointer; gap: 8px;">
-                        <input
-                            type="checkbox"
-                            id="position-sizing-enabled"
-                            style="cursor: pointer; width: 18px; height: 18px;">
-                        <span>Enable Position Sizing</span>
-                    </label>
+                    <label for="position-sizing-type">Sizing Type</label>
+                    <select id="position-sizing-type" class="form-select">
+                    </select>
                 </div>
 
-                <div id="position-sizing-field-container" style="display: none;">
-
-                    <div class="form-group">
-                        <label for="position-sizing-type">Sizing Type</label>
-                        <select id="position-sizing-type" class="form-select">
-                        </select>
-                    </div>
-
-                    <div id="position-sizing-parameters"></div>
-
-                </div>
+                <div id="position-sizing-parameters"></div>
 
             </section>
 
