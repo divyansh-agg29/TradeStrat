@@ -1,6 +1,13 @@
 
 ## Development Changelog
 
+### 2026-08-19 — Position Sizing Framework
+- Added pluggable position sizing system with registry-based architecture (All-In, Fixed Percentage, Fixed Amount, Fixed Shares, Risk-Based)
+- Position accumulation: consecutive BUY signals now add to the existing position instead of being ignored, with weighted average entry price tracking
+- Integrated position sizing with the backtest service, API routes, and portfolio simulator
+- Added frontend controls: enable checkbox, type dropdown, and dynamic parameter inputs in the sidebar
+- Trade history table now displays an "Entries" column showing how many BUY entries composed each trade
+
 ### 2026-08-17 — Bollinger Bands Bounce strategy
 - Added new BB Bounce trading strategy based on mean reversion
 - Strategy generates BUY signals when price crosses below lower band and SELL signals when price crosses above upper band

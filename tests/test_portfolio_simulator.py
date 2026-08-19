@@ -1,7 +1,9 @@
 import pandas as pd
 import pytest
 
-from portfolio import SimulationResult, simulate_portfolio
+from portfolio import SimulationResult, simulate_portfolio, PositionEntry, OpenPosition
+from portfolio.simulator import CompletedTrade, PortfolioState
+from position_sizing.config import PositionSizingConfig
 from risk.config import RiskConfig
 
 def create_sample_dataframe(
@@ -851,3 +853,621 @@ def test_stop_loss_takes_priority_over_take_profit():
     trade = result.trade_history.iloc[0]
 
     assert trade["exit_reason"] == "stop_loss"
+
+
+# ── PortfolioState (position removed) ───────────────────────
+
+
+def test_portfolio_state_has_no_position_field():
+    """
+    PortfolioState should no longer have a 'position' field.
+    """
+
+    state = PortfolioState(cash=100000, shares=0)
+
+    assert not hasattr(state, "position")
+    assert state.cash == 100000
+    assert state.shares == 0
+
+
+def test_portfolio_state_position_derived_from_shares():
+    """
+    Position should be derivable from shares > 0.
+    """
+
+    flat = PortfolioState(cash=100000, shares=0)
+    long = PortfolioState(cash=50000, shares=500)
+
+    assert flat.shares == 0  # FLAT
+    assert long.shares > 0   # LONG
+
+
+# ── PositionEntry ────────────────────────────────────────────
+
+
+def test_position_entry_creation():
+    """
+    PositionEntry should store all entry details.
+    """
+
+    entry = PositionEntry(
+        entry_date=pd.Timestamp("2024-01-01"),
+        entry_index=0,
+        entry_price=100.0,
+        shares=500,
+        investment=50000.0,
+    )
+
+    assert entry.entry_date == pd.Timestamp("2024-01-01")
+    assert entry.entry_index == 0
+    assert entry.entry_price == 100.0
+    assert entry.shares == 500
+    assert entry.investment == 50000.0
+
+
+# ── OpenPosition ─────────────────────────────────────────────
+
+
+def test_open_position_single_entry():
+    """
+    OpenPosition with a single entry should have correct aggregated fields.
+    """
+
+    entry = PositionEntry(
+        entry_date=pd.Timestamp("2024-01-01"),
+        entry_index=0,
+        entry_price=100.0,
+        shares=500,
+        investment=50000.0,
+    )
+
+    position = OpenPosition(
+        entries=[entry],
+        total_shares=500,
+        total_investment=50000.0,
+        average_entry_price=100.0,
+        highest_close=100.0,
+    )
+
+    assert position.total_shares == 500
+    assert position.total_investment == 50000.0
+    assert position.average_entry_price == 100.0
+    assert position.highest_close == 100.0
+    assert len(position.entries) == 1
+
+
+def test_open_position_add_entry():
+    """
+    Adding an entry should recalculate weighted average and totals.
+
+    Entry 1: 100 shares @ $50 = $5,000
+    Entry 2: 100 shares @ $60 = $6,000
+    Total: 200 shares, $11,000 invested, avg price $55
+    """
+
+    entry = PositionEntry(
+        entry_date=pd.Timestamp("2024-01-01"),
+        entry_index=0,
+        entry_price=50.0,
+        shares=100,
+        investment=5000.0,
+    )
+
+    position = OpenPosition(
+        entries=[entry],
+        total_shares=100,
+        total_investment=5000.0,
+        average_entry_price=50.0,
+        highest_close=55.0,
+    )
+
+    position.add_entry(
+        entry_date=pd.Timestamp("2024-01-05"),
+        entry_index=4,
+        entry_price=60.0,
+        shares=100,
+    )
+
+    assert position.total_shares == 200
+    assert position.total_investment == 11000.0
+    assert position.average_entry_price == 55.0
+    assert len(position.entries) == 2
+
+    second = position.entries[1]
+    assert second.entry_price == 60.0
+    assert second.shares == 100
+    assert second.investment == 6000.0
+
+
+def test_open_position_add_multiple_entries():
+    """
+    Adding multiple entries should track weighted average correctly.
+
+    Entry 1: 200 shares @ $100 = $20,000
+    Entry 2: 100 shares @ $110 = $11,000
+    Entry 3: 300 shares @ $90  = $27,000
+    Total: 600 shares, $58,000 invested, avg price $96.67
+    """
+
+    entry = PositionEntry(
+        entry_date=pd.Timestamp("2024-01-01"),
+        entry_index=0,
+        entry_price=100.0,
+        shares=200,
+        investment=20000.0,
+    )
+
+    position = OpenPosition(
+        entries=[entry],
+        total_shares=200,
+        total_investment=20000.0,
+        average_entry_price=100.0,
+        highest_close=105.0,
+    )
+
+    position.add_entry(
+        entry_date=pd.Timestamp("2024-01-10"),
+        entry_index=9,
+        entry_price=110.0,
+        shares=100,
+    )
+
+    position.add_entry(
+        entry_date=pd.Timestamp("2024-01-20"),
+        entry_index=19,
+        entry_price=90.0,
+        shares=300,
+    )
+
+    assert position.total_shares == 600
+    assert position.total_investment == 58000.0
+    assert position.average_entry_price == pytest.approx(
+        96.6667, rel=1e-3
+    )
+    assert len(position.entries) == 3
+
+
+def test_open_position_highest_close_preserved():
+    """
+    Adding entries should not affect highest_close (that is
+    updated by the simulation loop, not by add_entry).
+    """
+
+    entry = PositionEntry(
+        entry_date=pd.Timestamp("2024-01-01"),
+        entry_index=0,
+        entry_price=100.0,
+        shares=100,
+        investment=10000.0,
+    )
+
+    position = OpenPosition(
+        entries=[entry],
+        total_shares=100,
+        total_investment=10000.0,
+        average_entry_price=100.0,
+        highest_close=115.0,
+    )
+
+    position.add_entry(
+        entry_date=pd.Timestamp("2024-01-10"),
+        entry_index=9,
+        entry_price=105.0,
+        shares=50,
+    )
+
+    assert position.highest_close == 115.0
+
+
+# ── CompletedTrade new fields ────────────────────────────────
+
+
+def test_completed_trade_default_num_entries():
+    """
+    CompletedTrade should default to num_entries=1 for backward
+    compatibility.
+    """
+
+    trade = CompletedTrade(
+        entry_date=pd.Timestamp("2024-01-01"),
+        exit_date=pd.Timestamp("2024-01-10"),
+        entry_price=100.0,
+        exit_price=120.0,
+        shares=1000,
+        investment=100000.0,
+        exit_value=120000.0,
+        profit_loss=20000.0,
+        return_pct=20.0,
+        holding_period=9,
+    )
+
+    assert trade.num_entries == 1
+    assert trade.first_entry_date is None
+
+
+def test_completed_trade_with_multiple_entries():
+    """
+    CompletedTrade should accept explicit num_entries and first_entry_date.
+    """
+
+    trade = CompletedTrade(
+        entry_date=pd.Timestamp("2024-01-05"),
+        exit_date=pd.Timestamp("2024-01-20"),
+        entry_price=55.0,
+        exit_price=65.0,
+        shares=200,
+        investment=11000.0,
+        exit_value=13000.0,
+        profit_loss=2000.0,
+        return_pct=18.18,
+        holding_period=15,
+        num_entries=2,
+        first_entry_date=pd.Timestamp("2024-01-01"),
+    )
+
+    assert trade.num_entries == 2
+    assert trade.first_entry_date == pd.Timestamp("2024-01-01")
+
+
+# ── Position Sizing Integration ──────────────────────────────
+
+
+def test_fixed_percentage_sizing_limits_buy():
+    """
+    With 25% sizing, only 25% of portfolio value should be invested.
+    $100k * 25% = $25k allocation -> 250 shares at $100.
+    """
+
+    df = create_sample_dataframe(
+        signals=["BUY", "HOLD", "SELL"],
+        prices=[100, 110, 120],
+    )
+
+    sizing = PositionSizingConfig(
+        sizing_type="fixed_percentage",
+        sizing_parameters={"percent": 0.25},
+    )
+
+    result = simulate_portfolio(
+        df,
+        position_sizing_config=sizing,
+    )
+
+    portfolio = result.portfolio_history
+
+    assert portfolio.iloc[0]["Shares"] == 250
+    assert portfolio.iloc[0]["Cash"] == 75000
+
+    trade = result.trade_history.iloc[0]
+    assert trade["shares"] == 250
+    assert trade["investment"] == 25000
+    assert trade["exit_value"] == 30000
+    assert trade["profit_loss"] == 5000
+
+
+def test_fixed_amount_sizing():
+    """
+    With $10k fixed amount, should buy $10k worth of shares.
+    $10k / $100 = 100 shares.
+    """
+
+    df = create_sample_dataframe(
+        signals=["BUY", "SELL"],
+        prices=[100, 120],
+    )
+
+    sizing = PositionSizingConfig(
+        sizing_type="fixed_amount",
+        sizing_parameters={"amount": 10000},
+    )
+
+    result = simulate_portfolio(
+        df,
+        position_sizing_config=sizing,
+    )
+
+    portfolio = result.portfolio_history
+
+    assert portfolio.iloc[0]["Shares"] == 100
+    assert portfolio.iloc[0]["Cash"] == 90000
+
+
+def test_fixed_shares_sizing():
+    """
+    With 200 fixed shares, should buy exactly 200 shares.
+    """
+
+    df = create_sample_dataframe(
+        signals=["BUY", "SELL"],
+        prices=[100, 120],
+    )
+
+    sizing = PositionSizingConfig(
+        sizing_type="fixed_shares",
+        sizing_parameters={"shares": 200},
+    )
+
+    result = simulate_portfolio(
+        df,
+        position_sizing_config=sizing,
+    )
+
+    portfolio = result.portfolio_history
+
+    assert portfolio.iloc[0]["Shares"] == 200
+    assert portfolio.iloc[0]["Cash"] == 80000
+
+
+def test_no_sizing_config_defaults_to_all_in():
+    """
+    Without position_sizing_config, should use all cash (backward compat).
+    """
+
+    df = create_sample_dataframe(
+        signals=["BUY", "SELL"],
+        prices=[100, 120],
+    )
+
+    result = simulate_portfolio(df)
+
+    portfolio = result.portfolio_history
+
+    assert portfolio.iloc[0]["Shares"] == 1000
+    assert portfolio.iloc[0]["Cash"] == 0
+
+
+# ── Multi-Position Accumulation ──────────────────────────────
+
+
+def test_multiple_buys_accumulate_with_percentage_sizing():
+    """
+    With 25% sizing, multiple BUY signals should accumulate into one
+    position.
+
+    BUY 1: $100k * 25% = $25k -> 250 shares at $100, cash $75k
+    BUY 2: portfolio_value = $75k + 250*$105 = $101,250
+            allocation = $101,250 * 25% = $25,312.50
+            shares = int($25,312.50 // $105) = 241 shares
+            investment = 241 * $105 = $25,305
+            cash = $75,000 - $25,305 = $49,695
+    SELL:   total shares = 250 + 241 = 491
+    """
+
+    df = create_sample_dataframe(
+        signals=["BUY", "BUY", "SELL"],
+        prices=[100, 105, 120],
+    )
+
+    sizing = PositionSizingConfig(
+        sizing_type="fixed_percentage",
+        sizing_parameters={"percent": 0.25},
+    )
+
+    result = simulate_portfolio(
+        df,
+        position_sizing_config=sizing,
+    )
+
+    portfolio = result.portfolio_history
+
+    # After first BUY
+    assert portfolio.iloc[0]["Shares"] == 250
+
+    # After second BUY - shares should increase
+    assert portfolio.iloc[1]["Shares"] > 250
+
+    # After SELL - all shares sold
+    assert portfolio.iloc[2]["Shares"] == 0
+
+    # Should record 1 completed trade with 2 entries
+    assert len(result.trade_history) == 1
+
+    trade = result.trade_history.iloc[0]
+    assert trade["num_entries"] == 2
+    assert trade["first_entry_date"] == pd.Timestamp("2024-01-01")
+
+
+def test_accumulation_weighted_average_entry_price():
+    """
+    Verify weighted average entry price with accumulation.
+
+    BUY 1: 100 shares at $100 = $10,000
+    BUY 2: 100 shares at $120 = $12,000
+    Total: 200 shares, $22,000, avg $110
+    SELL at $130: exit_value = $26,000, profit = $4,000
+    """
+
+    df = create_sample_dataframe(
+        signals=["BUY", "BUY", "SELL"],
+        prices=[100, 120, 130],
+    )
+
+    sizing = PositionSizingConfig(
+        sizing_type="fixed_shares",
+        sizing_parameters={"shares": 100},
+    )
+
+    result = simulate_portfolio(
+        df,
+        position_sizing_config=sizing,
+    )
+
+    portfolio = result.portfolio_history
+
+    assert portfolio.iloc[0]["Shares"] == 100
+    assert portfolio.iloc[1]["Shares"] == 200
+
+    trade = result.trade_history.iloc[0]
+    assert trade["entry_price"] == 110  # Weighted average
+    assert trade["shares"] == 200
+    assert trade["investment"] == 22000
+    assert trade["exit_value"] == 26000
+    assert trade["profit_loss"] == 4000
+    assert trade["num_entries"] == 2
+
+
+def test_accumulation_with_insufficient_cash_on_second_buy():
+    """
+    When a second BUY signal comes but cash is insufficient for any
+    shares, the position should remain unchanged.
+    """
+
+    df = create_sample_dataframe(
+        signals=["BUY", "BUY", "SELL"],
+        prices=[100, 105, 120],
+    )
+
+    # All-in on first buy leaves no cash for second
+    result = simulate_portfolio(df)
+
+    portfolio = result.portfolio_history
+
+    assert portfolio.iloc[0]["Shares"] == 1000
+    assert portfolio.iloc[0]["Cash"] == 0
+
+    # Second BUY: no cash available, shares unchanged
+    assert portfolio.iloc[1]["Shares"] == 1000
+    assert portfolio.iloc[1]["Cash"] == 0
+
+    trade = result.trade_history.iloc[0]
+    assert trade["num_entries"] == 1
+
+
+def test_stop_loss_with_accumulated_position():
+    """
+    Stop-loss should use weighted average entry price with
+    accumulated positions.
+
+    BUY 1: 100 shares at $100
+    BUY 2: 100 shares at $110
+    Avg entry: $105
+    5% stop-loss on avg: $105 * 0.95 = $99.75
+    Price drops to $99 -> stop triggered
+    """
+
+    df = create_sample_dataframe(
+        signals=["BUY", "BUY", "HOLD", "HOLD"],
+        prices=[100, 110, 105, 99],
+    )
+
+    sizing = PositionSizingConfig(
+        sizing_type="fixed_shares",
+        sizing_parameters={"shares": 100},
+    )
+
+    result = simulate_portfolio(
+        df,
+        risk_config=RiskConfig(
+            stop_loss_type="fixed_percentage",
+            stop_loss_parameters={"percent": 0.05},
+        ),
+        position_sizing_config=sizing,
+    )
+
+    assert result.summary["completed_trade_count"] == 1
+
+    trade = result.trade_history.iloc[0]
+    assert trade["exit_reason"] == "stop_loss"
+    assert trade["num_entries"] == 2
+    assert trade["shares"] == 200
+    assert trade["entry_price"] == 105  # Weighted average
+
+
+def test_take_profit_with_accumulated_position():
+    """
+    Take-profit should use weighted average entry price with
+    accumulated positions.
+
+    BUY 1: 100 shares at $100
+    BUY 2: 100 shares at $110
+    Avg entry: $105
+    20% take-profit: $105 * 1.20 = $126
+    Price rises to $126 -> take-profit triggered
+    """
+
+    df = create_sample_dataframe(
+        signals=["BUY", "BUY", "HOLD", "HOLD"],
+        prices=[100, 110, 120, 126],
+    )
+
+    sizing = PositionSizingConfig(
+        sizing_type="fixed_shares",
+        sizing_parameters={"shares": 100},
+    )
+
+    result = simulate_portfolio(
+        df,
+        risk_config=RiskConfig(
+            take_profit_type="fixed_percentage",
+            take_profit_parameters={"percent": 0.20},
+        ),
+        position_sizing_config=sizing,
+    )
+
+    assert result.summary["completed_trade_count"] == 1
+
+    trade = result.trade_history.iloc[0]
+    assert trade["exit_reason"] == "take_profit"
+    assert trade["num_entries"] == 2
+    assert trade["shares"] == 200
+    assert trade["entry_price"] == 105  # Weighted average
+
+
+def test_buy_sell_buy_sell_with_sizing():
+    """
+    Two complete round-trip trades with position sizing.
+    Each trade should be independent.
+    """
+
+    df = create_sample_dataframe(
+        signals=["BUY", "SELL", "BUY", "SELL"],
+        prices=[100, 110, 100, 120],
+    )
+
+    sizing = PositionSizingConfig(
+        sizing_type="fixed_shares",
+        sizing_parameters={"shares": 100},
+    )
+
+    result = simulate_portfolio(
+        df,
+        position_sizing_config=sizing,
+    )
+
+    assert len(result.trade_history) == 2
+
+    trade1 = result.trade_history.iloc[0]
+    assert trade1["shares"] == 100
+    assert trade1["entry_price"] == 100
+    assert trade1["exit_price"] == 110
+    assert trade1["num_entries"] == 1
+
+    trade2 = result.trade_history.iloc[1]
+    assert trade2["shares"] == 100
+    assert trade2["entry_price"] == 100
+    assert trade2["exit_price"] == 120
+    assert trade2["num_entries"] == 1
+
+
+def test_holding_period_uses_first_entry():
+    """
+    Holding period should be measured from the first entry.
+    """
+
+    df = create_sample_dataframe(
+        signals=["BUY", "BUY", "HOLD", "SELL"],
+        prices=[100, 110, 115, 120],
+    )
+
+    sizing = PositionSizingConfig(
+        sizing_type="fixed_shares",
+        sizing_parameters={"shares": 100},
+    )
+
+    result = simulate_portfolio(
+        df,
+        position_sizing_config=sizing,
+    )
+
+    trade = result.trade_history.iloc[0]
+    assert trade["holding_period"] == 3  # From index 0 to index 3

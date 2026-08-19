@@ -162,6 +162,36 @@
 
             </section>
 
+            <!-- Position Sizing -->
+
+            <section id="position-sizing-section" class="panel">
+
+                <h3>Position Sizing</h3>
+
+                <div class="form-group">
+                    <label for="position-sizing-enabled" style="display: flex; align-items: center; cursor: pointer; gap: 8px;">
+                        <input
+                            type="checkbox"
+                            id="position-sizing-enabled"
+                            style="cursor: pointer; width: 18px; height: 18px;">
+                        <span>Enable Position Sizing</span>
+                    </label>
+                </div>
+
+                <div id="position-sizing-field-container" style="display: none;">
+
+                    <div class="form-group">
+                        <label for="position-sizing-type">Sizing Type</label>
+                        <select id="position-sizing-type" class="form-select">
+                        </select>
+                    </div>
+
+                    <div id="position-sizing-parameters"></div>
+
+                </div>
+
+            </section>
+
             <!-- Strategy -->
 
             <section id="strategy-section" class="panel">
@@ -534,6 +564,8 @@
 
                                 <th>Exit Reason</th>
 
+                                <th>Entries</th>
+
                             </tr>
 
                         </thead>
@@ -732,6 +764,7 @@
 <script src="{{ url_for('static', filename='js/formatters.js') }}"></script>
 <script src="{{ url_for('static', filename='js/strategies.js') }}"></script>
 <script src="{{ url_for('static', filename='js/risk-rules.js') }}"></script>
+<script src="{{ url_for('static', filename='js/position-sizing-rules.js') }}"></script>
 <script src="{{ url_for('static', filename='js/api.js') }}"></script>
 <script src="{{ url_for('static', filename='js/kpi-tooltips.js') }}"></script>
 <script src="{{ url_for('static', filename='js/chart-renderer.js') }}"></script>

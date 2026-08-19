@@ -171,6 +171,7 @@ function renderTradeHistory(trades) {
             <td>${formatPercentage(trade.return_pct)}</td>
             <td>${formatCurrency(trade.profit_loss)}</td>
             <td>${exitReason}</td>
+            <td>${trade.num_entries || 1}</td>
         `;
 
         ui.tradeHistoryBody.appendChild(row);

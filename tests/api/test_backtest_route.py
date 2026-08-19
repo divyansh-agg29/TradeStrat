@@ -421,3 +421,158 @@ def test_backtest_service_validation_error(
     assert data["error"]["type"] == "ValueError"
 
     assert data["error"]["message"] == "Invalid ticker."
+
+
+@patch("api.routes.serialize_backtest_result")
+@patch("api.routes.run_backtest")
+def test_backtest_parses_position_sizing_settings(
+    mock_run_backtest,
+    mock_serializer,
+    client,
+):
+    """
+    Backtest route should parse position sizing settings
+    into PositionSizingConfig.
+    """
+
+    payload = _create_request_payload()
+    payload["position_sizing"] = {
+        "sizing_type": "fixed_percentage",
+        "parameters": {"percent": 0.25},
+    }
+
+    mock_run_backtest.return_value = object()
+    mock_serializer.return_value = {
+        "portfolio_metrics": {},
+        "risk_metrics": {},
+        "trade_metrics": {},
+        "portfolio_history": [],
+        "analytics_history": [],
+        "trade_history": [],
+    }
+
+    response = client.post(
+        "/backtest",
+        json=payload,
+    )
+
+    request_arg = mock_run_backtest.call_args.args[0]
+
+    assert response.status_code == 200
+    assert request_arg.position_sizing.sizing_type == "fixed_percentage"
+    assert request_arg.position_sizing.sizing_parameters == {"percent": 0.25}
+
+
+@patch("api.routes.serialize_backtest_result")
+@patch("api.routes.run_backtest")
+def test_backtest_parses_fixed_amount_position_sizing(
+    mock_run_backtest,
+    mock_serializer,
+    client,
+):
+    """
+    Backtest route should parse fixed amount position sizing.
+    """
+
+    payload = _create_request_payload()
+    payload["position_sizing"] = {
+        "sizing_type": "fixed_amount",
+        "parameters": {"amount": 10000},
+    }
+
+    mock_run_backtest.return_value = object()
+    mock_serializer.return_value = {
+        "portfolio_metrics": {},
+        "risk_metrics": {},
+        "trade_metrics": {},
+        "portfolio_history": [],
+        "analytics_history": [],
+        "trade_history": [],
+    }
+
+    response = client.post(
+        "/backtest",
+        json=payload,
+    )
+
+    request_arg = mock_run_backtest.call_args.args[0]
+
+    assert response.status_code == 200
+    assert request_arg.position_sizing.sizing_type == "fixed_amount"
+    assert request_arg.position_sizing.sizing_parameters == {"amount": 10000}
+
+
+@patch("api.routes.serialize_backtest_result")
+@patch("api.routes.run_backtest")
+def test_backtest_without_position_sizing_defaults_to_none(
+    mock_run_backtest,
+    mock_serializer,
+    client,
+):
+    """
+    Omitting position sizing should leave the field as None.
+    """
+
+    mock_run_backtest.return_value = object()
+    mock_serializer.return_value = {
+        "portfolio_metrics": {},
+        "risk_metrics": {},
+        "trade_metrics": {},
+        "portfolio_history": [],
+        "analytics_history": [],
+        "trade_history": [],
+    }
+
+    response = client.post(
+        "/backtest",
+        json=_create_request_payload(),
+    )
+
+    request_arg = mock_run_backtest.call_args.args[0]
+
+    assert response.status_code == 200
+    assert request_arg.position_sizing is None
+
+
+@patch("api.routes.serialize_backtest_result")
+@patch("api.routes.run_backtest")
+def test_backtest_parses_combined_risk_and_position_sizing(
+    mock_run_backtest,
+    mock_serializer,
+    client,
+):
+    """
+    Backtest route should parse both risk and position sizing together.
+    """
+
+    payload = _create_request_payload()
+    payload["risk"] = {
+        "stop_loss_type": "fixed_percentage",
+        "parameters": {"percent": 0.05},
+    }
+    payload["position_sizing"] = {
+        "sizing_type": "fixed_shares",
+        "parameters": {"shares": 100},
+    }
+
+    mock_run_backtest.return_value = object()
+    mock_serializer.return_value = {
+        "portfolio_metrics": {},
+        "risk_metrics": {},
+        "trade_metrics": {},
+        "portfolio_history": [],
+        "analytics_history": [],
+        "trade_history": [],
+    }
+
+    response = client.post(
+        "/backtest",
+        json=payload,
+    )
+
+    request_arg = mock_run_backtest.call_args.args[0]
+
+    assert response.status_code == 200
+    assert request_arg.risk.stop_loss_type == "fixed_percentage"
+    assert request_arg.position_sizing.sizing_type == "fixed_shares"
+    assert request_arg.position_sizing.sizing_parameters == {"shares": 100}

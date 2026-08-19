@@ -23,6 +23,8 @@ from typing import Any
 
 import pandas as pd
 
+from position_sizing.config import PositionSizingConfig
+from position_sizing.manager import PositionSizingManager
 from risk.manager import RiskManager
 from risk.config import RiskConfig
 from utils.logger import get_logger
@@ -71,27 +73,116 @@ class PortfolioState:
 
     shares : int
         Number of shares currently held.
-
-    position : str
-        Current portfolio position.
-        Valid values are "FLAT" and "LONG".
     """
 
     cash: float
     shares: int
-    position: str
 
 @dataclass
-class OpenTrade:
+class PositionEntry:
     """
-    Represents the currently open trade.
+    Represents a single BUY entry within an aggregated position.
+
+    Attributes
+    ----------
+    entry_date : pd.Timestamp
+        Date of the entry.
+
+    entry_index : int
+        Row index of the entry in the simulation.
+
+    entry_price : float
+        Price at which shares were purchased.
+
+    shares : int
+        Number of shares purchased in this entry.
+
+    investment : float
+        Total cost of this entry (shares * entry_price).
     """
 
     entry_date: pd.Timestamp
     entry_index: int
     entry_price: float
     shares: int
+    investment: float
+
+
+@dataclass
+class OpenPosition:
+    """
+    Represents an aggregated open position with one or more entries.
+
+    Tracks total shares, total investment, weighted average entry price,
+    and the highest close observed since the first entry.
+
+    Attributes
+    ----------
+    entries : list[PositionEntry]
+        Individual BUY entries that make up this position.
+
+    total_shares : int
+        Sum of shares across all entries.
+
+    total_investment : float
+        Sum of investment across all entries.
+
+    average_entry_price : float
+        Weighted average entry price (total_investment / total_shares).
+
+    highest_close : float
+        Highest closing price observed since the first entry.
+    """
+
+    entries: list[PositionEntry]
+    total_shares: int
+    total_investment: float
+    average_entry_price: float
     highest_close: float
+
+    def add_entry(
+        self,
+        entry_date: pd.Timestamp,
+        entry_index: int,
+        entry_price: float,
+        shares: int,
+    ) -> None:
+        """
+        Add a new BUY entry and recalculate aggregated fields.
+
+        Parameters
+        ----------
+        entry_date : pd.Timestamp
+            Date of the entry.
+
+        entry_index : int
+            Row index of the entry.
+
+        entry_price : float
+            Price at which shares were purchased.
+
+        shares : int
+            Number of shares purchased.
+        """
+
+        investment = shares * entry_price
+
+        self.entries.append(
+            PositionEntry(
+                entry_date=entry_date,
+                entry_index=entry_index,
+                entry_price=entry_price,
+                shares=shares,
+                investment=investment,
+            )
+        )
+
+        self.total_shares += shares
+        self.total_investment += investment
+        self.average_entry_price = (
+            self.total_investment / self.total_shares
+        )
+
 
 @dataclass
 class CompletedTrade:
@@ -112,12 +203,15 @@ class CompletedTrade:
     exit_reason: str = "signal"
     stop_loss_price: float | None = None
     take_profit_price: float | None = None
+    num_entries: int = 1
+    first_entry_date: pd.Timestamp | None = None
 
 
 def simulate_portfolio(
     df: pd.DataFrame,
     initial_capital: float = 100000,
     risk_config: RiskConfig | None = None,
+    position_sizing_config: PositionSizingConfig | None = None,
 ) -> SimulationResult:
     """
     Simulate portfolio performance using trading signals.
@@ -130,6 +224,13 @@ def simulate_portfolio(
 
     initial_capital : float, default=100000
         Starting capital available for trading.
+
+    risk_config : RiskConfig | None
+        Optional risk management configuration.
+
+    position_sizing_config : PositionSizingConfig | None
+        Optional position sizing configuration.  When None, all-in
+        sizing is used (current default behavior).
 
     Returns
     -------
@@ -145,15 +246,16 @@ def simulate_portfolio(
     portfolio = _initialize_portfolio(initial_capital)
     portfolio_value = initial_capital
     risk_manager = RiskManager(risk_config)
+    position_sizing_manager = PositionSizingManager(position_sizing_config)
 
     logger.debug(
         "Initial portfolio state: "
         f"Cash={portfolio.cash}, "
         f"Shares={portfolio.shares}, "
-        f"Position={portfolio.position}"
+        f"Position={FLAT}"
     )
 
-    open_trade: OpenTrade | None = None
+    open_position: OpenPosition | None = None
     completed_trades: list[CompletedTrade] = []
 
     portfolio_history = df.copy()
@@ -172,9 +274,9 @@ def simulate_portfolio(
         signal = row.Signal
         close_price = row.Close
 
-        if open_trade is not None:
-            open_trade.highest_close = max(
-                open_trade.highest_close,
+        if open_position is not None:
+            open_position.highest_close = max(
+                open_position.highest_close,
                 close_price,
             )
 
@@ -184,14 +286,16 @@ def simulate_portfolio(
             f"Close={close_price}"
         )
 
-        open_trade, completed_trade = _evaluate_risk_and_signal(
+        open_position, completed_trade = _evaluate_risk_and_signal(
             signal=signal,
             current_date=index,
             current_index=row_number,
             close_price=close_price,
             portfolio=portfolio,
-            open_trade=open_trade,
+            portfolio_value=portfolio_value,
+            open_position=open_position,
             risk_manager=risk_manager,
+            position_sizing_manager=position_sizing_manager,
         )
 
         if completed_trade is not None:
@@ -208,7 +312,7 @@ def simulate_portfolio(
         shares_history.append(portfolio.shares)
         holdings_value_history.append(holdings_value)
         portfolio_value_history.append(portfolio_value)
-        position_history.append(portfolio.position)
+        position_history.append(LONG if portfolio.shares > 0 else FLAT)
 
     # Write the completed portfolio history to the DataFrame once
     # after the simulation loop.
@@ -313,7 +417,6 @@ def _initialize_portfolio(
     return PortfolioState(
         cash=initial_capital,
         shares=0,
-        position=FLAT,
     )
 
 def _update_portfolio_state(
@@ -348,42 +451,44 @@ def _evaluate_risk_and_signal(
     current_index: int,
     close_price: float,
     portfolio: PortfolioState,
-    open_trade: OpenTrade | None,
+    portfolio_value: float,
+    open_position: OpenPosition | None,
     risk_manager: RiskManager,
-) -> tuple[OpenTrade | None, CompletedTrade | None]:
+    position_sizing_manager: PositionSizingManager,
+) -> tuple[OpenPosition | None, CompletedTrade | None]:
     """
     Evaluate the risk manager first, then process the strategy signal.
     """
 
-    if open_trade is not None and risk_manager.should_stop(
-        entry_price=open_trade.entry_price,
+    if open_position is not None and risk_manager.should_stop(
+        entry_price=open_position.average_entry_price,
         current_price=close_price,
-        peak_price=open_trade.highest_close,
+        peak_price=open_position.highest_close,
     ):
         logger.debug(
-            "Stop-loss triggered for open trade at %s.",
+            "Stop-loss triggered for open position at %s.",
             current_date,
         )
         return _execute_stop_loss(
             portfolio=portfolio,
-            open_trade=open_trade,
+            open_position=open_position,
             current_date=current_date,
             current_index=current_index,
             close_price=close_price,
             risk_manager=risk_manager,
         )
 
-    if open_trade is not None and risk_manager.should_take_profit(
-        entry_price=open_trade.entry_price,
+    if open_position is not None and risk_manager.should_take_profit(
+        entry_price=open_position.average_entry_price,
         current_price=close_price,
     ):
         logger.debug(
-            "Take-profit triggered for open trade at %s.",
+            "Take-profit triggered for open position at %s.",
             current_date,
         )
         return _execute_take_profit(
             portfolio=portfolio,
-            open_trade=open_trade,
+            open_position=open_position,
             current_date=current_date,
             current_index=current_index,
             close_price=close_price,
@@ -391,62 +496,70 @@ def _evaluate_risk_and_signal(
         )
 
     if signal == BUY:
-        new_trade = _execute_buy(
-            portfolio,
-            current_date,
-            current_index,
-            close_price,
+        open_position = _execute_buy(
+            portfolio=portfolio,
+            portfolio_value=portfolio_value,
+            open_position=open_position,
+            current_date=current_date,
+            current_index=current_index,
+            close_price=close_price,
+            position_sizing_manager=position_sizing_manager,
+            risk_manager=risk_manager,
         )
-        if new_trade is not None:
-            open_trade = new_trade
-        return open_trade, None
+        return open_position, None
 
     elif signal == SELL:
-        open_trade, completed_trade = _execute_sell(
-            portfolio,
-            open_trade,
-            current_date,
-            current_index,
-            close_price,
+        open_position, completed_trade = _execute_sell(
+            portfolio=portfolio,
+            open_position=open_position,
+            current_date=current_date,
+            current_index=current_index,
+            close_price=close_price,
         )
-        return open_trade, completed_trade
+        return open_position, completed_trade
 
-    return open_trade, None
+    return open_position, None
 
 def _execute_buy(
     portfolio: PortfolioState,
+    portfolio_value: float,
+    open_position: OpenPosition | None,
     current_date: pd.Timestamp,
     current_index: int,
     close_price: float,
-) -> OpenTrade | None:
+    position_sizing_manager: PositionSizingManager,
+    risk_manager: RiskManager,
+) -> OpenPosition | None:
     """
     Execute a BUY order.
 
-    The simulator purchases the maximum number of whole shares
-    possible using all available cash.
+    Supports position accumulation: multiple BUY signals add to the
+    existing position.  The number of shares to buy is determined by
+    the configured position sizing strategy.
 
-    BUY signals are ignored while already holding a position.
+    Returns the updated (or newly created) OpenPosition, or the
+    unchanged open_position if no shares could be purchased.
     """
 
-    if portfolio.position == LONG:
-        logger.debug(
-            "BUY signal ignored because portfolio is already LONG."
-        )
-        return None
+    stop_loss_price = risk_manager.get_stop_loss_price(close_price)
 
-    shares_to_buy = int(portfolio.cash // close_price)
+    shares_to_buy = position_sizing_manager.calculate_shares_to_buy(
+        portfolio_value=portfolio_value,
+        cash=portfolio.cash,
+        current_price=close_price,
+        stop_loss_price=stop_loss_price,
+    )
 
     if shares_to_buy == 0:
         logger.debug(
             "BUY signal ignored because available cash is insufficient."
         )
-        return None
+        return open_position
 
     investment = shares_to_buy * close_price
 
     portfolio.cash -= investment
-    portfolio.shares = shares_to_buy
-    portfolio.position = LONG
+    portfolio.shares += shares_to_buy
 
     logger.debug(
         "BUY executed: "
@@ -454,48 +567,65 @@ def _execute_buy(
         f"at {close_price:.2f}"
     )
 
-    return OpenTrade(
+    if open_position is None:
+        entry = PositionEntry(
+            entry_date=current_date,
+            entry_index=current_index,
+            entry_price=close_price,
+            shares=shares_to_buy,
+            investment=investment,
+        )
+        return OpenPosition(
+            entries=[entry],
+            total_shares=shares_to_buy,
+            total_investment=investment,
+            average_entry_price=close_price,
+            highest_close=close_price,
+        )
+
+    open_position.add_entry(
         entry_date=current_date,
         entry_index=current_index,
         entry_price=close_price,
         shares=shares_to_buy,
-        highest_close=close_price,
     )
+
+    return open_position
 
 def _execute_stop_loss(
     portfolio: PortfolioState,
-    open_trade: OpenTrade,
+    open_position: OpenPosition,
     current_date: pd.Timestamp,
     current_index: int,
     close_price: float,
     risk_manager: RiskManager,
-) -> tuple[OpenTrade | None, CompletedTrade | None]:
+) -> tuple[OpenPosition | None, CompletedTrade | None]:
     """
-    Close an open trade because the stop-loss threshold was reached.
+    Close an open position because the stop-loss threshold was reached.
     """
 
-    exit_value = open_trade.shares * close_price
+    exit_value = open_position.total_shares * close_price
 
     portfolio.cash += exit_value
     portfolio.shares = 0
-    portfolio.position = FLAT
 
-    investment = open_trade.entry_price * open_trade.shares
+    investment = open_position.total_investment
     profit_loss = exit_value - investment
     return_pct = (profit_loss / investment) * 100
 
-    holding_period = current_index - open_trade.entry_index
+    first_entry = open_position.entries[0]
+    holding_period = current_index - first_entry.entry_index
     stop_loss_price = risk_manager.get_stop_loss_price(
-        open_trade.entry_price,
-        peak_price=open_trade.highest_close,
+        open_position.average_entry_price,
+        peak_price=open_position.highest_close,
     )
 
     completed_trade = CompletedTrade(
-        entry_date=open_trade.entry_date,
+        entry_date=first_entry.entry_date,
         exit_date=current_date,
-        entry_price=open_trade.entry_price,
+        entry_price=open_position.average_entry_price,
         exit_price=close_price,
-        shares=open_trade.shares,
+        shares=open_position.total_shares,
         investment=investment,
         exit_value=exit_value,
         profit_loss=profit_loss,
@@ -503,6 +633,8 @@ def _execute_stop_loss(
         holding_period=holding_period,
         exit_reason="stop_loss",
         stop_loss_price=stop_loss_price,
+        num_entries=len(open_position.entries),
+        first_entry_date=first_entry.entry_date,
     )
 
     logger.debug("Stop-loss executed: Position closed.")
@@ -512,37 +644,37 @@ def _execute_stop_loss(
 
 def _execute_take_profit(
     portfolio: PortfolioState,
-    open_trade: OpenTrade,
+    open_position: OpenPosition,
     current_date: pd.Timestamp,
     current_index: int,
     close_price: float,
     risk_manager: RiskManager,
-) -> tuple[OpenTrade | None, CompletedTrade | None]:
+) -> tuple[OpenPosition | None, CompletedTrade | None]:
     """
-    Close an open trade because the take-profit threshold was reached.
+    Close an open position because the take-profit threshold was reached.
     """
 
-    exit_value = open_trade.shares * close_price
+    exit_value = open_position.total_shares * close_price
 
     portfolio.cash += exit_value
     portfolio.shares = 0
-    portfolio.position = FLAT
 
-    investment = open_trade.entry_price * open_trade.shares
+    investment = open_position.total_investment
     profit_loss = exit_value - investment
     return_pct = (profit_loss / investment) * 100
 
-    holding_period = current_index - open_trade.entry_index
+    first_entry = open_position.entries[0]
+    holding_period = current_index - first_entry.entry_index
     take_profit_price = risk_manager.get_take_profit_price(
-        open_trade.entry_price,
+        open_position.average_entry_price,
     )
 
     completed_trade = CompletedTrade(
-        entry_date=open_trade.entry_date,
+        entry_date=first_entry.entry_date,
         exit_date=current_date,
-        entry_price=open_trade.entry_price,
+        entry_price=open_position.average_entry_price,
         exit_price=close_price,
-        shares=open_trade.shares,
+        shares=open_position.total_shares,
         investment=investment,
         exit_value=exit_value,
         profit_loss=profit_loss,
@@ -550,6 +682,8 @@ def _execute_take_profit(
         holding_period=holding_period,
         exit_reason="take_profit",
         take_profit_price=take_profit_price,
+        num_entries=len(open_position.entries),
+        first_entry_date=first_entry.entry_date,
     )
 
     logger.debug("Take-profit executed: Position closed.")
@@ -559,46 +693,46 @@ def _execute_take_profit(
 
 def _execute_sell(
     portfolio: PortfolioState,
-    open_trade: OpenTrade | None,
+    open_position: OpenPosition | None,
     current_date: pd.Timestamp,
     current_index: int,
     close_price: float,
-) -> tuple[OpenTrade | None, CompletedTrade | None]:
+) -> tuple[OpenPosition | None, CompletedTrade | None]:
     """
-    Execute a SELL order.
+    Execute a SELL order.  Closes the entire aggregated position.
 
     Returns
     -------
     tuple
-        Updated open trade and completed trade (if any).
+        Updated open position (None) and completed trade (if any).
     """
 
-    if portfolio.position == FLAT or open_trade is None:
+    if portfolio.shares == 0 or open_position is None:
         logger.debug(
             "SELL signal ignored because portfolio is already FLAT."
         )
-        return open_trade, None
+        return open_position, None
 
     exit_value = portfolio.shares * close_price
 
     portfolio.cash += exit_value
     portfolio.shares = 0
-    portfolio.position = FLAT
 
-    investment = open_trade.entry_price * open_trade.shares
+    investment = open_position.total_investment
     profit_loss = exit_value - investment
     return_pct = (profit_loss / investment) * 100
 
+    first_entry = open_position.entries[0]
     holding_period = (
-        current_index - open_trade.entry_index
+        current_index - first_entry.entry_index
     )
 
     completed_trade = CompletedTrade(
-        entry_date=open_trade.entry_date,
+        entry_date=first_entry.entry_date,
         exit_date=current_date,
-        entry_price=open_trade.entry_price,
+        entry_price=open_position.average_entry_price,
         exit_price=close_price,
-        shares=open_trade.shares,
+        shares=open_position.total_shares,
         investment=investment,
         exit_value=exit_value,
         profit_loss=profit_loss,
@@ -606,6 +740,8 @@ def _execute_sell(
         holding_period=holding_period,
         exit_reason="signal",
         stop_loss_price=None,
+        num_entries=len(open_position.entries),
+        first_entry_date=first_entry.entry_date,
     )
 
     logger.debug(
@@ -645,12 +781,14 @@ def _create_summary(
 
     logger.debug("Creating simulation summary.")
 
+    position = LONG if portfolio.shares > 0 else FLAT
+
     return {
         "initial_capital": initial_capital,
         "final_portfolio_value": final_portfolio_value,
         "cash": portfolio.cash,
         "shares_held": portfolio.shares,
-        "position": portfolio.position,
-        "open_position": portfolio.position == LONG,
+        "position": position,
+        "open_position": portfolio.shares > 0,
         "completed_trade_count": len(completed_trades),
     }

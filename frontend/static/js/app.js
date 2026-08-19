@@ -17,6 +17,8 @@ function initializeApplication() {
 
     populateTakeProfitDropdown();
 
+    populatePositionSizingDropdown();
+
     onStrategyChanged();
 
     restorePreviousConfiguration();

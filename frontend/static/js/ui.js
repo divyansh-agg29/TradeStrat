@@ -49,6 +49,17 @@ const ui = {
     takeProfitParametersContainer:
         document.getElementById("take-profit-parameters"),
     
+    // Position Sizing Configuration
+
+    positionSizingEnabledCheckbox:
+        document.getElementById("position-sizing-enabled"),
+
+    positionSizingTypeSelect:
+        document.getElementById("position-sizing-type"),
+
+    positionSizingParametersContainer:
+        document.getElementById("position-sizing-parameters"),
+
     // Run Button
 
     runButton:
@@ -183,6 +194,16 @@ function registerEventListeners() {
         onTakeProfitTypeChanged
     );
 
+    ui.positionSizingEnabledCheckbox.addEventListener(
+        "change",
+        onPositionSizingCheckboxChanged
+    );
+
+    ui.positionSizingTypeSelect.addEventListener(
+        "change",
+        onPositionSizingTypeChanged
+    );
+
 }
 
 function onStopLossCheckboxChanged() {
@@ -270,6 +291,81 @@ function onTakeProfitTypeChanged() {
         group.appendChild(label);
         group.appendChild(input);
         ui.takeProfitParametersContainer.appendChild(group);
+
+    }
+
+}
+
+
+function onPositionSizingCheckboxChanged() {
+
+    const isEnabled = ui.positionSizingEnabledCheckbox.checked;
+
+    const fieldContainer = document.getElementById("position-sizing-field-container");
+    fieldContainer.style.display = isEnabled ? "block" : "none";
+
+    if (!isEnabled) {
+        ui.positionSizingParametersContainer.innerHTML = "";
+    } else {
+        onPositionSizingTypeChanged();
+    }
+
+}
+
+
+function populatePositionSizingDropdown() {
+
+    ui.positionSizingTypeSelect.innerHTML = "";
+
+    for (const [key, rule] of Object.entries(POSITION_SIZING_REGISTRY)) {
+
+        const option = document.createElement("option");
+        option.value = key;
+        option.textContent = rule.label;
+        ui.positionSizingTypeSelect.appendChild(option);
+
+    }
+
+}
+
+
+function onPositionSizingTypeChanged() {
+
+    const sizingType = ui.positionSizingTypeSelect.value;
+    const rule = POSITION_SIZING_REGISTRY[sizingType];
+
+    ui.positionSizingParametersContainer.innerHTML = "";
+
+    if (!rule) {
+        return;
+    }
+
+    for (const param of rule.parameters) {
+
+        const group = document.createElement("div");
+        group.className = "form-group";
+
+        const label = document.createElement("label");
+        label.setAttribute("for", "sizing-param-" + param.key);
+        label.textContent = param.label;
+
+        const input = document.createElement("input");
+        input.type = param.type;
+        input.id = "sizing-param-" + param.key;
+        input.className = "form-input";
+        input.value = param.default;
+
+        if (param.min !== undefined) {
+            input.min = param.min;
+        }
+
+        if (param.step !== undefined) {
+            input.step = param.step;
+        }
+
+        group.appendChild(label);
+        group.appendChild(input);
+        ui.positionSizingParametersContainer.appendChild(group);
 
     }
 
@@ -496,6 +592,28 @@ function readConfigurationForm() {
         }
     }
 
+    const positionSizingEnabled = ui.positionSizingEnabledCheckbox.checked;
+    const positionSizing = {};
+
+    if (positionSizingEnabled) {
+        const sizingType = ui.positionSizingTypeSelect.value;
+        const sizingRule = POSITION_SIZING_REGISTRY[sizingType];
+
+        if (sizingRule) {
+            const rawSizingParams = {};
+
+            for (const param of sizingRule.parameters) {
+                const input = document.getElementById("sizing-param-" + param.key);
+                if (input) {
+                    rawSizingParams[param.key] = Number(input.value);
+                }
+            }
+
+            positionSizing.sizingType = sizingType;
+            positionSizing.parameters = sizingRule.toPayload(rawSizingParams);
+        }
+    }
+
     return {
 
         ticker: ui.tickerInput.value.trim(),
@@ -518,7 +636,9 @@ function readConfigurationForm() {
 
         },
 
-        risk: risk
+        risk: risk,
+
+        positionSizing: positionSizing
 
     };
 
@@ -582,6 +702,14 @@ function validateConfiguration(configuration) {
         if (tpRule && tpRule.validate) {
             const tpErrors = tpRule.validate(configuration.risk.takeProfitParameters || {});
             errors.push(...tpErrors);
+        }
+    }
+
+    if (configuration.positionSizing && configuration.positionSizing.sizingType) {
+        const sizingRule = POSITION_SIZING_REGISTRY[configuration.positionSizing.sizingType];
+        if (sizingRule && sizingRule.validate) {
+            const sizingErrors = sizingRule.validate(configuration.positionSizing.parameters || {});
+            errors.push(...sizingErrors);
         }
     }
 
@@ -670,6 +798,28 @@ function populateConfigurationForm(configuration) {
     } else {
         ui.takeProfitEnabledCheckbox.checked = false;
         document.getElementById("take-profit-field-container").style.display = "none";
+    }
+
+    if (configuration.positionSizing && configuration.positionSizing.sizingType) {
+        ui.positionSizingEnabledCheckbox.checked = true;
+        document.getElementById("position-sizing-field-container").style.display = "block";
+
+        ui.positionSizingTypeSelect.value = configuration.positionSizing.sizingType;
+        onPositionSizingTypeChanged();
+
+        const sizingRule = POSITION_SIZING_REGISTRY[configuration.positionSizing.sizingType];
+        if (sizingRule && configuration.positionSizing.parameters) {
+            const displayParams = sizingRule.fromPayload(configuration.positionSizing.parameters);
+            for (const [key, value] of Object.entries(displayParams)) {
+                const input = document.getElementById("sizing-param-" + key);
+                if (input) {
+                    input.value = value;
+                }
+            }
+        }
+    } else {
+        ui.positionSizingEnabledCheckbox.checked = false;
+        document.getElementById("position-sizing-field-container").style.display = "none";
     }
 
     ui.strategySelect.value =

@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 from models.strategy_config import StrategyConfig
+from position_sizing.config import PositionSizingConfig
 from risk.config import RiskConfig
 
 
@@ -20,4 +21,5 @@ class BacktestRequest:
     risk_free_rate: float = 0.0
     strategy: StrategyConfig = None
     risk: RiskConfig | None = None
+    position_sizing: PositionSizingConfig | None = None
     interval: str = "1d"

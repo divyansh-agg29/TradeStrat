@@ -11,7 +11,7 @@ from api import api
 from utils.logger import get_logger
 from utils.rate_limiter import limiter
 
-from models import BacktestRequest, ComparisonRequest, RiskConfig, StrategyConfig
+from models import BacktestRequest, ComparisonRequest, PositionSizingConfig, RiskConfig, StrategyConfig
 from serialization import serialize_backtest_result, serialize_comparison_result
 from services import run_backtest, run_comparison
 
@@ -77,6 +77,15 @@ def _parse_request(data: dict) -> BacktestRequest:
             take_profit_parameters=risk_data.get("take_profit_parameters") or None,
         )
 
+    sizing_data = data.get("position_sizing", {})
+    position_sizing_config = None
+
+    if sizing_data and sizing_data.get("sizing_type"):
+        position_sizing_config = PositionSizingConfig(
+            sizing_type=sizing_data.get("sizing_type"),
+            sizing_parameters=sizing_data.get("parameters") or None,
+        )
+
     return BacktestRequest(
         ticker=data.get("ticker", ""),
         start_date=data.get("start_date", ""),
@@ -91,6 +100,7 @@ def _parse_request(data: dict) -> BacktestRequest:
         ),
         strategy=strategy_config,
         risk=risk_config,
+        position_sizing=position_sizing_config,
         interval=data.get("interval", "1d"),
     )
 

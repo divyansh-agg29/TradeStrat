@@ -12,7 +12,8 @@ A web-based modular trading strategy analysis platform for backtesting, portfoli
 - **Market Data** — Historical data download via Yahoo Finance with local SQLite caching
 - **Technical Indicators** — SMA, EMA, RSI, MACD, BB with automatic warm-up period handling
 - **Trading Strategies** — SMA Crossover, EMA Crossover, MACD Crossover, RSI Mean Reversion, BB Bounce
-- **Portfolio Simulation** — Full trade lifecycle simulation with configurable initial capital
+- **Portfolio Simulation** — Full trade lifecycle simulation with configurable initial capital and position accumulation
+- **Position Sizing** — Pluggable position sizing framework with dropdown selection and dynamic parameters (All-In, Fixed Percentage, Fixed Amount, Fixed Shares, Risk-Based)
 - **Risk Management** — Pluggable stop-loss and take-profit framework with dropdown selection and dynamic parameters (Stop-Loss: Fixed Percentage, Fixed Price Offset, Trailing Stop; Take-Profit: Fixed Percentage, Fixed Amount)
 - **Performance Analytics** — Portfolio metrics, risk metrics, and trade statistics
 - **Benchmark Comparison** — Buy & Hold benchmark overlay with alpha calculation
@@ -44,6 +45,7 @@ graph TD
         IND[Indicators]
         STR[Strategies]
         RISK[Risk Module]
+        PS[Position Sizing]
         SIM[Portfolio Simulator]
         ANA[Analytics Engine]
     end
@@ -61,7 +63,9 @@ graph TD
     BS --> IND
     BS --> STR
     BS --> RISK
+    BS --> PS
     RISK --> SIM
+    PS --> SIM
     BS --> SIM
     BS --> ANA
     BS --> DL

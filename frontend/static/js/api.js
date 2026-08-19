@@ -44,6 +44,13 @@ function buildBacktestRequest(configuration) {
         }
     }
 
+    if (configuration.positionSizing && configuration.positionSizing.sizingType) {
+        request.position_sizing = {
+            sizing_type: configuration.positionSizing.sizingType,
+            parameters: configuration.positionSizing.parameters,
+        };
+    }
+
     return request;
 
 }

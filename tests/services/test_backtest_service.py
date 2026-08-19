@@ -10,6 +10,7 @@ from analytics import AnalyticsResult
 from models import (
     BacktestRequest,
     BacktestResult,
+    PositionSizingConfig,
     RiskConfig,
     StrategyConfig,
 )
@@ -23,6 +24,7 @@ from strategy import StrategyOutput
 def _create_request(
     strategy_type: str = "sma_crossover",
     risk: RiskConfig | None = None,
+    position_sizing: PositionSizingConfig | None = None,
 ) -> BacktestRequest:
     """
     Create a valid BacktestRequest for testing.
@@ -42,6 +44,7 @@ def _create_request(
             },
         ),
         risk=risk,
+        position_sizing=position_sizing,
     )
 
 @patch("services.backtest_service.analyze_performance")
@@ -300,3 +303,117 @@ def test_run_backtest_propagates_analytics_errors(
                 _create_request(),
                 db_path="test.db",
             )
+
+
+@patch("services.backtest_service.analyze_performance")
+@patch("services.backtest_service.simulate_portfolio")
+@patch("services.backtest_service.get_stock_data")
+def test_run_backtest_passes_position_sizing_config_to_simulator(
+    mock_get_stock_data,
+    mock_simulate_portfolio,
+    mock_analyze_performance,
+):
+    """
+    Backtest Service should forward request position sizing settings
+    to the simulator.
+    """
+
+    strategy_df = pd.DataFrame(
+        {
+            "Close": [100.0, 110.0],
+            "Signal": ["BUY", "SELL"],
+        },
+        index=pd.date_range(
+            start="2022-01-01",
+            periods=2,
+            freq="D",
+        ),
+    )
+    strategy_output = StrategyOutput(df=strategy_df, indicators=[])
+
+    simulation_result = SimulationResult(
+        portfolio_history=pd.DataFrame(),
+        trade_history=pd.DataFrame(),
+        summary={},
+    )
+    analytics_result = AnalyticsResult()
+    sizing_config = PositionSizingConfig(
+        sizing_type="fixed_percentage",
+        sizing_parameters={"percent": 0.25},
+    )
+
+    mock_get_stock_data.return_value = strategy_df
+    mock_simulate_portfolio.return_value = simulation_result
+    mock_analyze_performance.return_value = analytics_result
+
+    with patch(
+        "services.backtest_service._get_strategy_function"
+    ) as mock_strategy:
+
+        mock_strategy.return_value = (
+            lambda df, **kwargs: strategy_output
+        )
+
+        run_backtest(
+            _create_request(position_sizing=sizing_config),
+            db_path="test.db",
+        )
+
+    _, kwargs = mock_simulate_portfolio.call_args
+
+    assert kwargs["position_sizing_config"] is sizing_config
+
+
+@patch("services.backtest_service.analyze_performance")
+@patch("services.backtest_service.simulate_portfolio")
+@patch("services.backtest_service.get_stock_data")
+def test_run_backtest_defaults_position_sizing_to_none(
+    mock_get_stock_data,
+    mock_simulate_portfolio,
+    mock_analyze_performance,
+):
+    """
+    When no position sizing config is provided, the simulator
+    should receive None (which defaults to all-in sizing).
+    """
+
+    strategy_df = pd.DataFrame(
+        {
+            "Close": [100.0, 110.0],
+            "Signal": ["BUY", "SELL"],
+        },
+        index=pd.date_range(
+            start="2022-01-01",
+            periods=2,
+            freq="D",
+        ),
+    )
+    strategy_output = StrategyOutput(df=strategy_df, indicators=[])
+
+    simulation_result = SimulationResult(
+        portfolio_history=pd.DataFrame(),
+        trade_history=pd.DataFrame(),
+        summary={},
+    )
+    analytics_result = AnalyticsResult()
+
+    mock_get_stock_data.return_value = strategy_df
+    mock_simulate_portfolio.return_value = simulation_result
+    mock_analyze_performance.return_value = analytics_result
+
+    with patch(
+        "services.backtest_service._get_strategy_function"
+    ) as mock_strategy:
+
+        mock_strategy.return_value = (
+            lambda df, **kwargs: strategy_output
+        )
+
+        run_backtest(
+            _create_request(),
+            db_path="test.db",
+        )
+
+    _, kwargs = mock_simulate_portfolio.call_args
+
+    assert kwargs["position_sizing_config"] is None
