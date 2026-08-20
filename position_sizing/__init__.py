@@ -5,6 +5,7 @@ from .rules import (
     FixedAmountPositionSizing,
     FixedSharesPositionSizing,
     RiskBasedPositionSizing,
+    KellyCriterionPositionSizing,
     AllInPositionSizing,
     POSITION_SIZING_REGISTRY,
 )
@@ -16,6 +17,7 @@ __all__ = [
     "FixedAmountPositionSizing",
     "FixedSharesPositionSizing",
     "RiskBasedPositionSizing",
+    "KellyCriterionPositionSizing",
     "AllInPositionSizing",
     "POSITION_SIZING_REGISTRY",
 ]

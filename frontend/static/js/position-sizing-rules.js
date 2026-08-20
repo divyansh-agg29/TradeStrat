@@ -98,6 +98,51 @@ const POSITION_SIZING_REGISTRY = {
             }
             return errors;
         }
+    },
+
+    kelly_criterion: {
+        label: "Kelly Criterion",
+        parameters: [
+            {key: "win_rate", label: "Win Rate %", type: "number", default: 55, min: 0.1, max: 99.9, step: 0.1},
+            {key: "win_loss_ratio", label: "Win/Loss Ratio", type: "number", default: 1.5, min: 0.01, step: 0.01},
+            {key: "kelly_fraction", label: "Kelly Fraction", type: "number", default: 50, min: 0.1, max: 100, step: 0.1}
+        ],
+
+        toPayload(params) {
+            return {
+                win_rate: params.win_rate / 100,
+                win_loss_ratio: params.win_loss_ratio,
+                kelly_fraction: params.kelly_fraction / 100
+            };
+        },
+
+        fromPayload(params) {
+            return {
+                win_rate: params.win_rate * 100,
+                win_loss_ratio: params.win_loss_ratio,
+                kelly_fraction: params.kelly_fraction * 100
+            };
+        },
+
+        validate(params) {
+            const errors = [];
+            if (!params.win_rate || params.win_rate <= 0) {
+                errors.push("Win Rate % must be greater than zero.");
+            }
+            if (params.win_rate >= 100) {
+                errors.push("Win Rate % must be less than 100.");
+            }
+            if (!params.win_loss_ratio || params.win_loss_ratio <= 0) {
+                errors.push("Win/Loss Ratio must be greater than zero.");
+            }
+            if (!params.kelly_fraction || params.kelly_fraction <= 0) {
+                errors.push("Kelly Fraction must be greater than zero.");
+            }
+            if (params.kelly_fraction > 100) {
+                errors.push("Kelly Fraction cannot exceed 100.");
+            }
+            return errors;
+        }
     }
 
 };

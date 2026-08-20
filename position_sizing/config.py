@@ -29,6 +29,7 @@ class PositionSizingConfig:
             "fixed_amount",
             "fixed_shares",
             "risk_based",
+            "kelly_criterion",
         }
 
         if (

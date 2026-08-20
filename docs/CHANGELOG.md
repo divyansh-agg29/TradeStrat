@@ -1,6 +1,9 @@
 
 ## Development Changelog
 
+### 2026-08-20 — Kelly Criterion Position Sizing
+- Added Kelly Criterion position sizing: calculates optimal position size from win rate, win/loss ratio, and a configurable Kelly fraction
+
 ### 2026-08-19 — Position Sizing Framework
 - Added pluggable position sizing system with registry-based architecture (All-In, Fixed Percentage, Fixed Amount, Fixed Shares, Risk-Based)
 - Position accumulation: consecutive BUY signals now add to the existing position instead of being ignored, with weighted average entry price tracking

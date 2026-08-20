@@ -89,6 +89,7 @@ def test_config_is_frozen():
     "fixed_amount",
     "fixed_shares",
     "risk_based",
+    "kelly_criterion",
 ])
 def test_config_rejects_all_param_requiring_types_without_params(sizing_type):
     """

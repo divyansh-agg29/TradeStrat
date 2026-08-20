@@ -205,10 +205,92 @@ class RiskBasedPositionSizing:
         return min(shares, max_affordable)
 
 
+@dataclass(frozen=True)
+class KellyCriterionPositionSizing:
+    """
+    Kelly Criterion position sizing rule.
+
+    Calculates optimal position size based on historical win rate
+    and win/loss ratio to maximize long-term capital growth.
+
+    Formula: Kelly % = W - [(1 - W) / R]
+
+    Where:
+        W = Win rate (probability of a winning trade)
+        R = Win/Loss ratio (average win / average loss)
+
+    A fractional Kelly multiplier is applied to reduce volatility.
+
+    Parameters
+    ----------
+    win_rate : float
+        Historical win rate as a fraction (0 < win_rate < 1).
+        E.g. 0.55 means 55 % of trades are winners.
+
+    win_loss_ratio : float
+        Average winning trade divided by average losing trade
+        (must be > 0).  E.g. 1.5 means the average win is 1.5x
+        the average loss.
+
+    kelly_fraction : float
+        Fraction of the full Kelly percentage to use
+        (0 < kelly_fraction <= 1).  Defaults to 0.5 (half-Kelly).
+    """
+
+    win_rate: float
+    win_loss_ratio: float
+    kelly_fraction: float = 0.5
+
+    def __post_init__(self) -> None:
+        if self.win_rate <= 0 or self.win_rate >= 1:
+            raise ValueError(
+                "win_rate must be between 0 and 1 (exclusive)"
+            )
+        if self.win_loss_ratio <= 0:
+            raise ValueError(
+                "win_loss_ratio must be greater than zero"
+            )
+        if self.kelly_fraction <= 0 or self.kelly_fraction > 1:
+            raise ValueError(
+                "kelly_fraction must be between 0 (exclusive) and 1 (inclusive)"
+            )
+
+    def calculate_shares(
+        self,
+        portfolio_value: float,
+        cash: float,
+        current_price: float,
+        stop_loss_price: float | None = None,
+    ) -> int:
+        """
+        Return the number of shares to buy using the Kelly Criterion.
+
+        The raw Kelly percentage is clamped to [0, 1] so that a
+        negative edge produces zero shares rather than a short.
+        """
+
+        if current_price <= 0 or cash <= 0 or portfolio_value <= 0:
+            return 0
+
+        kelly_percent = (
+            self.win_rate
+            - (1 - self.win_rate) / self.win_loss_ratio
+        )
+
+        adjusted_kelly = kelly_percent * self.kelly_fraction
+        adjusted_kelly = max(0.0, min(adjusted_kelly, 1.0))
+
+        allocation = portfolio_value * adjusted_kelly
+        affordable = min(allocation, cash)
+
+        return int(affordable // current_price)
+
+
 POSITION_SIZING_REGISTRY: dict[str, type] = {
     "all_in": AllInPositionSizing,
     "fixed_percentage": FixedPercentagePositionSizing,
     "fixed_amount": FixedAmountPositionSizing,
     "fixed_shares": FixedSharesPositionSizing,
     "risk_based": RiskBasedPositionSizing,
+    "kelly_criterion": KellyCriterionPositionSizing,
 }

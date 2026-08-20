@@ -185,3 +185,29 @@ def test_manager_passes_stop_loss_to_risk_based():
     )
 
     assert shares_tight > shares_wide
+
+
+def test_manager_resolves_kelly_criterion():
+    """
+    Manager should resolve and apply Kelly Criterion sizing.
+    Kelly % = 0.6 - (0.4 / 2.0) = 0.4, half-Kelly = 0.2.
+    Allocation = $100k * 0.2 = $20k. Shares = $20k / $100 = 200.
+    """
+
+    config = PositionSizingConfig(
+        sizing_type="kelly_criterion",
+        sizing_parameters={
+            "win_rate": 0.6,
+            "win_loss_ratio": 2.0,
+            "kelly_fraction": 0.5,
+        },
+    )
+    manager = PositionSizingManager(config)
+
+    shares = manager.calculate_shares_to_buy(
+        portfolio_value=100000,
+        cash=100000,
+        current_price=100,
+    )
+
+    assert shares == 200

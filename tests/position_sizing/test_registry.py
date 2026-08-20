@@ -9,6 +9,7 @@ from position_sizing import (
     FixedAmountPositionSizing,
     FixedSharesPositionSizing,
     RiskBasedPositionSizing,
+    KellyCriterionPositionSizing,
 )
 
 
@@ -22,6 +23,7 @@ def test_registry_contains_expected_types():
     assert "fixed_amount" in POSITION_SIZING_REGISTRY
     assert "fixed_shares" in POSITION_SIZING_REGISTRY
     assert "risk_based" in POSITION_SIZING_REGISTRY
+    assert "kelly_criterion" in POSITION_SIZING_REGISTRY
 
 
 def test_registry_maps_to_correct_classes():
@@ -34,11 +36,12 @@ def test_registry_maps_to_correct_classes():
     assert POSITION_SIZING_REGISTRY["fixed_amount"] is FixedAmountPositionSizing
     assert POSITION_SIZING_REGISTRY["fixed_shares"] is FixedSharesPositionSizing
     assert POSITION_SIZING_REGISTRY["risk_based"] is RiskBasedPositionSizing
+    assert POSITION_SIZING_REGISTRY["kelly_criterion"] is KellyCriterionPositionSizing
 
 
-def test_registry_has_exactly_five_entries():
+def test_registry_has_exactly_six_entries():
     """
-    Registry should have exactly 5 entries (no unexpected extras).
+    Registry should have exactly 6 entries (no unexpected extras).
     """
 
-    assert len(POSITION_SIZING_REGISTRY) == 5
+    assert len(POSITION_SIZING_REGISTRY) == 6
