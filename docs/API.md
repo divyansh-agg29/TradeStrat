@@ -38,11 +38,11 @@ Unless otherwise stated, failed requests return a JSON response in the following
 
 ```json
 {
-    "success": True/False,
+    "success": false,
     "error": {
-        "type": ErrorType,
-        "message": "error message",
-    },
+        "type": "ErrorType",
+        "message": "error message"
+    }
 }
 ```
 
@@ -50,13 +50,33 @@ Example:
 
 ```json
 {
-    "success": False,
+    "success": false,
     "error": {
-        "type": ValueError,
-        "message": "Invalid Ticker",
-    },
+        "type": "ValueError",
+        "message": "Invalid Ticker"
+    }
 }
 ```
+
+---
+
+# Pages
+
+## Landing Page
+
+```http
+GET /
+```
+
+Serves the landing page HTML.
+
+## Dashboard
+
+```http
+GET /app
+```
+
+Serves the main application dashboard HTML.
 
 ---
 
@@ -74,10 +94,10 @@ GET /health
 
 ```json
 {
-    "success": True,
+    "success": true,
     "data": {
-        "status": "healthy",
-    },
+        "status": "healthy"
+    }
 }
 ```
 
@@ -99,6 +119,8 @@ Executes a historical backtest for a single trading strategy.
 POST /backtest
 ```
 
+Rate limit: 5 requests per minute.
+
 ---
 
 ## Request Body
@@ -109,6 +131,8 @@ POST /backtest
     "start_date": "2024-01-01",
     "end_date": "2025-01-01",
     "initial_capital": 100000,
+    "risk_free_rate": 0.06,
+    "interval": "1d",
     "strategy": {
         "type": "sma_crossover",
         "parameters": {
@@ -117,13 +141,21 @@ POST /backtest
         }
     },
     "risk": {
-        "stop_loss_type" : "fixed_percentage",
-        "parameters":{
+        "stop_loss_type": "fixed_percentage",
+        "parameters": {
             "percent": 0.05
         },
         "take_profit_type": "fixed_amount",
         "take_profit_parameters": {
             "amount": 300
+        }
+    },
+    "position_sizing": {
+        "sizing_type": "kelly_criterion",
+        "parameters": {
+            "win_rate": 0.55,
+            "win_loss_ratio": 1.5,
+            "kelly_fraction": 0.5
         }
     }
 }
@@ -133,18 +165,74 @@ POST /backtest
 
 ## Request Fields
 
-| Field                       | Type   | Description                          |
-| ----------------------------| ------ | ------------------------------------ |
-| ticker                      | string | Stock ticker symbol                  |
-| start_date                  | string | Start date (`YYYY-MM-DD`)            |
-| end_date                    | string | End date (`YYYY-MM-DD`)              |
-| initial_capital             | number | Initial portfolio capital            |
-| strategy.type               | string | Strategy identifier                  |
-| strategy.parameters         | object | Strategy-specific configuration      |
-| risk.stop_loss_type         | string | Stop Loss identifier                 |             
-| risk.parameters             | object | Stop loss specific configuration     |
-| risk.take_profit_type       | string | Take profit identifier               |
-| risk.take_profit_parameters | object | Take profit specific configuration   |
+| Field                                | Type   | Required | Default  | Description                                  |
+| ------------------------------------ | ------ | -------- | -------- | -------------------------------------------- |
+| ticker                               | string | Yes      |          | Stock ticker symbol                          |
+| start_date                           | string | Yes      |          | Start date (`YYYY-MM-DD`)                    |
+| end_date                             | string | Yes      |          | End date (`YYYY-MM-DD`)                      |
+| initial_capital                      | number | No       | 100000   | Initial portfolio capital                    |
+| risk_free_rate                       | number | No       | 0.0      | Annual risk-free rate as a decimal (e.g. 0.06 = 6%) |
+| interval                             | string | No       | `"1d"`   | Data interval for the backtest               |
+| strategy.type                        | string | Yes      |          | Strategy identifier                          |
+| strategy.parameters                  | object | Yes      |          | Strategy-specific configuration              |
+| risk.stop_loss_type                  | string | No       |          | Stop-loss identifier                         |
+| risk.parameters                      | object | No       |          | Stop-loss specific configuration             |
+| risk.take_profit_type                | string | No       |          | Take-profit identifier                       |
+| risk.take_profit_parameters          | object | No       |          | Take-profit specific configuration           |
+| position_sizing.sizing_type          | string | No       |          | Position sizing identifier                   |
+| position_sizing.parameters           | object | No       |          | Position sizing specific configuration       |
+
+---
+
+## Available Strategies
+
+| Type                 | Parameters                            |
+| -------------------- | ------------------------------------- |
+| `sma_crossover`      | `short_period`, `long_period`         |
+| `ema_crossover`      | `short_period`, `long_period`         |
+| `macd_crossover`     | `fast_period`, `slow_period`, `signal_period` |
+| `rsi_mean_reversion` | `period`, `overbought`, `oversold`    |
+| `bb_bounce`          | `period`, `std_multiplier`            |
+
+## Available Intervals
+
+| Interval | Description |
+| -------- | ----------- |
+| `1m`     | 1 Minute    |
+| `5m`     | 5 Minutes   |
+| `15m`    | 15 Minutes  |
+| `30m`    | 30 Minutes  |
+| `1h`     | 1 Hour      |
+| `1d`     | 1 Day       |
+| `1wk`    | 1 Week      |
+| `1mo`    | 1 Month     |
+
+## Available Stop-Loss Types
+
+| Type                  | Parameters  |
+| --------------------- | ----------- |
+| `fixed_percentage`    | `percent`   |
+| `fixed_price_offset`  | `offset`    |
+| `trailing_stop`       | `percent`   |
+
+## Available Take-Profit Types
+
+| Type                  | Parameters  |
+| --------------------- | ----------- |
+| `fixed_percentage`    | `percent`   |
+| `fixed_amount`        | `amount`    |
+
+## Available Position Sizing Types
+
+| Type                | Parameters                                      |
+| ------------------- | ----------------------------------------------- |
+| `all_in`            | _(none)_                                        |
+| `fixed_percentage`  | `percent`                                       |
+| `fixed_amount`      | `amount`                                        |
+| `fixed_shares`      | `shares`                                        |
+| `risk_based`        | `risk_percent`                                  |
+| `kelly_criterion`   | `win_rate`, `win_loss_ratio`, `kelly_fraction`  |
+
 ---
 
 ## Success Response
@@ -155,15 +243,18 @@ Response structure:
 
 ```json
 {
-    "analytics_history": [ ... ],
-    "benchmark_metrics": { ... },
-    "charts": { ... },
-    "kpi_cards": { ... },
-    "portfolio_history": [ ... ],
-    "portfolio_metrics": { ... },
-    "risk_metrics": { ... },
-    "trade_history":[ ... ],
-    "trade_metrics": { ... }
+    "success": true,
+    "data": {
+        "analytics_history": [ ... ],
+        "benchmark_metrics": { ... },
+        "charts": { ... },
+        "kpi_cards": { ... },
+        "portfolio_history": [ ... ],
+        "portfolio_metrics": { ... },
+        "risk_metrics": { ... },
+        "trade_history": [ ... ],
+        "trade_metrics": { ... }
+    }
 }
 ```
 
@@ -171,7 +262,7 @@ Response structure:
 
 | Object            | Description                                |
 | ----------------- | ------------------------------------------ |
-| analytics_history | List of Analytics data                     |
+| analytics_history | List of analytics data                     |
 | benchmark_metrics | Buy & Hold comparison metrics              |
 | charts            | Data required to render frontend charts    |
 | kpi_cards         | Summary metrics displayed in the dashboard |
@@ -198,13 +289,13 @@ Response structure:
 
 Executes multiple strategy backtests using identical market conditions and returns a consolidated comparison.
 
-> **Note:** Available from Version 2.0 onward.
-
 ## Endpoint
 
 ```http
 POST /compare
 ```
+
+Rate limit: 5 requests per minute.
 
 ---
 
@@ -216,6 +307,8 @@ POST /compare
     "start_date": "2024-01-01",
     "end_date": "2025-01-01",
     "initial_capital": 100000,
+    "risk_free_rate": 0.06,
+    "interval": "1d",
     "strategies": [
         {
             "type": "sma_crossover",
@@ -237,18 +330,70 @@ POST /compare
 
 ---
 
+## Request Fields
+
+| Field                  | Type   | Required | Default  | Description                                  |
+| ---------------------- | ------ | -------- | -------- | -------------------------------------------- |
+| ticker                 | string | Yes      |          | Stock ticker symbol                          |
+| start_date             | string | Yes      |          | Start date (`YYYY-MM-DD`)                    |
+| end_date               | string | Yes      |          | End date (`YYYY-MM-DD`)                      |
+| initial_capital        | number | No       | 100000   | Initial portfolio capital                    |
+| risk_free_rate         | number | No       | 0.0      | Annual risk-free rate as a decimal (e.g. 0.06 = 6%) |
+| interval               | string | No       | `"1d"`   | Data interval for the backtest               |
+| strategies             | array  | Yes      |          | List of 2-6 strategy configurations          |
+| strategies[].type      | string | Yes      |          | Strategy identifier                          |
+| strategies[].parameters| object | Yes      |          | Strategy-specific configuration              |
+
+---
+
 ## Success Response
 
 ```json
 {
-    "results": [
-        { ... },
-        { ... }
-    ]
+    "success": true,
+    "data": {
+        "common": {
+            "ticker": "RELIANCE.NS",
+            "start_date": "2024-01-01",
+            "end_date": "2025-01-01",
+            "initial_capital": 100000,
+            "risk_free_rate": 0.06,
+            "interval": "1d"
+        },
+        "benchmark": {
+            "portfolio_history": [ ... ],
+            "benchmark_metrics": { ... }
+        },
+        "results": [
+            {
+                "strategy": { "type": "sma_crossover", "parameters": { ... } },
+                "success": true,
+                "error": null,
+                "portfolio_metrics": { ... },
+                "risk_metrics": { ... },
+                "trade_metrics": { ... },
+                "portfolio_history": [ ... ],
+                "analytics_history": [ ... ],
+                "trade_history": [ ... ],
+                "charts": { ... }
+            }
+        ]
+    }
 }
 ```
 
-Each element in the `results` array follows the same response schema as the `/backtest` endpoint.
+### Response Objects
+
+| Object              | Description                                                        |
+| -------------------- | ------------------------------------------------------------------ |
+| common               | Shared request parameters echoed back                              |
+| benchmark            | Buy & Hold benchmark data from the first successful strategy       |
+| results              | Array of per-strategy results                                      |
+| results[].strategy   | Strategy type and parameters echoed back                           |
+| results[].success    | Whether the strategy executed successfully                         |
+| results[].error      | Error message if the strategy failed, otherwise `null`             |
+
+Each successful element in `results` contains the same response objects as the `/backtest` endpoint (excluding `kpi_cards` and `benchmark_metrics`).
 
 ---
 
