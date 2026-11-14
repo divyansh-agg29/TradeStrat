@@ -174,7 +174,10 @@ def initialize_db(
         logger.warning(
             "Database at '%s' appears corrupted. Recreating.", db_path,
         )
-        conn.close()
+        try:
+            conn.close()
+        except NameError:
+            pass
 
         if os.path.exists(db_path):
             os.remove(db_path)
