@@ -13,8 +13,14 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Set production environment by default.
 ENV APP_ENV=production
 
-# Copy the rest of the application source code.
-COPY . .
+# Create a non-root user for running the application.
+RUN adduser --disabled-password --gecos "" appuser
 
-# Start the Flask application.
-CMD ["python", "app.py"]
+# Copy the rest of the application source code.
+COPY --chown=appuser:appuser . .
+
+# Switch to the non-root user.
+USER appuser
+
+# Start the application with a production WSGI server.
+CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:5000 --workers ${WEB_WORKERS:-2} app:app"]

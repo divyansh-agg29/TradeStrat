@@ -6,6 +6,9 @@
 - Fixed Docker running in debug mode by setting `APP_ENV=production` in Dockerfile
 - Added debug-mode safety guard that prevents startup with `DEBUG=True` in production
 - Added `.env` to `.dockerignore` to prevent secrets leaking into image layers
+- Replaced Flask dev server with Gunicorn as the production WSGI server
+- Added configurable worker count via `WEB_WORKERS` env var (defaults to 2)
+- Added non-root `appuser` to Dockerfile for least-privilege container execution
 
 ### 2026-08-20 — Kelly Criterion Position Sizing
 - Added Kelly Criterion position sizing: calculates optimal position size from win rate, win/loss ratio, and a configurable Kelly fraction
