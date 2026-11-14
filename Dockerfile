@@ -19,6 +19,9 @@ RUN adduser --disabled-password --gecos "" appuser
 # Copy the rest of the application source code.
 COPY --chown=appuser:appuser . .
 
+# Ensure appuser owns the working directory (needed to create SQLite DB at runtime).
+RUN chown appuser:appuser /app
+
 # Switch to the non-root user.
 USER appuser
 

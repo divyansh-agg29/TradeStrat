@@ -170,6 +170,16 @@ def initialize_db(
         )
         return conn
 
+    except sqlite3.OperationalError:
+        # Path is unwritable or inaccessible — re-raising is the only
+        # sensible option because recreation would fail the same way.
+        logger.error(
+            "Unable to open database file at '%s'. Check that the "
+            "directory exists and the process has write permission.",
+            db_path,
+        )
+        raise
+
     except sqlite3.DatabaseError:
         logger.warning(
             "Database at '%s' appears corrupted. Recreating.", db_path,
