@@ -10,6 +10,9 @@ COPY requirements.txt .
 # Install Python dependencies.
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Set production environment by default.
+ENV APP_ENV=production
+
 # Copy the rest of the application source code.
 COPY . .
 

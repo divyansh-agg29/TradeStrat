@@ -3,6 +3,10 @@ Application entry point.
 """
 import os
 import time
+
+from dotenv import load_dotenv
+load_dotenv()
+
 from flask import Flask, jsonify, request, g
 from flask_limiter.errors import RateLimitExceeded
 from config import DevelopmentConfig, ProductionConfig
@@ -41,6 +45,13 @@ def create_app(config_object=None) -> Flask:
         config_object = get_config()
 
     app.config.from_object(config_object)
+
+    if app.config.get("DEBUG") and os.environ.get("APP_ENV", "").lower() == "production":
+        raise RuntimeError(
+            "Refusing to start: DEBUG=True is not allowed when APP_ENV=production. "
+            "Check your configuration."
+        )
+
     configure_logging(app.config["LOG_LEVEL"])
 
     limiter.init_app(app)

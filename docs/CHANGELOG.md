@@ -1,6 +1,12 @@
 
 ## Development Changelog
 
+### 2026-11-15 — Security Hardening & Environment Configuration
+- Added `python-dotenv` with `.env.example` for environment variable management
+- Fixed Docker running in debug mode by setting `APP_ENV=production` in Dockerfile
+- Added debug-mode safety guard that prevents startup with `DEBUG=True` in production
+- Added `.env` to `.dockerignore` to prevent secrets leaking into image layers
+
 ### 2026-08-20 — Kelly Criterion Position Sizing
 - Added Kelly Criterion position sizing: calculates optimal position size from win rate, win/loss ratio, and a configurable Kelly fraction
 
