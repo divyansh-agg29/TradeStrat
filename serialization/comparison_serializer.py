@@ -52,19 +52,26 @@ def serialize_comparison_result(result: ComparisonResult) -> dict:
         "interval": result.request.interval,
     }
 
-    benchmark = _extract_benchmark(result)
+    # Single pass: serialize each successful strategy once.
+    serialized_cache = {}
+    for i, strategy_result in enumerate(result.strategy_results):
+        if strategy_result.success:
+            serialized_cache[i] = serialize_backtest_result(
+                strategy_result.backtest_result
+            )
 
+    benchmark = _extract_benchmark(serialized_cache)
+
+    # Build results from cache (no re-serialization).
     results = []
-    for strategy_result in result.strategy_results:
+    for i, strategy_result in enumerate(result.strategy_results):
         strategy_echo = {
             "type": strategy_result.strategy.type,
             "parameters": strategy_result.strategy.parameters,
         }
 
-        if strategy_result.success:
-            serialized = serialize_backtest_result(
-                strategy_result.backtest_result
-            )
+        if i in serialized_cache:
+            serialized = serialized_cache[i]
             serialized.pop("kpi_cards", None)
             serialized.pop("benchmark_metrics", None)
             serialized["strategy"] = strategy_echo
@@ -87,33 +94,30 @@ def serialize_comparison_result(result: ComparisonResult) -> dict:
     }
 
 
-def _extract_benchmark(result: ComparisonResult):
+def _extract_benchmark(serialized_cache: dict):
     """
-    Extract benchmark data from the first successful strategy.
+    Extract benchmark data from the first cached serialized result.
 
     Returns None if no strategies succeeded.
     """
 
-    for strategy_result in result.strategy_results:
-        if strategy_result.success:
-            serialized = serialize_backtest_result(
-                strategy_result.backtest_result
-            )
+    if not serialized_cache:
+        return None
 
-            benchmark_metrics = serialized.get("benchmark_metrics")
+    first_serialized = next(iter(serialized_cache.values()))
 
-            analytics_history = serialized.get("analytics_history", [])
-            portfolio_history = [
-                {
-                    "Date": record.get("Date"),
-                    "Buy & Hold Value": record.get("Buy & Hold Value"),
-                }
-                for record in analytics_history
-            ]
+    benchmark_metrics = first_serialized.get("benchmark_metrics")
 
-            return {
-                "portfolio_history": portfolio_history,
-                "benchmark_metrics": benchmark_metrics,
-            }
+    analytics_history = first_serialized.get("analytics_history", [])
+    portfolio_history = [
+        {
+            "Date": record.get("Date"),
+            "Buy & Hold Value": record.get("Buy & Hold Value"),
+        }
+        for record in analytics_history
+    ]
 
-    return None
+    return {
+        "portfolio_history": portfolio_history,
+        "benchmark_metrics": benchmark_metrics,
+    }
