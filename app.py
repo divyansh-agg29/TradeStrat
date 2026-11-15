@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from flask import Flask, jsonify, request, g
+from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_limiter.errors import RateLimitExceeded
 from config import DevelopmentConfig, ProductionConfig
 
@@ -53,6 +54,9 @@ def create_app(config_object=None) -> Flask:
         )
 
     configure_logging(app.config["LOG_LEVEL"])
+
+    if not app.config.get("DEBUG"):
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1)
 
     limiter.init_app(app)
 

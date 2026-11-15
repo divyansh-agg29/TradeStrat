@@ -1,11 +1,13 @@
 
 ## Development Changelog
 
-### 2026-11-15 — Frontend Resilience & Data Module Fixes
+### 2026-11-15 — Frontend Resilience, Data Module & API Hardening
 - Fixed `JSON.parse` crash on corrupt localStorage in `storage.js`
 - Fixed `response.json()` crash on non-JSON error responses in `api.js` and `compare.js`
 - Refactored `_DB_CONN` global state with path validation, health checks, and `close_db()` cleanup
 - Replaced row-by-row SQL inserts with `executemany()` and explicit transaction safety in `store_data()`
+- Added `MAX_CONTENT_LENGTH` (1 MB) to reject oversized request payloads
+- Added `ProxyFix` middleware so rate limiter uses real client IP behind reverse proxy
 
 ### 2026-11-14 — Security Hardening & Environment Configuration
 - Added `python-dotenv` with `.env.example` for environment variable management

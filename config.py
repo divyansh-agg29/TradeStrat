@@ -10,6 +10,8 @@ class BaseConfig:
 
     DATABASE_PATH = PROJECT_ROOT / "market_data.db"
 
+    MAX_CONTENT_LENGTH = 1 * 1024 * 1024  # 1 MB
+
 
 class DevelopmentConfig(BaseConfig):
     """

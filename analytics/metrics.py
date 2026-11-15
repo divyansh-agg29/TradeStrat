@@ -337,6 +337,9 @@ def _calculate_portfolio_metrics(
     initial_capital = summary["initial_capital"]
     final_portfolio_value = summary["final_portfolio_value"]
 
+    if initial_capital == 0:
+        return PortfolioMetrics()
+
     profit_loss = (
         final_portfolio_value - initial_capital
     )
@@ -356,15 +359,12 @@ def _calculate_portfolio_metrics(
 
     else:
         years = trading_periods / periods_per_year
+        ratio = final_portfolio_value / initial_capital
 
-        cagr = (
-            (
-                final_portfolio_value
-                / initial_capital
-            )
-            ** (1 / years)
-            - 1
-        ) * 100
+        if ratio <= 0:
+            cagr = 0.0
+        else:
+            cagr = (ratio ** (1 / years) - 1) * 100
 
     return PortfolioMetrics(
         initial_capital=initial_capital,
@@ -464,11 +464,14 @@ def _build_analytics_history(
 
     close_prices = analytics_history["Close"]
     first_close = close_prices.iloc[0]
-    shares_bought = initial_capital / first_close
 
-    analytics_history["Buy & Hold Value"] = (
-        shares_bought * close_prices
-    )
+    if first_close == 0:
+        analytics_history["Buy & Hold Value"] = 0.0
+    else:
+        shares_bought = initial_capital / first_close
+        analytics_history["Buy & Hold Value"] = (
+            shares_bought * close_prices
+        )
 
     return analytics_history
 
@@ -506,6 +509,9 @@ def _calculate_benchmark_metrics(
 
     first_close = portfolio_history["Close"].iloc[0]
     last_close = portfolio_history["Close"].iloc[-1]
+
+    if first_close == 0 or initial_capital == 0:
+        return BenchmarkMetrics()
 
     shares_bought = initial_capital / first_close
     benchmark_final_value = shares_bought * last_close
