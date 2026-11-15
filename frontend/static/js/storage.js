@@ -13,16 +13,18 @@ function saveConfiguration(configuration) {
 
 function loadConfiguration() {
 
-    const savedConfiguration =
-        localStorage.getItem(STORAGE_KEY);
+    try {
+        const savedConfiguration =
+            localStorage.getItem(STORAGE_KEY);
 
-    if (!savedConfiguration) {
-
+        return savedConfiguration
+            ? JSON.parse(savedConfiguration)
+            : null;
+    } catch (e) {
+        console.warn("Failed to parse saved configuration, clearing corrupt data.", e);
+        localStorage.removeItem(STORAGE_KEY);
         return null;
-
     }
-
-    return JSON.parse(savedConfiguration);
 
 }
 
@@ -40,15 +42,17 @@ function saveCompareConfiguration(configuration) {
 
 function loadCompareConfiguration() {
 
-    const saved =
-        localStorage.getItem(COMPARE_STORAGE_KEY);
+    try {
+        const saved =
+            localStorage.getItem(COMPARE_STORAGE_KEY);
 
-    if (!saved) {
-
+        return saved
+            ? JSON.parse(saved)
+            : null;
+    } catch (e) {
+        console.warn("Failed to parse saved compare configuration, clearing corrupt data.", e);
+        localStorage.removeItem(COMPARE_STORAGE_KEY);
         return null;
-
     }
-
-    return JSON.parse(saved);
 
 }

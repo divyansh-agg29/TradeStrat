@@ -74,6 +74,19 @@ async function runBacktest(configuration) {
     );
 
 
+    if (!response.ok) {
+        let errorMessage = `Server error (${response.status})`;
+        try {
+            const errorData = await response.json();
+            if (errorData.error && errorData.error.message) {
+                errorMessage = errorData.error.message;
+            }
+        } catch (e) {
+            // Response body was not JSON (e.g., HTML error page from proxy)
+        }
+        throw new Error(errorMessage);
+    }
+
     const result = await response.json();
 
     if (!result.success) {

@@ -1,7 +1,11 @@
 
 ## Development Changelog
 
-### 2026-11-15 — Security Hardening & Environment Configuration
+### 2026-11-15 — Frontend Resilience Fixes
+- Fixed `JSON.parse` crash on corrupt localStorage in `storage.js`
+- Fixed `response.json()` crash on non-JSON error responses in `api.js` and `compare.js`
+
+### 2026-11-14 — Security Hardening & Environment Configuration
 - Added `python-dotenv` with `.env.example` for environment variable management
 - Fixed Docker running in debug mode by setting `APP_ENV=production` in Dockerfile
 - Added debug-mode safety guard that prevents startup with `DEBUG=True` in production
