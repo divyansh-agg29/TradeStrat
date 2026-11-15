@@ -1,22 +1,40 @@
 
 ## Development Changelog
 
-### 2026-11-15 — Frontend Resilience, Data Module & API Hardening
+### 2026-11-15 — Robustness, Performance & API Hardening
+**Frontend Resilience**
 - Fixed `JSON.parse` crash on corrupt localStorage in `storage.js`
 - Fixed `response.json()` crash on non-JSON error responses in `api.js` and `compare.js`
+
+**Data Module**
 - Refactored `_DB_CONN` global state with path validation, health checks, and `close_db()` cleanup
 - Replaced row-by-row SQL inserts with `executemany()` and explicit transaction safety in `store_data()`
+
+**Analytics & Backtest**
+- Added zero-division guards in analytics for benchmark and CAGR calculations
+- Added empty-DataFrame check after warm-up trimming with descriptive error message
+- Eliminated double serialization in comparison response via caching
+
+**API Hardening**
 - Added `MAX_CONTENT_LENGTH` (1 MB) to reject oversized request payloads
 - Added `ProxyFix` middleware so rate limiter uses real client IP behind reverse proxy
 
+
+
 ### 2026-11-14 — Security Hardening & Environment Configuration
+
+**Environment & Configuration**
 - Added `python-dotenv` with `.env.example` for environment variable management
 - Fixed Docker running in debug mode by setting `APP_ENV=production` in Dockerfile
 - Added debug-mode safety guard that prevents startup with `DEBUG=True` in production
+
+**Docker & Deployment**
 - Added `.env` to `.dockerignore` to prevent secrets leaking into image layers
 - Replaced Flask dev server with Gunicorn as the production WSGI server
 - Added configurable worker count via `WEB_WORKERS` env var (defaults to 2)
 - Added non-root `appuser` to Dockerfile for least-privilege container execution
+
+
 
 ### 2026-08-20 — Kelly Criterion Position Sizing
 - Added Kelly Criterion position sizing: calculates optimal position size from win rate, win/loss ratio, and a configurable Kelly fraction
@@ -54,14 +72,24 @@
 - Integrated app screenshots for all sections
 - Dashboard title now links back to landing page
 
+
+
 ### 2026-08-07 — Architecture, DevOps & API Production Hardening
+
+**Architecture**
 - Refactored data and service layers to use dependency injection, decoupling business logic from Flask framework
 - Added environment-based configuration system for development and production settings
+- Simplified test infrastructure by removing Flask dependencies from data layer tests
+
+**DevOps**
 - Added Docker support for containerized deployment
 - Added GitHub Actions CI/CD pipeline for automated testing on every commit
+
+**API Hardening**
 - Added rate limiting to API endpoints (5 requests per minute) with custom error handler
 - Added request/response logging with execution time tracking for all API requests
-- Simplified test infrastructure by removing Flask dependencies from data layer tests
+
+
 
 ### 2026-08-06 — Advanced Charting
 - Price chart now renders OHLC data as candlesticks instead of a simple close-price line
