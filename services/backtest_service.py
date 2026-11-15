@@ -228,7 +228,13 @@ def _trim_to_requested_period(
         end_date,
     )
 
-    return df.loc[start_date:end_date].copy()
+    trimmed = df.loc[start_date:end_date].copy()
+    if trimmed.empty:
+        raise ValueError(
+            f"No trading data available between {start_date} and {end_date}. "
+            "The date range may fall on weekends, holidays, or outside market data availability."
+        )
+    return trimmed
 
 def _get_strategy_function(
     strategy_type: str,

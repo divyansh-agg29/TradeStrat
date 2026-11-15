@@ -71,7 +71,8 @@ def test_run_backtest_success(
             {
                 "Close": [100.0, 101.0],
                 "Signal": ["HOLD", "BUY"],
-            }
+            },
+            index=pd.to_datetime(["2022-06-01", "2022-06-02"]),
         ),
         indicators=[],
     )
@@ -269,7 +270,15 @@ def test_run_backtest_propagates_analytics_errors(
     should propagate unchanged.
     """
 
-    market_data = pd.DataFrame()
+    market_data = pd.DataFrame(
+        {"Close": [100.0, 101.0]},
+        index=pd.to_datetime(["2022-06-01", "2022-06-02"]),
+    )
+
+    strategy_df = pd.DataFrame(
+        {"Close": [100.0, 101.0], "Signal": ["HOLD", "BUY"]},
+        index=pd.to_datetime(["2022-06-01", "2022-06-02"]),
+    )
 
     simulation_result = SimulationResult(
         portfolio_history=pd.DataFrame(),
@@ -292,7 +301,7 @@ def test_run_backtest_propagates_analytics_errors(
     ) as mock_strategy:
 
         mock_strategy.return_value = (
-            lambda df, **kwargs: StrategyOutput(df=df, indicators=[])
+            lambda df, **kwargs: StrategyOutput(df=strategy_df, indicators=[])
         )
 
         with pytest.raises(
