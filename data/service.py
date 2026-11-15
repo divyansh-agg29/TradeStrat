@@ -17,6 +17,9 @@ Current workflow (Version 2A):
 """
 
 
+import atexit
+import sqlite3
+
 import pandas as pd
 
 from data.market_data_store import initialize_db
@@ -27,6 +30,44 @@ from utils.logger import get_logger
 logger = get_logger(__name__)
 
 _DB_CONN = None
+_DB_PATH = None
+
+
+def _get_connection(db_path: str) -> sqlite3.Connection:
+    """
+    Return a valid database connection, re-creating it when the
+    requested path differs from the cached one or when the existing
+    connection is no longer usable.
+    """
+    global _DB_CONN, _DB_PATH
+
+    if _DB_CONN is not None and _DB_PATH == db_path:
+        try:
+            _DB_CONN.execute("SELECT 1")
+            return _DB_CONN
+        except sqlite3.Error:
+            logger.warning("Stale database connection detected. Reconnecting.")
+            _DB_CONN = None
+
+    if _DB_CONN is not None:
+        _DB_CONN.close()
+        logger.info("Closed previous database connection to '%s'.", _DB_PATH)
+
+    _DB_CONN = initialize_db(db_path)
+    _DB_PATH = db_path
+    return _DB_CONN
+
+
+def close_db():
+    """Close the cached database connection and reset state."""
+    global _DB_CONN, _DB_PATH
+    if _DB_CONN is not None:
+        _DB_CONN.close()
+        _DB_CONN = None
+        _DB_PATH = None
+
+
+atexit.register(close_db)
 
 
 def get_stock_data(
@@ -89,16 +130,14 @@ def get_stock_data(
     logger.debug("Request validation completed successfully.")
 
     # Step 2: Ensure database connection is available.
-    global _DB_CONN
-    if _DB_CONN is None:
-        _DB_CONN = initialize_db(db_path)
+    conn = _get_connection(db_path)
 
     # Step 3: Retrieve data (cache-first, download on miss).
     cleaned_data = retrieve_market_data(
         ticker=ticker,
         start_date=start_date,
         end_date=end_date,
-        conn=_DB_CONN,
+        conn=conn,
         interval=interval,
     )
 

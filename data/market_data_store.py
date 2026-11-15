@@ -241,49 +241,57 @@ def store_data(
 
     cursor = conn.cursor()
 
-    for idx, row in df_copy.iterrows():
-        date_str = idx.strftime(date_fmt)
+    # Build all rows upfront — avoids slow iterrows() overhead.
+    rows = [
+        (
+            norm_ticker,
+            idx.strftime(date_fmt),
+            _safe_float(row.get("Open")),
+            _safe_float(row.get("High")),
+            _safe_float(row.get("Low")),
+            _safe_float(row.get("Close")),
+            _safe_int(row.get("Volume")),
+            _safe_float(row.get("Dividends")),
+            _safe_float(row.get("Stock Splits")),
+            _safe_float(row.get("Capital Gains")),
+        )
+        for idx, row in df_copy.iterrows()
+    ]
 
+    upsert_sql = f"""
+        INSERT INTO {table_name}
+            (ticker, date, open, high, low, close,
+             volume, dividends, stock_splits, capital_gains)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(ticker, date) DO UPDATE SET
+            open          = excluded.open,
+            high          = excluded.high,
+            low           = excluded.low,
+            close         = excluded.close,
+            volume        = excluded.volume,
+            dividends     = excluded.dividends,
+            stock_splits  = excluded.stock_splits,
+            capital_gains = excluded.capital_gains
+    """
+
+    try:
+        conn.execute("BEGIN")
+
+        cursor.executemany(upsert_sql, rows)
+
+        # Record the downloaded range.
         cursor.execute(
             f"""
-            INSERT INTO {table_name}
-                (ticker, date, open, high, low, close,
-                 volume, dividends, stock_splits, capital_gains)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(ticker, date) DO UPDATE SET
-                open          = excluded.open,
-                high          = excluded.high,
-                low           = excluded.low,
-                close         = excluded.close,
-                volume        = excluded.volume,
-                dividends     = excluded.dividends,
-                stock_splits  = excluded.stock_splits,
-                capital_gains = excluded.capital_gains
+            INSERT INTO {ranges_table} (ticker, start_date, end_date)
+            VALUES (?, ?, ?)
             """,
-            (
-                norm_ticker,
-                date_str,
-                _safe_float(row.get("Open")),
-                _safe_float(row.get("High")),
-                _safe_float(row.get("Low")),
-                _safe_float(row.get("Close")),
-                _safe_int(row.get("Volume")),
-                _safe_float(row.get("Dividends")),
-                _safe_float(row.get("Stock Splits")),
-                _safe_float(row.get("Capital Gains")),
-            ),
+            (norm_ticker, start_date, end_date),
         )
 
-    # Record the downloaded range and merge with existing ranges.
-    cursor.execute(
-        f"""
-        INSERT INTO {ranges_table} (ticker, start_date, end_date)
-        VALUES (?, ?, ?)
-        """,
-        (norm_ticker, start_date, end_date),
-    )
-
-    conn.commit()
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
 
     _merge_ranges(conn, norm_ticker, interval)
 

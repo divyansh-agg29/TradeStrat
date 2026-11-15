@@ -23,7 +23,7 @@ def test_get_stock_data_success(
     database, and delegates to retrieve_market_data.
     """
     import data.service as svc
-    svc._DB_CONN = None
+    svc.close_db()
 
     cleaned_df = pd.DataFrame(
         {
@@ -79,7 +79,7 @@ def test_get_stock_data_validation_failure(
     further processing occurs.
     """
     import data.service as svc
-    svc._DB_CONN = None
+    svc.close_db()
 
     mock_validate_request.side_effect = ValueError("Invalid request.")
 
@@ -107,7 +107,7 @@ def test_get_stock_data_retrieval_failure(
     Verify that errors from retrieve_market_data are propagated.
     """
     import data.service as svc
-    svc._DB_CONN = None
+    svc.close_db()
 
     mock_conn = MagicMock()
     mock_initialize_db.return_value = mock_conn
@@ -142,7 +142,7 @@ def test_get_stock_data_cleaning_failure(
     are propagated.
     """
     import data.service as svc
-    svc._DB_CONN = None
+    svc.close_db()
 
     mock_conn = MagicMock()
     mock_initialize_db.return_value = mock_conn
@@ -177,7 +177,7 @@ def test_db_connection_reused_across_calls(
     get_stock_data is called multiple times.
     """
     import data.service as svc
-    svc._DB_CONN = None
+    svc.close_db()
 
     mock_conn = MagicMock()
     mock_initialize_db.return_value = mock_conn
