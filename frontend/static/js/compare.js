@@ -287,11 +287,15 @@ function validateComparisonRequest(request) {
 
 async function onRunComparison() {
 
+    const btn = document.getElementById("run-comparison-btn");
+    btn.disabled = true;
+
     const request = collectComparisonRequest();
 
     const errors = validateComparisonRequest(request);
     if (errors.length > 0) {
         showErrorModal("Validation Error", errors.join("\n"));
+        btn.disabled = false;
         return;
     }
 
@@ -334,6 +338,7 @@ async function onRunComparison() {
         showErrorModal("Network Error", err.message);
     } finally {
         hideLoadingOverlay();
+        btn.disabled = false;
     }
 
 }

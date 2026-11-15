@@ -2,9 +2,14 @@
 ## Development Changelog
 
 ### 2026-11-15 — Robustness, Performance & API Hardening
-**Frontend Resilience**
+**Frontend Cleanup & UX**
 - Fixed `JSON.parse` crash on corrupt localStorage in `storage.js`
 - Fixed `response.json()` crash on non-JSON error responses in `api.js` and `compare.js`
+- Removed orphaned `index.html` template (dead code)
+- Removed empty `charts.js` and `tables.js` files and their `<script>` tags
+- Added required-field validation for dates in backtest tab
+- Disabled Run Backtest / Run Comparison buttons during API requests to prevent duplicates
+- Pinned Plotly CDN to v4.3.0 (was frozen at v1.58.5 via `plotly-latest`)
 
 **Data Module**
 - Refactored `_DB_CONN` global state with path validation, health checks, and `close_db()` cleanup

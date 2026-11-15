@@ -444,6 +444,8 @@ function onStrategyChanged() {
 
 async function onRunBacktestClicked() {
 
+    const btn = document.getElementById("run-backtest-btn");
+    btn.disabled = true;
     showLoadingOverlay();
 
     try{
@@ -479,9 +481,8 @@ async function onRunBacktestClicked() {
     }
     finally {
         hideLoadingOverlay();
+        btn.disabled = false;
     };
-
-    
 
 }
 
@@ -609,6 +610,14 @@ function validateConfiguration(configuration) {
             "Ticker is required."
         );
 
+    }
+
+    if (!configuration.startDate) {
+        errors.push("Start date is required.");
+    }
+
+    if (!configuration.endDate) {
+        errors.push("End date is required.");
     }
 
     if (configuration.initialCapital <= 0) {

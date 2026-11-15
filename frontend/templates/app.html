@@ -8,7 +8,7 @@
     <title>TradeStrat - A Trading Strategy Analysis Platform</title>
 
     <!-- Plotly -->
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-4.3.0.min.js" charset="utf-8"></script>
 
     <!-- CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
@@ -71,7 +71,8 @@
                     <input
                         type="date"
                         class="form-input"
-                        id="start-date">
+                        id="start-date"
+                        required>
                 </div>
 
                 <div class="form-group">
@@ -79,7 +80,8 @@
                     <input
                         type="date"
                         class="form-input"
-                        id="end-date">
+                        id="end-date"
+                        required>
                 </div>
 
                 <div class="form-group">
@@ -727,8 +729,6 @@
 <script src="{{ url_for('static', filename='js/kpi-tooltips.js') }}"></script>
 <script src="{{ url_for('static', filename='js/chart-renderer.js') }}"></script>
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
-<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
-<script src="{{ url_for('static', filename='js/tables.js') }}"></script>
 <script src="{{ url_for('static', filename='js/interval-validator.js') }}"></script>
 <script src="{{ url_for('static', filename='js/ui.js') }}"></script>
 <script src="{{ url_for('static', filename='js/compare.js') }}"></script>
