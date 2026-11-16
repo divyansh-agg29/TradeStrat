@@ -111,7 +111,7 @@ def _validate_request(
             "A strategy configuration must be provided."
         )
 
-    if not request.strategy.type.strip():
+    if request.strategy.type is None or not request.strategy.type.strip():
         raise ValueError(
             "Strategy type cannot be empty."
         )

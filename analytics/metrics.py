@@ -348,9 +348,6 @@ def _calculate_portfolio_metrics(
         (profit_loss / initial_capital) * 100
     )
 
-    start_date = portfolio_history.index[0]
-    end_date = portfolio_history.index[-1]
-
     trading_periods = len(portfolio_history)
     periods_per_year = _get_periods_per_year(interval)
 

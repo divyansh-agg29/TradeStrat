@@ -1,6 +1,14 @@
 
 ## Development Changelog
 
+### 2026-11-16 — Code Quality & Cleanup
+- Fixed `BacktestRequest.strategy` type hint (`StrategyConfig` -> `StrategyConfig | None`) and added `None` guard on `strategy.type` in validation
+- Standardized type hints to modern Python 3.10+ syntax (`X | None`, `list[X]`, `X | Y`) across 6 files; removed unused `typing` imports
+- Replaced eager f-string formatting in `logger.debug()` calls with lazy `%s` formatting in `portfolio/simulator.py` hot loop
+- Removed unused `import logging` from `comparison_service.py`
+- Removed dead `start_date`/`end_date` assignments in `analytics/metrics.py`
+- Deleted empty `utils/helpers.py`
+
 ### 2026-11-15 — Robustness, Performance & API Hardening
 **Frontend Cleanup & UX**
 - Fixed `JSON.parse` crash on corrupt localStorage in `storage.js`

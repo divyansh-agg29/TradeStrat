@@ -5,7 +5,6 @@ Defines the structured output returned by all strategy functions.
 """
 
 from dataclasses import dataclass, field
-from typing import List, Optional
 
 import pandas as pd
 
@@ -37,8 +36,8 @@ class IndicatorConfig:
     column: str
     name: str
     display: str = "overlay"
-    subplot_id: Optional[str] = None
-    y_range: Optional[tuple] = None
+    subplot_id: str | None = None
+    y_range: tuple | None = None
 
 
 @dataclass
@@ -51,9 +50,9 @@ class StrategyOutput:
     df : pd.DataFrame
         DataFrame with OHLCV data, indicator columns, and Signal column.
 
-    indicators : List[IndicatorConfig]
+    indicators : list[IndicatorConfig]
         Metadata describing each indicator column for chart rendering.
     """
 
     df: pd.DataFrame
-    indicators: List[IndicatorConfig] = field(default_factory=list)
+    indicators: list[IndicatorConfig] = field(default_factory=list)

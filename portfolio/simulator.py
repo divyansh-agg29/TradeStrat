@@ -249,10 +249,8 @@ def simulate_portfolio(
     position_sizing_manager = PositionSizingManager(position_sizing_config)
 
     logger.debug(
-        "Initial portfolio state: "
-        f"Cash={portfolio.cash}, "
-        f"Shares={portfolio.shares}, "
-        f"Position={FLAT}"
+        "Initial portfolio state: Cash=%s, Shares=%s, Position=%s",
+        portfolio.cash, portfolio.shares, FLAT,
     )
 
     open_position: OpenPosition | None = None
@@ -281,9 +279,8 @@ def simulate_portfolio(
             )
 
         logger.debug(
-            f"Processing {index}: "
-            f"Signal={signal}, "
-            f"Close={close_price}"
+            "Processing %s: Signal=%s, Close=%s",
+            index, signal, close_price,
         )
 
         open_position, completed_trade = _evaluate_risk_and_signal(
@@ -562,9 +559,8 @@ def _execute_buy(
     portfolio.shares += shares_to_buy
 
     logger.debug(
-        "BUY executed: "
-        f"{shares_to_buy} shares "
-        f"at {close_price:.2f}"
+        "BUY executed: %s shares at %.2f",
+        shares_to_buy, close_price,
     )
 
     if open_position is None:

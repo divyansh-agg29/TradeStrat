@@ -7,7 +7,6 @@ Adding a new interval requires updating only this file.
 
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Union
 
 from dateutil.relativedelta import relativedelta
 
@@ -33,7 +32,7 @@ class IntervalConfig:
     max_range_days: int | None
     max_lookback_days: int | None
     periods_per_year: int
-    warmup_period: Union[timedelta, relativedelta]
+    warmup_period: timedelta | relativedelta
     use_case: str
 
 

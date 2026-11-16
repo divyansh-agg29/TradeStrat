@@ -19,7 +19,7 @@ class BacktestRequest:
     end_date: str
     initial_capital: float = 100000.0
     risk_free_rate: float = 0.0
-    strategy: StrategyConfig = None
+    strategy: StrategyConfig | None = None
     risk: RiskConfig | None = None
     position_sizing: PositionSizingConfig | None = None
     interval: str = "1d"

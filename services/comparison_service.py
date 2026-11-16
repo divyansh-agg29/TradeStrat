@@ -10,7 +10,6 @@ Each strategy executes in its own try/except so that one failure
 does not block the remaining strategies.
 """
 
-import logging
 from models import (
     BacktestRequest,
     StrategyConfig,

@@ -16,7 +16,6 @@ Separate tables per interval (e.g., market_data_1day, market_data_1hour):
 import os
 import sqlite3
 from datetime import datetime, timedelta
-from typing import Optional
 
 import pandas as pd
 
@@ -116,7 +115,7 @@ def _parse_date(date_str: str) -> datetime:
 _DAILY_OR_ABOVE = frozenset({"1d", "5d", "1wk", "1mo", "3mo"})
 
 
-def _safe_float(value) -> Optional[float]:
+def _safe_float(value) -> float | None:
     """Convert a value to float, returning None on failure."""
     try:
         return float(value)
@@ -124,7 +123,7 @@ def _safe_float(value) -> Optional[float]:
         return None
 
 
-def _safe_int(value) -> Optional[int]:
+def _safe_int(value) -> int | None:
     """Convert a value to int, returning None on failure."""
     try:
         return int(value)
@@ -354,7 +353,7 @@ def retrieve_data(
     start_date: str,
     end_date: str,
     interval: str,
-) -> Optional[pd.DataFrame]:
+) -> pd.DataFrame | None:
     """
     Retrieve cached market data for ``ticker`` in ``[start_date, end_date]``
     for the specified interval.

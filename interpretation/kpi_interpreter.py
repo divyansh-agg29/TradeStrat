@@ -17,7 +17,6 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from typing import Optional
 
 from analytics import AnalyticsResult
 from utils.logger import get_logger
@@ -39,7 +38,7 @@ class KPIDefinition:
     source: str
     field: str
     format_type: str
-    thresholds: Optional[list] = None
+    thresholds: list | None = None
     invert: bool = False
 
 
@@ -255,7 +254,7 @@ def _evaluate_interpretation(
     value,
     thresholds: list,
     invert: bool,
-) -> Optional[str]:
+) -> str | None:
     """
     Evaluate a KPI value against its interpretation thresholds.
 

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional
+
 from models.strategy_config import StrategyConfig
 from models.backtest_result import BacktestResult
 from models.comparison_request import ComparisonRequest
@@ -15,8 +15,8 @@ class StrategyResult:
     """
     strategy: StrategyConfig
     success: bool
-    error: Optional[str] = None
-    backtest_result: Optional[BacktestResult] = None
+    error: str | None = None
+    backtest_result: BacktestResult | None = None
 
 
 @dataclass(frozen=True)
