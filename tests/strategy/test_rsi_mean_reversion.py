@@ -2,24 +2,7 @@ import pandas as pd
 import pytest
 
 from strategy import generate_rsi_mean_reversion_signals
-
-
-# ---------------------------------------------------------------------
-# Test Helpers
-# ---------------------------------------------------------------------
-
-def create_market_data(close_prices):
-    """Create a standard market DataFrame for testing."""
-
-    return pd.DataFrame(
-        {
-            "Open": close_prices,
-            "High": close_prices,
-            "Low": close_prices,
-            "Close": close_prices,
-            "Volume": [1000] * len(close_prices),
-        }
-    )
+from tests.strategy.helpers import create_market_data
 
 
 # ---------------------------------------------------------------------
@@ -106,7 +89,7 @@ def test_empty_dataframe_raises_value_error():
 
     df = pd.DataFrame()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Input DataFrame cannot be empty"):
         generate_rsi_mean_reversion_signals(df)
 
 
@@ -115,7 +98,7 @@ def test_invalid_rsi_period_raises_value_error():
 
     df = create_market_data(range(1, 101))
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="rsi_period must be greater than zero"):
         generate_rsi_mean_reversion_signals(
             df,
             rsi_period=0,
@@ -127,7 +110,7 @@ def test_invalid_thresholds_raise_value_error():
 
     df = create_market_data(range(1, 101))
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="overbought must be greater than oversold"):
         generate_rsi_mean_reversion_signals(
             df,
             overbought=30,
@@ -140,7 +123,7 @@ def test_equal_thresholds_raise_value_error():
 
     df = create_market_data(range(1, 101))
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="overbought must be greater than oversold"):
         generate_rsi_mean_reversion_signals(
             df,
             overbought=50,
@@ -153,7 +136,7 @@ def test_invalid_price_column_is_propagated():
 
     df = create_market_data(range(1, 101))
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Price column.*not found"):
         generate_rsi_mean_reversion_signals(
             df,
             price_column="AdjustedClose",

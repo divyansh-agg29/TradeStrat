@@ -80,7 +80,7 @@ def test_config_is_frozen():
         sizing_parameters={"percent": 0.25},
     )
 
-    with pytest.raises(AttributeError):
+    with pytest.raises(AttributeError, match="cannot assign to field"):
         config.sizing_type = "fixed_amount"
 
 

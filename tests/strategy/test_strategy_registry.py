@@ -2,30 +2,43 @@
 Tests for the strategy registry.
 """
 
+import pytest
+
 from strategy import STRATEGY_REGISTRY
-from strategy.sma_crossover import (
-    generate_sma_crossover_signals,
+from strategy.sma_crossover import generate_sma_crossover_signals
+from strategy.ema_crossover import generate_ema_crossover_signals
+from strategy.macd_crossover import generate_macd_crossover_signals
+from strategy.rsi_mean_reversion import generate_rsi_mean_reversion_signals
+from strategy.bb_bounce import generate_bb_bounce_signals
+
+
+EXPECTED_STRATEGIES = {
+    "sma_crossover": generate_sma_crossover_signals,
+    "ema_crossover": generate_ema_crossover_signals,
+    "macd_crossover": generate_macd_crossover_signals,
+    "rsi_mean_reversion": generate_rsi_mean_reversion_signals,
+    "bb_bounce": generate_bb_bounce_signals,
+}
+
+
+def test_registry_contains_exactly_expected_strategies():
+    """
+    The registry should contain all known strategies and nothing extra.
+    """
+
+    assert set(STRATEGY_REGISTRY.keys()) == set(EXPECTED_STRATEGIES.keys())
+
+
+@pytest.mark.parametrize(
+    "name, expected_fn",
+    EXPECTED_STRATEGIES.items(),
 )
-
-
-def test_sma_strategy_registered():
+def test_strategy_maps_to_correct_function(name, expected_fn):
     """
-    The SMA crossover strategy should exist in the registry.
+    Each strategy key should map to its implementation function.
     """
 
-    assert "sma_crossover" in STRATEGY_REGISTRY
-
-
-def test_sma_strategy_maps_to_correct_function():
-    """
-    The registry should map the SMA strategy to its
-    implementation function.
-    """
-
-    assert (
-        STRATEGY_REGISTRY["sma_crossover"]
-        is generate_sma_crossover_signals
-    )
+    assert STRATEGY_REGISTRY[name] is expected_fn
 
 
 def test_all_registered_strategies_are_callable():

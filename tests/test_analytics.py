@@ -1017,3 +1017,178 @@ def test_analytics_history_contains_buy_hold_column():
         "Buy & Hold Value"
         in analytics_result.analytics_history.columns
     )
+
+
+# ============================================================================
+# Non-Daily Interval Annualization Tests (#27)
+# ============================================================================
+
+class TestIntervalAnnualization:
+    """
+    Verify that annualized metrics scale correctly for non-daily intervals.
+
+    The same portfolio_values produce different annualized metrics
+    depending on the interval because periods_per_year differs:
+      - 1d  → 252
+      - 1h  → 1638
+      - 1wk → 52
+    """
+
+    PORTFOLIO_VALUES = [
+        100000,
+        102000,
+        101000,
+        104000,
+        103000,
+    ]
+
+    def _analyze(self, interval):
+        sim = create_simulation_result(
+            portfolio_values=self.PORTFOLIO_VALUES,
+        )
+        return analyze_performance(sim, interval=interval)
+
+    def test_cagr_scales_with_interval(self):
+        """
+        Shorter intervals mean more periods per year, so the same
+        raw return maps to a much larger annualized CAGR.
+        """
+        daily = self._analyze("1d")
+        hourly = self._analyze("1h")
+        weekly = self._analyze("1wk")
+
+        daily_cagr = daily.portfolio_metrics.cagr
+        hourly_cagr = hourly.portfolio_metrics.cagr
+        weekly_cagr = weekly.portfolio_metrics.cagr
+
+        # Hourly annualizes over more periods → higher CAGR
+        assert hourly_cagr > daily_cagr
+        # Weekly annualizes over fewer periods → lower CAGR
+        assert weekly_cagr < daily_cagr
+
+    def test_volatility_scales_with_interval(self):
+        """
+        Annualized volatility scales by sqrt(periods_per_year).
+        """
+        daily = self._analyze("1d")
+        hourly = self._analyze("1h")
+        weekly = self._analyze("1wk")
+
+        daily_vol = daily.risk_metrics.annualized_volatility
+        hourly_vol = hourly.risk_metrics.annualized_volatility
+        weekly_vol = weekly.risk_metrics.annualized_volatility
+
+        assert hourly_vol > daily_vol
+        assert weekly_vol < daily_vol
+
+    def test_sharpe_scales_with_interval(self):
+        """
+        Sharpe ratio = (mean excess return / vol) * sqrt(periods_per_year),
+        so it differs across intervals.
+        """
+        daily = self._analyze("1d")
+        hourly = self._analyze("1h")
+
+        assert daily.risk_metrics.sharpe_ratio != pytest.approx(
+            hourly.risk_metrics.sharpe_ratio, abs=0.01,
+        )
+
+    @pytest.mark.parametrize("interval", ["1h", "1wk"])
+    def test_all_metrics_are_finite(self, interval):
+        """
+        Annualized metrics should remain finite for any valid interval.
+        """
+        result = self._analyze(interval)
+
+        assert math.isfinite(result.portfolio_metrics.cagr)
+        assert math.isfinite(result.risk_metrics.annualized_volatility)
+        assert math.isfinite(result.risk_metrics.sharpe_ratio)
+        assert math.isfinite(result.risk_metrics.calmar_ratio)
+
+
+# ============================================================================
+# Non-Zero Risk-Free Rate Tests (#28)
+# ============================================================================
+
+class TestNonZeroRiskFreeRate:
+    """
+    Verify that a non-zero risk_free_rate changes Sharpe and Sortino
+    ratios correctly.
+    """
+
+    PORTFOLIO_VALUES = [
+        100000,
+        102000,
+        101000,
+        104000,
+        103000,
+    ]
+
+    def test_sharpe_decreases_with_higher_risk_free_rate(self):
+        """
+        A positive risk-free rate reduces excess returns, so the
+        Sharpe ratio must be lower than with risk_free_rate=0.
+        """
+        sim = create_simulation_result(
+            portfolio_values=self.PORTFOLIO_VALUES,
+        )
+
+        result_zero = analyze_performance(sim, risk_free_rate=0.0)
+        result_rfr = analyze_performance(sim, risk_free_rate=0.06)
+
+        assert (
+            result_rfr.risk_metrics.sharpe_ratio
+            < result_zero.risk_metrics.sharpe_ratio
+        )
+
+    def test_sortino_decreases_with_higher_risk_free_rate(self):
+        """
+        When all returns are negative (always below any positive RFR
+        threshold), a higher risk-free rate increases downside deviation
+        and decreases excess return mean — both push Sortino down.
+        """
+        sim = create_simulation_result(
+            portfolio_values=[100000, 99000, 98000, 97000, 96000],
+        )
+
+        result_zero = analyze_performance(sim, risk_free_rate=0.0)
+        result_rfr = analyze_performance(sim, risk_free_rate=0.06)
+
+        assert (
+            result_rfr.risk_metrics.sortino_ratio
+            < result_zero.risk_metrics.sortino_ratio
+        )
+
+    def test_risk_free_rate_does_not_affect_volatility(self):
+        """
+        Annualized volatility is independent of the risk-free rate.
+        """
+        sim = create_simulation_result(
+            portfolio_values=self.PORTFOLIO_VALUES,
+        )
+
+        result_zero = analyze_performance(sim, risk_free_rate=0.0)
+        result_rfr = analyze_performance(sim, risk_free_rate=0.06)
+
+        assert result_rfr.risk_metrics.annualized_volatility == pytest.approx(
+            result_zero.risk_metrics.annualized_volatility,
+        )
+
+    def test_risk_free_rate_does_not_affect_portfolio_metrics(self):
+        """
+        Portfolio metrics (return, CAGR) should be unaffected by
+        the risk-free rate.
+        """
+        sim = create_simulation_result(
+            portfolio_values=self.PORTFOLIO_VALUES,
+        )
+
+        result_zero = analyze_performance(sim, risk_free_rate=0.0)
+        result_rfr = analyze_performance(sim, risk_free_rate=0.06)
+
+        assert result_rfr.portfolio_metrics.total_return == pytest.approx(
+            result_zero.portfolio_metrics.total_return,
+        )
+        assert result_rfr.portfolio_metrics.cagr == pytest.approx(
+            result_zero.portfolio_metrics.cagr,
+        )

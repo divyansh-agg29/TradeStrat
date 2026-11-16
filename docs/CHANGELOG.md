@@ -1,13 +1,26 @@
 
 ## Development Changelog
 
-### 2026-11-16 — Code Quality & Cleanup
+### 2026-11-16 — Code Quality, Cleanup & Test Improvements
+**Code Quality**
 - Fixed `BacktestRequest.strategy` type hint (`StrategyConfig` -> `StrategyConfig | None`) and added `None` guard on `strategy.type` in validation
 - Standardized type hints to modern Python 3.10+ syntax (`X | None`, `list[X]`, `X | Y`) across 6 files; removed unused `typing` imports
 - Replaced eager f-string formatting in `logger.debug()` calls with lazy `%s` formatting in `portfolio/simulator.py` hot loop
 - Removed unused `import logging` from `comparison_service.py`
 - Removed dead `start_date`/`end_date` assignments in `analytics/metrics.py`
-- Deleted empty `utils/helpers.py`
+- Deleted empty `utils/helpers.py` and `analytics/charts.py`
+- Updated `.gitignore` with missing patterns (`.venv/`, `htmlcov/`, `coverage.xml`, `*.pyo`, `.DS_Store`, `Thumbs.db`); removed stale `.streamlit/`
+
+**Test Infrastructure**
+- Created shared `tests/api/conftest.py` (Flask `client` fixture) and `tests/strategy/helpers.py` (`create_market_data`); removed duplicates from 8 test files
+- Added missing `__init__.py` in `tests/data/`, `tests/indicators/`, `tests/strategy/`
+- Rewrote strategy registry tests to parametrize over all 5 strategies
+
+**New Tests**
+- Added interval annualization tests (`1h`, `1wk`) for CAGR, volatility, Sharpe, and finiteness
+- Added non-zero `risk_free_rate` tests verifying Sharpe/Sortino decrease and portfolio metrics are unaffected
+- Added unit tests for `_calculate_warmup_start()` covering daily/weekly/monthly warmup, intraday lookback clamping, and edge cases
+- Added `match` patterns to all bare `pytest.raises()` calls across strategy, data validator, and position sizing tests
 
 ### 2026-11-15 — Robustness, Performance & API Hardening
 **Frontend Cleanup & UX**

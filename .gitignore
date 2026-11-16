@@ -1,11 +1,16 @@
 venv/
+.venv/
 __pycache__/
 *.pyc
+*.pyo
 .pytest_cache/
-.streamlit/
+htmlcov/
+coverage.xml
 .idea/
 .vscode/
 .env
 *.db
 .coverage
+.DS_Store
+Thumbs.db
 .devin/

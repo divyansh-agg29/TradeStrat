@@ -2,24 +2,7 @@ import pandas as pd
 import pytest
 
 from strategy import generate_ema_crossover_signals
-
-
-# ---------------------------------------------------------------------
-# Test Helpers
-# ---------------------------------------------------------------------
-
-def create_market_data(close_prices):
-    """Create a standard market DataFrame for testing."""
-
-    return pd.DataFrame(
-        {
-            "Open": close_prices,
-            "High": close_prices,
-            "Low": close_prices,
-            "Close": close_prices,
-            "Volume": [1000] * len(close_prices),
-        }
-    )
+from tests.strategy.helpers import create_market_data
 
 
 # ---------------------------------------------------------------------
@@ -141,7 +124,7 @@ def test_empty_dataframe_raises_value_error():
 
     df = pd.DataFrame()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Input DataFrame cannot be empty"):
         generate_ema_crossover_signals(df)
 
 
@@ -150,7 +133,7 @@ def test_invalid_period_order_raises_value_error():
 
     df = create_market_data(range(1, 101))
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="short_period must be smaller than long_period"):
         generate_ema_crossover_signals(
             df,
             short_period=50,
@@ -163,7 +146,7 @@ def test_equal_periods_raise_value_error():
 
     df = create_market_data(range(1, 101))
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="short_period must be smaller than long_period"):
         generate_ema_crossover_signals(
             df,
             short_period=20,
@@ -176,7 +159,7 @@ def test_invalid_price_column_is_propagated():
 
     df = create_market_data(range(1, 101))
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Price column.*not found"):
         generate_ema_crossover_signals(
             df,
             price_column="AdjustedClose",

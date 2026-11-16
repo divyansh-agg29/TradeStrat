@@ -50,7 +50,7 @@ def test_validate_ticker_invalid(ticker):
 
 def test_validate_ticker_non_string():
     """Ticker must be a string."""
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError, match="Ticker must be a string"):
         validate_ticker(123)
 
 
@@ -68,7 +68,7 @@ def test_validate_dates_valid():
 
 def test_validate_dates_start_after_end():
     """Start date cannot be after end date."""
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Start date cannot be after end date"):
         validate_dates(
             "2024-12-31",
             "2024-01-01",
@@ -77,7 +77,7 @@ def test_validate_dates_start_after_end():
 
 def test_validate_dates_invalid_start_format():
     """Invalid start date format should raise ValueError."""
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Invalid start date"):
         validate_dates(
             "01-01-2024",
             "2024-12-31",
@@ -86,7 +86,7 @@ def test_validate_dates_invalid_start_format():
 
 def test_validate_dates_invalid_end_format():
     """Invalid end date format should raise ValueError."""
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Invalid end date"):
         validate_dates(
             "2024-01-01",
             "31-12-2024",
@@ -97,7 +97,7 @@ def test_validate_dates_future_start():
     """Future start dates should fail validation."""
     future = (date.today() + timedelta(days=1)).strftime("%Y-%m-%d")
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Start date cannot be in the future"):
         validate_dates(
             future,
             future,
@@ -108,7 +108,7 @@ def test_validate_dates_future_end():
     """Future end dates should fail validation."""
     future = (date.today() + timedelta(days=1)).strftime("%Y-%m-%d")
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="End date cannot be in the future"):
         validate_dates(
             "2024-01-01",
             future,
@@ -117,7 +117,7 @@ def test_validate_dates_future_end():
 
 def test_validate_dates_non_string():
     """Dates must be strings."""
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError, match="date must be a string"):
         validate_dates(
             date.today(),
             "2024-12-31",

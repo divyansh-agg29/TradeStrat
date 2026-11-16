@@ -6,20 +6,7 @@ from unittest.mock import patch, MagicMock
 
 import pytest
 
-from app import create_app
-from config import TestConfig
 from models import BacktestResult
-
-
-@pytest.fixture
-def client():
-    """
-    Create a Flask test client.
-    """
-    app = create_app(TestConfig)
-
-    with app.test_client() as client:
-        yield client
 
 
 def _create_compare_payload(num_strategies=2):
