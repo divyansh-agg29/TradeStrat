@@ -8,7 +8,7 @@ This guide explains how to set up and run the **TradeStrat** application in a lo
 
 Before starting, ensure the following software is installed on your system:
 
-* Python 3.11 or later
+* Python 3.13 or later
 * Git
 * Docker Desktop *(optional, for containerized execution)*
 * Internet connection (required for downloading market data from Yahoo Finance)
@@ -104,14 +104,6 @@ Start the Flask application.
 python app.py
 ```
 
-or
-
-```bash
-flask run
-```
-
-depending on your preferred workflow.
-
 The application should now be available at
 
 ```
@@ -140,10 +132,10 @@ Expected response:
 
 ```json
 {
-    "success": True,
+    "success": true,
     "data": {
-        "status": "healthy",
-    },
+        "status": "healthy"
+    }
 }
 ```
 
@@ -161,6 +153,12 @@ Run the container.
 
 ```bash
 docker run -p 5000:5000 tradestrat
+```
+
+The Dockerfile sets `APP_ENV=production` by default. To override environment variables:
+
+```bash
+docker run -p 5000:5000 -e APP_ENV=development -e WEB_WORKERS=1 tradestrat
 ```
 
 The application will now be available at:
