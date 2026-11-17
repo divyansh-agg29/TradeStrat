@@ -707,7 +707,7 @@ def _calculate_trade_metrics(
     total_trades = len(trade_history)
 
     winning_trades_df = (
-        trade_history[trade_history["profit_loss"] > 0]
+        trade_history[trade_history["profit_loss"] >= 0]
     )
 
     losing_trades_df = (

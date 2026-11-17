@@ -112,7 +112,7 @@ def _parse_date(date_str: str) -> datetime:
 
 
 # Intervals where each row represents a full day (no intraday timestamps).
-_DAILY_OR_ABOVE = frozenset({"1d", "5d", "1wk", "1mo", "3mo"})
+_DAILY_OR_ABOVE = frozenset({"1d", "1wk", "1mo"})
 
 
 def _safe_float(value) -> float | None:
