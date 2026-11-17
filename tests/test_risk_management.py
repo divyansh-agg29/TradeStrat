@@ -53,19 +53,18 @@ def test_risk_config_rejects_type_without_parameters():
         RiskConfig(stop_loss_type="fixed_percentage")
 
 
-def test_risk_config_rejects_type_with_empty_parameters():
+def test_risk_config_accepts_type_with_empty_parameters():
     """
-    Setting a type with an empty parameters dict should fail.
+    Setting a type with an empty parameters dict should be accepted.
+    An empty dict means 'provided but empty', distinct from None.
     """
 
-    with pytest.raises(
-        ValueError,
-        match="stop_loss_parameters are required",
-    ):
-        RiskConfig(
-            stop_loss_type="fixed_percentage",
-            stop_loss_parameters={},
-        )
+    config = RiskConfig(
+        stop_loss_type="fixed_percentage",
+        stop_loss_parameters={},
+    )
+
+    assert config.stop_loss_parameters == {}
 
 
 # ── FixedPercentageStopLoss ──────────────────────────────────

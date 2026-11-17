@@ -45,19 +45,18 @@ def test_config_rejects_type_without_parameters():
         PositionSizingConfig(sizing_type="fixed_percentage")
 
 
-def test_config_rejects_type_with_empty_parameters():
+def test_config_accepts_type_with_empty_parameters():
     """
-    Setting a type with an empty parameters dict should fail.
+    Setting a type with an empty parameters dict should be accepted.
+    An empty dict means 'provided but empty', distinct from None.
     """
 
-    with pytest.raises(
-        ValueError,
-        match="sizing_parameters are required",
-    ):
-        PositionSizingConfig(
-            sizing_type="fixed_amount",
-            sizing_parameters={},
-        )
+    config = PositionSizingConfig(
+        sizing_type="fixed_amount",
+        sizing_parameters={},
+    )
+
+    assert config.sizing_parameters == {}
 
 
 def test_config_allows_all_in_without_parameters():
