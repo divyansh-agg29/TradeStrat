@@ -2,10 +2,23 @@
 ## Development Changelog
 
 ### 2026-11-17 — Documentation, Logging & Polish
+
+**Documentation & Logging**
 - Fixed SETUP.md: corrected invalid JSON in health check example, removed misleading `flask run` suggestion, updated Python version to 3.13, added Docker env var documentation
 - Added module-level docstrings to 11 files across `risk/`, `position_sizing/`, and `models/`
 - Added debug logging to `risk/manager.py` and `position_sizing/manager.py` for rule resolution
 - Removed 4 `console.log`/`console.error` calls from production JS (`api.js`, `ui.js`, `app.js`)
+
+**Frontend**
+- Added empty-state message for trade history table when no trades are executed
+- Moved `<script>` tags inside `<body>` in `app.html` for valid HTML
+- Namespaced error-modal global variables into single `errorModal` object
+
+**Backend**
+- Breakeven trades (`profit_loss == 0`) now counted as winning in analytics
+- Removed unsupported `"5d"` and `"3mo"` from `_DAILY_OR_ABOVE` in `market_data_store.py`
+- Added warning log when all strategies fail in comparison service
+- Changed truthiness checks to explicit `is None` in `risk/config.py` and `position_sizing/config.py`
 
 ### 2026-11-16 — Code Quality, Cleanup & Test Improvements
 **Code Quality**
