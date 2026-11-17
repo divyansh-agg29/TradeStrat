@@ -153,6 +153,11 @@ function renderTradeHistory(trades) {
 
     ui.tradeHistoryBody.innerHTML = "";
 
+    if (trades.length === 0) {
+        ui.tradeHistoryBody.innerHTML = '<tr><td colspan="12" class="empty-table">No trades were executed during this period.</td></tr>';
+        return;
+    }
+
     for (const trade of trades) {
 
         const row = document.createElement("tr");

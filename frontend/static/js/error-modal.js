@@ -4,17 +4,12 @@
  * ==========================================================
  */
 
-const modal =
-    document.getElementById("error-modal");
-
-const title =
-    document.getElementById("error-title");
-
-const message =
-    document.getElementById("error-message");
-
-const closeButton =
-    document.getElementById("error-close");
+const errorModal = {
+    overlay: document.getElementById("error-modal"),
+    title: document.getElementById("error-title"),
+    message: document.getElementById("error-message"),
+    closeButton: document.getElementById("error-close"),
+};
 
 
 function showErrorModal(
@@ -22,32 +17,32 @@ function showErrorModal(
     modalMessage
 ) {
 
-    title.textContent = modalTitle;
+    errorModal.title.textContent = modalTitle;
 
-    message.textContent = modalMessage;
+    errorModal.message.textContent = modalMessage;
 
-    modal.classList.add("active");
+    errorModal.overlay.classList.add("active");
 
 }
 
 
 function hideErrorModal() {
 
-    modal.classList.remove("active");
+    errorModal.overlay.classList.remove("active");
 
 }
 
 
-closeButton.addEventListener(
+errorModal.closeButton.addEventListener(
     "click",
     hideErrorModal
 );
 
-modal.addEventListener(
+errorModal.overlay.addEventListener(
     "click",
     (event) => {
 
-        if (event.target === modal) {
+        if (event.target === errorModal.overlay) {
 
             hideErrorModal();
 
@@ -62,7 +57,7 @@ document.addEventListener(
 
         if (
             event.key === "Escape" &&
-            modal.classList.contains("active")
+            errorModal.overlay.classList.contains("active")
         ) {
 
             hideErrorModal();
