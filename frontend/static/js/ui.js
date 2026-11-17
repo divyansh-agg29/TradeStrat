@@ -465,13 +465,10 @@ async function onRunBacktestClicked() {
         saveConfiguration(configuration);
 
         const response = await runBacktest(configuration);
-        console.log("Backtest Response:", response);
 
         renderDashboard(response);
     }
     catch (error) {
-
-        console.error(error);
 
         showErrorModal(
             "Backtest Failed",

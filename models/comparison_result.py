@@ -1,3 +1,10 @@
+"""
+Comparison Result
+
+Defines the StrategyResult and ComparisonResult dataclasses that
+package the output of a multi-strategy comparison run.
+"""
+
 from dataclasses import dataclass
 
 from models.strategy_config import StrategyConfig

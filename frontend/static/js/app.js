@@ -7,10 +7,6 @@ document.addEventListener(
 
 function initializeApplication() {
 
-    console.log(
-        "Trading Dashboard Initialized"
-    );
-
     populateStrategyDropdown();
 
     populateStopLossDropdown();

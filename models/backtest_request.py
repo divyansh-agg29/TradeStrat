@@ -1,3 +1,10 @@
+"""
+Backtest Request
+
+Defines the BacktestRequest dataclass that carries all configuration
+required to execute a single backtest.
+"""
+
 from dataclasses import dataclass
 
 from models.strategy_config import StrategyConfig

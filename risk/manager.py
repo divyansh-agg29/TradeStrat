@@ -1,5 +1,15 @@
+"""
+Risk Manager
+
+Resolves risk rule configurations into concrete rule objects
+and evaluates stop-loss / take-profit conditions.
+"""
+
 from risk.config import RiskConfig
 from risk.rules import STOP_LOSS_REGISTRY, TAKE_PROFIT_REGISTRY
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class RiskManager:
@@ -25,6 +35,7 @@ class RiskManager:
                 )
 
             self._rule = rule_class(**risk_config.stop_loss_parameters)
+            logger.debug("Stop-loss rule resolved: %s", risk_config.stop_loss_type)
 
         if risk_config is not None and risk_config.take_profit_type is not None:
             tp_class = TAKE_PROFIT_REGISTRY.get(risk_config.take_profit_type)
@@ -35,6 +46,7 @@ class RiskManager:
                 )
 
             self._take_profit_rule = tp_class(**risk_config.take_profit_parameters)
+            logger.debug("Take-profit rule resolved: %s", risk_config.take_profit_type)
 
     def should_stop(
         self,

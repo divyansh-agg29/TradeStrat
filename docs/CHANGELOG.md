@@ -1,6 +1,12 @@
 
 ## Development Changelog
 
+### 2026-11-17 — Documentation, Logging & Polish
+- Fixed SETUP.md: corrected invalid JSON in health check example, removed misleading `flask run` suggestion, updated Python version to 3.13, added Docker env var documentation
+- Added module-level docstrings to 11 files across `risk/`, `position_sizing/`, and `models/`
+- Added debug logging to `risk/manager.py` and `position_sizing/manager.py` for rule resolution
+- Removed 4 `console.log`/`console.error` calls from production JS (`api.js`, `ui.js`, `app.js`)
+
 ### 2026-11-16 — Code Quality, Cleanup & Test Improvements
 **Code Quality**
 - Fixed `BacktestRequest.strategy` type hint (`StrategyConfig` -> `StrategyConfig | None`) and added `None` guard on `strategy.type` in validation

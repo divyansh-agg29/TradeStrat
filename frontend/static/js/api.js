@@ -60,8 +60,6 @@ async function runBacktest(configuration) {
 
     const requestBody =buildBacktestRequest(configuration);
 
-    console.log("API Request:",requestBody);
-
     const response = await fetch(
         BACKTEST_ENDPOINT,
         {

@@ -1,3 +1,10 @@
+"""
+Strategy Configuration
+
+Defines the StrategyConfig dataclass that specifies which trading
+strategy to execute and its associated parameters.
+"""
+
 from dataclasses import dataclass, field
 from typing import Any
 

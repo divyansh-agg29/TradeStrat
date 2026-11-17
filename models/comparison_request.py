@@ -1,3 +1,10 @@
+"""
+Comparison Request
+
+Defines the ComparisonRequest dataclass that carries configuration
+for running multiple strategies against the same market data.
+"""
+
 from dataclasses import dataclass, field
 from models.strategy_config import StrategyConfig
 

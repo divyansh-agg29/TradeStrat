@@ -1,3 +1,11 @@
+"""
+Position Sizing Rules
+
+Implements position sizing rule classes (all-in, fixed amount,
+fixed percentage, Kelly criterion, risk-based) and their registry
+for dynamic resolution by the Position Sizing Manager.
+"""
+
 from dataclasses import dataclass
 
 

@@ -1,3 +1,10 @@
+"""
+Risk Configuration
+
+Defines the RiskConfig dataclass used to specify stop-loss
+and take-profit rules for a backtest.
+"""
+
 from dataclasses import dataclass
 
 

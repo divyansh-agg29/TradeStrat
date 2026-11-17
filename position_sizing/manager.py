@@ -1,8 +1,18 @@
+"""
+Position Sizing Manager
+
+Resolves position sizing configurations into concrete rule objects
+and calculates the number of shares to buy for each trade.
+"""
+
 from position_sizing.config import PositionSizingConfig
 from position_sizing.rules import (
     AllInPositionSizing,
     POSITION_SIZING_REGISTRY,
 )
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class PositionSizingManager:
@@ -24,6 +34,7 @@ class PositionSizingManager:
 
         if config is None or config.sizing_type is None:
             self._rule = AllInPositionSizing()
+            logger.debug("Position sizing defaulting to all-in.")
         else:
             rule_class = POSITION_SIZING_REGISTRY.get(config.sizing_type)
 
@@ -34,6 +45,7 @@ class PositionSizingManager:
 
             params = config.sizing_parameters or {}
             self._rule = rule_class(**params)
+            logger.debug("Position sizing rule resolved: %s", config.sizing_type)
 
     def calculate_shares_to_buy(
         self,

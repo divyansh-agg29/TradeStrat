@@ -1,3 +1,10 @@
+"""
+Backtest Result
+
+Defines the BacktestResult dataclass that packages the outputs
+of the Portfolio Simulator and the Analytics Engine.
+"""
+
 from dataclasses import dataclass, field
 
 from analytics import AnalyticsResult

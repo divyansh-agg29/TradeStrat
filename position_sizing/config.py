@@ -1,3 +1,10 @@
+"""
+Position Sizing Configuration
+
+Defines the PositionSizingConfig dataclass used to specify
+how trade sizes are calculated during portfolio simulation.
+"""
+
 from dataclasses import dataclass
 
 

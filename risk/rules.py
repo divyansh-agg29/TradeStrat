@@ -1,3 +1,10 @@
+"""
+Risk Rules
+
+Implements stop-loss and take-profit rule classes and their
+registries for dynamic resolution by the Risk Manager.
+"""
+
 from dataclasses import dataclass
 
 
