@@ -39,11 +39,11 @@ class RiskConfig:
     take_profit_parameters: dict | None = None
 
     def __post_init__(self) -> None:
-        if self.stop_loss_type is not None and not self.stop_loss_parameters:
+        if self.stop_loss_type is not None and self.stop_loss_parameters is None:
             raise ValueError(
                 "stop_loss_parameters are required when stop_loss_type is set"
             )
-        if self.take_profit_type is not None and not self.take_profit_parameters:
+        if self.take_profit_type is not None and self.take_profit_parameters is None:
             raise ValueError(
                 "take_profit_parameters are required when take_profit_type is set"
             )

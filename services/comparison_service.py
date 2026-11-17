@@ -106,6 +106,9 @@ def run_comparison(
                 )
             )
 
+    if all(not r.success for r in strategy_results):
+        logger.warning("All %d strategies failed in comparison.", len(strategy_results))
+
     logger.info("Comparison completed.")
 
     return ComparisonResult(
