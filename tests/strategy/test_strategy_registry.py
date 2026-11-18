@@ -21,31 +21,31 @@ EXPECTED_STRATEGIES = {
 }
 
 
-def test_registry_contains_exactly_expected_strategies():
-    """
-    The registry should contain all known strategies and nothing extra.
-    """
+class TestStrategyRegistry:
 
-    assert set(STRATEGY_REGISTRY.keys()) == set(EXPECTED_STRATEGIES.keys())
+    def test_contains_exactly_expected_strategies(self):
+        """
+        The registry should contain all known strategies and nothing extra.
+        """
 
+        assert set(STRATEGY_REGISTRY.keys()) == set(EXPECTED_STRATEGIES.keys())
 
-@pytest.mark.parametrize(
-    "name, expected_fn",
-    EXPECTED_STRATEGIES.items(),
-)
-def test_strategy_maps_to_correct_function(name, expected_fn):
-    """
-    Each strategy key should map to its implementation function.
-    """
+    @pytest.mark.parametrize(
+        "name, expected_fn",
+        EXPECTED_STRATEGIES.items(),
+    )
+    def test_strategy_maps_to_correct_function(self, name, expected_fn):
+        """
+        Each strategy key should map to its implementation function.
+        """
 
-    assert STRATEGY_REGISTRY[name] is expected_fn
+        assert STRATEGY_REGISTRY[name] is expected_fn
 
+    def test_all_registered_strategies_are_callable(self):
+        """
+        Every registered strategy implementation should be callable.
+        """
 
-def test_all_registered_strategies_are_callable():
-    """
-    Every registered strategy implementation should be callable.
-    """
+        for strategy_function in STRATEGY_REGISTRY.values():
 
-    for strategy_function in STRATEGY_REGISTRY.values():
-
-        assert callable(strategy_function)
+            assert callable(strategy_function)

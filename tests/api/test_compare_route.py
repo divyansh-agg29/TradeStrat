@@ -34,228 +34,224 @@ def _create_compare_payload(num_strategies=2):
     }
 
 
-# ── Success ───────────────────────────────────────────────────
+class TestCompareSuccess:
+
+    @patch("api.routes.serialize_comparison_result")
+    @patch("api.routes.run_comparison")
+    def test_valid_request(
+        self,
+        mock_run_comparison,
+        mock_serializer,
+        client,
+    ):
+        """
+        A valid comparison request should return HTTP 200.
+        """
+
+        mock_run_comparison.return_value = MagicMock()
+
+        mock_serializer.return_value = {
+            "common": {
+                "ticker": "RELIANCE.NS",
+                "start_date": "2022-01-01",
+                "end_date": "2023-01-01",
+                "initial_capital": 100000,
+                "risk_free_rate": 0.06,
+            },
+            "benchmark": None,
+            "results": [
+                {"strategy": {"type": "sma_crossover"}, "success": True},
+                {"strategy": {"type": "ema_crossover"}, "success": True},
+            ],
+        }
+
+        response = client.post(
+            "/compare",
+            json=_create_compare_payload(2),
+        )
+
+        assert response.status_code == 200
+
+        data = response.get_json()
+
+        assert data["success"] is True
+        assert "data" in data
+        assert len(data["data"]["results"]) == 2
+
+        mock_run_comparison.assert_called_once()
+        mock_serializer.assert_called_once()
 
 
-@patch("api.routes.serialize_comparison_result")
-@patch("api.routes.run_comparison")
-def test_compare_endpoint_success(
-    mock_run_comparison,
-    mock_serializer,
-    client,
-):
-    """
-    A valid comparison request should return HTTP 200.
-    """
+class TestCompareValidation:
 
-    mock_run_comparison.return_value = MagicMock()
+    def test_invalid_json(self, client):
+        """
+        Invalid JSON should return HTTP 400.
+        """
 
-    mock_serializer.return_value = {
-        "common": {
-            "ticker": "RELIANCE.NS",
-            "start_date": "2022-01-01",
-            "end_date": "2023-01-01",
-            "initial_capital": 100000,
-            "risk_free_rate": 0.06,
-        },
-        "benchmark": None,
-        "results": [
-            {"strategy": {"type": "sma_crossover"}, "success": True},
-            {"strategy": {"type": "ema_crossover"}, "success": True},
-        ],
-    }
+        response = client.post(
+            "/compare",
+            data="this is not valid json",
+            content_type="application/json",
+        )
 
-    response = client.post(
-        "/compare",
-        json=_create_compare_payload(2),
-    )
+        assert response.status_code == 400
 
-    assert response.status_code == 200
+        data = response.get_json()
 
-    data = response.get_json()
+        assert data["success"] is False
+        assert data["error"]["type"] == "ValueError"
+        assert (
+            data["error"]["message"]
+            == "Request body must contain valid JSON."
+        )
 
-    assert data["success"] is True
-    assert "data" in data
-    assert len(data["data"]["results"]) == 2
+    def test_too_few_strategies(self, client):
+        """
+        A payload with fewer than 2 strategies should return HTTP 400.
+        """
 
-    mock_run_comparison.assert_called_once()
-    mock_serializer.assert_called_once()
+        response = client.post(
+            "/compare",
+            json=_create_compare_payload(1),
+        )
 
+        assert response.status_code == 400
 
-# ── Validation Errors ─────────────────────────────────────────
+        data = response.get_json()
 
+        assert data["success"] is False
+        assert "At least 2 strategies" in data["error"]["message"]
 
-def test_compare_endpoint_invalid_json(client):
-    """
-    Invalid JSON should return HTTP 400.
-    """
+    @patch("api.routes.run_comparison")
+    def test_too_many_strategies(
+        self,
+        mock_run_comparison,
+        client,
+    ):
+        """
+        A payload with more than 6 strategies should return HTTP 400.
+        """
 
-    response = client.post(
-        "/compare",
-        data="this is not valid json",
-        content_type="application/json",
-    )
+        mock_run_comparison.side_effect = ValueError(
+            "A comparison requires between 2 and 6 strategies."
+        )
 
-    assert response.status_code == 400
+        response = client.post(
+            "/compare",
+            json=_create_compare_payload(7),
+        )
 
-    data = response.get_json()
+        assert response.status_code == 400
 
-    assert data["success"] is False
-    assert data["error"]["type"] == "ValueError"
-    assert (
-        data["error"]["message"]
-        == "Request body must contain valid JSON."
-    )
+        data = response.get_json()
 
+        assert data["success"] is False
+        assert "2 and 6" in data["error"]["message"]
 
-def test_compare_endpoint_too_few_strategies(
-    client,
-):
-    """
-    A payload with fewer than 2 strategies should return HTTP 400.
-    """
+    @patch("api.routes.run_comparison")
+    def test_missing_ticker(
+        self,
+        mock_run_comparison,
+        client,
+    ):
+        """
+        A missing/empty ticker should return HTTP 400 when the
+        service raises a ValueError.
+        """
 
-    response = client.post(
-        "/compare",
-        json=_create_compare_payload(1),
-    )
+        mock_run_comparison.side_effect = ValueError(
+            "Invalid ticker."
+        )
 
-    assert response.status_code == 400
+        payload = _create_compare_payload(2)
+        payload["ticker"] = ""
 
-    data = response.get_json()
+        response = client.post(
+            "/compare",
+            json=payload,
+        )
 
-    assert data["success"] is False
-    assert "At least 2 strategies" in data["error"]["message"]
+        assert response.status_code == 400
 
+        data = response.get_json()
 
-@patch("api.routes.run_comparison")
-def test_compare_endpoint_too_many_strategies(
-    mock_run_comparison,
-    client,
-):
-    """
-    A payload with more than 6 strategies should return HTTP 400.
-    """
-
-    mock_run_comparison.side_effect = ValueError(
-        "A comparison requires between 2 and 6 strategies."
-    )
-
-    response = client.post(
-        "/compare",
-        json=_create_compare_payload(7),
-    )
-
-    assert response.status_code == 400
-
-    data = response.get_json()
-
-    assert data["success"] is False
-    assert "2 and 6" in data["error"]["message"]
+        assert data["success"] is False
 
 
-@patch("api.routes.run_comparison")
-def test_compare_endpoint_missing_ticker(
-    mock_run_comparison,
-    client,
-):
-    """
-    A missing/empty ticker should return HTTP 400 when the
-    service raises a ValueError.
-    """
+class TestComparePartialFailure:
 
-    mock_run_comparison.side_effect = ValueError(
-        "Invalid ticker."
-    )
+    @patch("api.routes.serialize_comparison_result")
+    @patch("api.routes.run_comparison")
+    def test_mixed_success_and_failure(
+        self,
+        mock_run_comparison,
+        mock_serializer,
+        client,
+    ):
+        """
+        When some strategies fail individually, the endpoint should
+        still return HTTP 200 with mixed success/failure results.
+        """
 
-    payload = _create_compare_payload(2)
-    payload["ticker"] = ""
+        mock_run_comparison.return_value = MagicMock()
 
-    response = client.post(
-        "/compare",
-        json=payload,
-    )
+        mock_serializer.return_value = {
+            "common": {},
+            "benchmark": None,
+            "results": [
+                {"strategy": {"type": "sma_crossover"}, "success": True, "error": None},
+                {"strategy": {"type": "ema_crossover"}, "success": False, "error": "No trades"},
+                {"strategy": {"type": "macd_crossover"}, "success": True, "error": None},
+            ],
+        }
 
-    assert response.status_code == 400
+        response = client.post(
+            "/compare",
+            json=_create_compare_payload(3),
+        )
 
-    data = response.get_json()
+        assert response.status_code == 200
 
-    assert data["success"] is False
+        data = response.get_json()
 
+        assert data["success"] is True
 
-# ── Partial Failure ───────────────────────────────────────────
-
-
-@patch("api.routes.serialize_comparison_result")
-@patch("api.routes.run_comparison")
-def test_compare_endpoint_partial_failure(
-    mock_run_comparison,
-    mock_serializer,
-    client,
-):
-    """
-    When some strategies fail individually, the endpoint should
-    still return HTTP 200 with mixed success/failure results.
-    """
-
-    mock_run_comparison.return_value = MagicMock()
-
-    mock_serializer.return_value = {
-        "common": {},
-        "benchmark": None,
-        "results": [
-            {"strategy": {"type": "sma_crossover"}, "success": True, "error": None},
-            {"strategy": {"type": "ema_crossover"}, "success": False, "error": "No trades"},
-            {"strategy": {"type": "macd_crossover"}, "success": True, "error": None},
-        ],
-    }
-
-    response = client.post(
-        "/compare",
-        json=_create_compare_payload(3),
-    )
-
-    assert response.status_code == 200
-
-    data = response.get_json()
-
-    assert data["success"] is True
-
-    results = data["data"]["results"]
-    assert results[0]["success"] is True
-    assert results[1]["success"] is False
-    assert results[1]["error"] == "No trades"
-    assert results[2]["success"] is True
+        results = data["data"]["results"]
+        assert results[0]["success"] is True
+        assert results[1]["success"] is False
+        assert results[1]["error"] == "No trades"
+        assert results[2]["success"] is True
 
 
-# ── Internal Server Error ─────────────────────────────────────
+class TestCompareErrorHandling:
 
+    @patch("api.routes.run_comparison")
+    def test_internal_server_error(
+        self,
+        mock_run_comparison,
+        client,
+    ):
+        """
+        Unexpected exceptions should return HTTP 500.
+        """
 
-@patch("api.routes.run_comparison")
-def test_compare_endpoint_internal_server_error(
-    mock_run_comparison,
-    client,
-):
-    """
-    Unexpected exceptions should return HTTP 500.
-    """
+        mock_run_comparison.side_effect = RuntimeError(
+            "Unexpected failure."
+        )
 
-    mock_run_comparison.side_effect = RuntimeError(
-        "Unexpected failure."
-    )
+        response = client.post(
+            "/compare",
+            json=_create_compare_payload(2),
+        )
 
-    response = client.post(
-        "/compare",
-        json=_create_compare_payload(2),
-    )
+        assert response.status_code == 500
 
-    assert response.status_code == 500
+        data = response.get_json()
 
-    data = response.get_json()
-
-    assert data["success"] is False
-    assert data["error"]["type"] == "RuntimeError"
-    assert (
-        data["error"]["message"]
-        == "An unexpected internal error occurred."
-    )
+        assert data["success"] is False
+        assert data["error"]["type"] == "RuntimeError"
+        assert (
+            data["error"]["message"]
+            == "An unexpected internal error occurred."
+        )

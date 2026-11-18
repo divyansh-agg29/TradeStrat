@@ -9,9 +9,6 @@ from serialization.chart_serializer import build_charts
 from strategy import IndicatorConfig
 
 
-# ── Helpers ───────────────────────────────────────────────────
-
-
 def _make_portfolio_history(
     indicator_columns=None,
 ):
@@ -101,343 +98,331 @@ def _make_empty_trade_history():
     return pd.DataFrame()
 
 
-# ── Price Chart ──────────────────────────────────────────────
-
-
-def test_build_price_chart_includes_candlestick_trace():
-    """
-    Price chart should always include a candlestick OHLC trace.
-    """
-
-    charts = build_charts(
-        _make_portfolio_history(),
-        _make_trade_history(),
-        _make_analytics_history(),
-    )
-
-    price_traces = charts["price_chart"]["traces"]
-    ohlc_trace = next(t for t in price_traces if t["id"] == "ohlc")
-
-    assert ohlc_trace["type"] == "candlestick"
-    assert ohlc_trace["name"] == "Price"
-    assert len(ohlc_trace["x"]) == 3
-    assert ohlc_trace["open"] == [100.0, 101.0, 102.0]
-    assert ohlc_trace["high"] == [105.0, 106.0, 107.0]
-    assert ohlc_trace["low"] == [99.0, 100.0, 101.0]
-    assert ohlc_trace["close"] == [101.0, 103.0, 105.0]
-
-
-def test_build_price_chart_includes_indicator_traces():
-    """
-    Price chart should include indicator overlay traces.
-    """
-
-    charts = build_charts(
-        _make_portfolio_history(
-            indicator_columns={
-                "SMA20": [100.0, 101.0, 102.0],
-                "EMA50": [99.0, 100.0, 101.0],
-            }
-        ),
-        _make_trade_history(),
-        _make_analytics_history(),
-    )
-
-    price_traces = charts["price_chart"]["traces"]
-    trace_ids = [t["id"] for t in price_traces]
-
-    assert "sma20" in trace_ids
-    assert "ema50" in trace_ids
-
-    sma_trace = next(t for t in price_traces if t["id"] == "sma20")
-    assert sma_trace["type"] == "indicator_line"
-    assert sma_trace["name"] == "SMA20"
-
-
-def test_build_price_chart_excludes_non_indicator_columns():
-    """
-    Columns like Signal, Cash, Shares should not appear as traces.
-    """
-
-    charts = build_charts(
-        _make_portfolio_history(),
-        _make_trade_history(),
-        _make_analytics_history(),
-    )
-
-    price_traces = charts["price_chart"]["traces"]
-    trace_ids = [t["id"] for t in price_traces]
-
-    assert "signal" not in trace_ids
-    assert "cash" not in trace_ids
-    assert "position" not in trace_ids
-
-
-def test_build_price_chart_uses_indicator_metadata():
-    """
-    When indicator_metadata is provided, traces should use metadata
-    instead of prefix detection.
-    """
-
-    indicator_metadata = [
-        IndicatorConfig(
-            column="SMA20",
-            name="Short SMA",
-            display="overlay",
-        ),
-        IndicatorConfig(
-            column="RSI14",
-            name="RSI",
-            display="subplot",
-            subplot_id="rsi",
-            y_range=(0, 100),
-        ),
-    ]
-
-    charts = build_charts(
-        _make_portfolio_history(
-            indicator_columns={
-                "SMA20": [100.0, 101.0, 102.0],
-                "RSI14": [30.0, 50.0, 70.0],
-            }
-        ),
-        _make_trade_history(),
-        _make_analytics_history(),
-        indicator_metadata,
-    )
-
-    price_traces = charts["price_chart"]["traces"]
-
-    sma_trace = next(t for t in price_traces if t["id"] == "sma20")
-    assert sma_trace["name"] == "Short SMA"
-    assert sma_trace["display"] == "overlay"
-
-    rsi_trace = next(t for t in price_traces if t["id"] == "rsi14")
-    assert rsi_trace["name"] == "RSI"
-    assert rsi_trace["display"] == "subplot"
-    assert rsi_trace["subplot"] == "rsi"
-    assert rsi_trace["y_range"] == (0, 100)
-
-    subplots = charts["price_chart"]["subplots"]
-    assert len(subplots) == 2
-    assert subplots[0]["id"] == "main"
-    assert subplots[0]["height_ratio"] == 3
-    assert subplots[1]["id"] == "rsi"
-    assert subplots[1]["height_ratio"] == 1
-    assert subplots[1]["y_range"] == (0, 100)
-
-
-def test_build_price_chart_includes_execution_markers():
-    """
-    Price chart should include execution marker traces.
-    """
-
-    charts = build_charts(
-        _make_portfolio_history(),
-        _make_trade_history(),
-        _make_analytics_history(),
-    )
-
-    price_traces = charts["price_chart"]["traces"]
-    trace_ids = [t["id"] for t in price_traces]
-
-    assert "buy_executed" in trace_ids
-    assert "sell_signal_exit" in trace_ids
-
-
-def test_execution_markers_use_correct_category():
-    """
-    Each execution marker should have the correct category.
-    """
-
-    trades = [
-        {
-            "entry_date": pd.Timestamp("2020-01-02"),
-            "exit_date": pd.Timestamp("2020-01-03"),
-            "entry_price": 101.0,
-            "exit_price": 95.0,
-            "shares": 990,
-            "investment": 99990.0,
-            "exit_value": 94050.0,
-            "profit_loss": -5940.0,
-            "return_pct": -5.94,
-            "holding_period": 1,
-            "exit_reason": "stop_loss",
-            "stop_loss_price": 95.95,
-            "take_profit_price": None,
-        },
-        {
-            "entry_date": pd.Timestamp("2020-01-03"),
-            "exit_date": pd.Timestamp("2020-01-06"),
-            "entry_price": 103.0,
-            "exit_price": 120.0,
-            "shares": 990,
-            "investment": 101970.0,
-            "exit_value": 118800.0,
-            "profit_loss": 16830.0,
-            "return_pct": 16.50,
-            "holding_period": 1,
-            "exit_reason": "take_profit",
-            "stop_loss_price": None,
-            "take_profit_price": 120.0,
-        },
-    ]
-
-    charts = build_charts(
-        _make_portfolio_history(),
-        _make_trade_history(trades),
-        _make_analytics_history(),
-    )
-
-    price_traces = charts["price_chart"]["traces"]
-
-    buy_marker = next(t for t in price_traces if t["id"] == "buy_executed")
-    assert buy_marker["category"] == "buy"
-    assert len(buy_marker["x"]) == 2
-
-    sl_marker = next(t for t in price_traces if t["id"] == "stop_loss_exit")
-    assert sl_marker["category"] == "stop_loss"
-    assert len(sl_marker["x"]) == 1
-
-    tp_marker = next(t for t in price_traces if t["id"] == "take_profit_exit")
-    assert tp_marker["category"] == "take_profit"
-    assert len(tp_marker["x"]) == 1
-
-
-def test_empty_trade_history_produces_no_markers():
-    """
-    An empty trade history should produce no execution markers.
-    """
-
-    charts = build_charts(
-        _make_portfolio_history(),
-        _make_empty_trade_history(),
-        _make_analytics_history(),
-    )
-
-    price_traces = charts["price_chart"]["traces"]
-    marker_traces = [t for t in price_traces if t["type"] == "execution_marker"]
-
-    assert len(marker_traces) == 0
-
-
-# ── Signal Markers ───────────────────────────────────────────
-
-
-def test_build_price_chart_includes_signal_markers():
-    """
-    Price chart should include signal marker traces.
-    """
-
-    charts = build_charts(
-        _make_portfolio_history(),
-        _make_trade_history(),
-        _make_analytics_history(),
-    )
-
-    price_traces = charts["price_chart"]["traces"]
-    trace_ids = [t["id"] for t in price_traces]
-
-    assert "buy_signal" in trace_ids
-    assert "sell_signal" in trace_ids
-
-    buy_sig = next(t for t in price_traces if t["id"] == "buy_signal")
-    assert buy_sig["type"] == "signal_marker"
-    assert buy_sig["group"] == "signals"
-    assert buy_sig["category"] == "buy"
-
-    sell_sig = next(t for t in price_traces if t["id"] == "sell_signal")
-    assert sell_sig["type"] == "signal_marker"
-    assert sell_sig["group"] == "signals"
-    assert sell_sig["category"] == "sell"
-
-
-def test_execution_markers_have_executions_group():
-    """
-    All execution markers should have group='executions'.
-    """
-
-    charts = build_charts(
-        _make_portfolio_history(),
-        _make_trade_history(),
-        _make_analytics_history(),
-    )
-
-    price_traces = charts["price_chart"]["traces"]
-    exec_traces = [t for t in price_traces if t["type"] == "execution_marker"]
-
-    for trace in exec_traces:
-        assert trace["group"] == "executions"
-
-
-# ── Equity Chart ─────────────────────────────────────────────
-
-
-def test_build_equity_chart_includes_strategy_and_benchmark():
-    """
-    Equity chart should include strategy and benchmark traces.
-    """
-
-    charts = build_charts(
-        _make_portfolio_history(),
-        _make_trade_history(),
-        _make_analytics_history(),
-    )
-
-    equity_traces = charts["equity_chart"]["traces"]
-    trace_ids = [t["id"] for t in equity_traces]
-
-    assert "strategy" in trace_ids
-    assert "benchmark" in trace_ids
-
-    strategy_trace = next(t for t in equity_traces if t["id"] == "strategy")
-    assert strategy_trace["type"] == "line"
-    assert strategy_trace["y"] == [100000.0, 101000.0, 102000.0]
-
-    benchmark_trace = next(t for t in equity_traces if t["id"] == "benchmark")
-    assert benchmark_trace["type"] == "benchmark_line"
-    assert benchmark_trace["y"] == [100000.0, 100500.0, 101000.0]
-
-
-# ── Drawdown Chart ───────────────────────────────────────────
-
-
-def test_build_drawdown_chart_includes_drawdown_trace():
-    """
-    Drawdown chart should include a drawdown area trace.
-    """
-
-    charts = build_charts(
-        _make_portfolio_history(),
-        _make_trade_history(),
-        _make_analytics_history(),
-    )
-
-    dd_traces = charts["drawdown_chart"]["traces"]
-
-    assert len(dd_traces) == 1
-
-    dd_trace = dd_traces[0]
-    assert dd_trace["id"] == "drawdown"
-    assert dd_trace["type"] == "area"
-    assert dd_trace["y"] == [0.0, 0.0, 500.0]
-
-
-# ── Top-Level Structure ──────────────────────────────────────
-
-
-def test_build_charts_returns_all_chart_keys():
-    """
-    build_charts should return price, equity, and drawdown charts.
-    """
-
-    charts = build_charts(
-        _make_portfolio_history(),
-        _make_trade_history(),
-        _make_analytics_history(),
-    )
-
-    assert set(charts.keys()) == {"price_chart", "equity_chart", "drawdown_chart"}
-    assert "traces" in charts["price_chart"]
-    assert "traces" in charts["equity_chart"]
-    assert "traces" in charts["drawdown_chart"]
+class TestPriceChart:
+
+    def test_build_price_chart_includes_candlestick_trace(self):
+        """
+        Price chart should always include a candlestick OHLC trace.
+        """
+
+        charts = build_charts(
+            _make_portfolio_history(),
+            _make_trade_history(),
+            _make_analytics_history(),
+        )
+
+        price_traces = charts["price_chart"]["traces"]
+        ohlc_trace = next(t for t in price_traces if t["id"] == "ohlc")
+
+        assert ohlc_trace["type"] == "candlestick"
+        assert ohlc_trace["name"] == "Price"
+        assert len(ohlc_trace["x"]) == 3
+        assert ohlc_trace["open"] == [100.0, 101.0, 102.0]
+        assert ohlc_trace["high"] == [105.0, 106.0, 107.0]
+        assert ohlc_trace["low"] == [99.0, 100.0, 101.0]
+        assert ohlc_trace["close"] == [101.0, 103.0, 105.0]
+
+    def test_build_price_chart_includes_indicator_traces(self):
+        """
+        Price chart should include indicator overlay traces.
+        """
+
+        charts = build_charts(
+            _make_portfolio_history(
+                indicator_columns={
+                    "SMA20": [100.0, 101.0, 102.0],
+                    "EMA50": [99.0, 100.0, 101.0],
+                }
+            ),
+            _make_trade_history(),
+            _make_analytics_history(),
+        )
+
+        price_traces = charts["price_chart"]["traces"]
+        trace_ids = [t["id"] for t in price_traces]
+
+        assert "sma20" in trace_ids
+        assert "ema50" in trace_ids
+
+        sma_trace = next(t for t in price_traces if t["id"] == "sma20")
+        assert sma_trace["type"] == "indicator_line"
+        assert sma_trace["name"] == "SMA20"
+
+    def test_build_price_chart_excludes_non_indicator_columns(self):
+        """
+        Columns like Signal, Cash, Shares should not appear as traces.
+        """
+
+        charts = build_charts(
+            _make_portfolio_history(),
+            _make_trade_history(),
+            _make_analytics_history(),
+        )
+
+        price_traces = charts["price_chart"]["traces"]
+        trace_ids = [t["id"] for t in price_traces]
+
+        assert "signal" not in trace_ids
+        assert "cash" not in trace_ids
+        assert "position" not in trace_ids
+
+    def test_build_price_chart_uses_indicator_metadata(self):
+        """
+        When indicator_metadata is provided, traces should use metadata
+        instead of prefix detection.
+        """
+
+        indicator_metadata = [
+            IndicatorConfig(
+                column="SMA20",
+                name="Short SMA",
+                display="overlay",
+            ),
+            IndicatorConfig(
+                column="RSI14",
+                name="RSI",
+                display="subplot",
+                subplot_id="rsi",
+                y_range=(0, 100),
+            ),
+        ]
+
+        charts = build_charts(
+            _make_portfolio_history(
+                indicator_columns={
+                    "SMA20": [100.0, 101.0, 102.0],
+                    "RSI14": [30.0, 50.0, 70.0],
+                }
+            ),
+            _make_trade_history(),
+            _make_analytics_history(),
+            indicator_metadata,
+        )
+
+        price_traces = charts["price_chart"]["traces"]
+
+        sma_trace = next(t for t in price_traces if t["id"] == "sma20")
+        assert sma_trace["name"] == "Short SMA"
+        assert sma_trace["display"] == "overlay"
+
+        rsi_trace = next(t for t in price_traces if t["id"] == "rsi14")
+        assert rsi_trace["name"] == "RSI"
+        assert rsi_trace["display"] == "subplot"
+        assert rsi_trace["subplot"] == "rsi"
+        assert rsi_trace["y_range"] == (0, 100)
+
+        subplots = charts["price_chart"]["subplots"]
+        assert len(subplots) == 2
+        assert subplots[0]["id"] == "main"
+        assert subplots[0]["height_ratio"] == 3
+        assert subplots[1]["id"] == "rsi"
+        assert subplots[1]["height_ratio"] == 1
+        assert subplots[1]["y_range"] == (0, 100)
+
+    def test_build_price_chart_includes_execution_markers(self):
+        """
+        Price chart should include execution marker traces.
+        """
+
+        charts = build_charts(
+            _make_portfolio_history(),
+            _make_trade_history(),
+            _make_analytics_history(),
+        )
+
+        price_traces = charts["price_chart"]["traces"]
+        trace_ids = [t["id"] for t in price_traces]
+
+        assert "buy_executed" in trace_ids
+        assert "sell_signal_exit" in trace_ids
+
+    def test_execution_markers_use_correct_category(self):
+        """
+        Each execution marker should have the correct category.
+        """
+
+        trades = [
+            {
+                "entry_date": pd.Timestamp("2020-01-02"),
+                "exit_date": pd.Timestamp("2020-01-03"),
+                "entry_price": 101.0,
+                "exit_price": 95.0,
+                "shares": 990,
+                "investment": 99990.0,
+                "exit_value": 94050.0,
+                "profit_loss": -5940.0,
+                "return_pct": -5.94,
+                "holding_period": 1,
+                "exit_reason": "stop_loss",
+                "stop_loss_price": 95.95,
+                "take_profit_price": None,
+            },
+            {
+                "entry_date": pd.Timestamp("2020-01-03"),
+                "exit_date": pd.Timestamp("2020-01-06"),
+                "entry_price": 103.0,
+                "exit_price": 120.0,
+                "shares": 990,
+                "investment": 101970.0,
+                "exit_value": 118800.0,
+                "profit_loss": 16830.0,
+                "return_pct": 16.50,
+                "holding_period": 1,
+                "exit_reason": "take_profit",
+                "stop_loss_price": None,
+                "take_profit_price": 120.0,
+            },
+        ]
+
+        charts = build_charts(
+            _make_portfolio_history(),
+            _make_trade_history(trades),
+            _make_analytics_history(),
+        )
+
+        price_traces = charts["price_chart"]["traces"]
+
+        buy_marker = next(t for t in price_traces if t["id"] == "buy_executed")
+        assert buy_marker["category"] == "buy"
+        assert len(buy_marker["x"]) == 2
+
+        sl_marker = next(t for t in price_traces if t["id"] == "stop_loss_exit")
+        assert sl_marker["category"] == "stop_loss"
+        assert len(sl_marker["x"]) == 1
+
+        tp_marker = next(t for t in price_traces if t["id"] == "take_profit_exit")
+        assert tp_marker["category"] == "take_profit"
+        assert len(tp_marker["x"]) == 1
+
+    def test_empty_trade_history_produces_no_markers(self):
+        """
+        An empty trade history should produce no execution markers.
+        """
+
+        charts = build_charts(
+            _make_portfolio_history(),
+            _make_empty_trade_history(),
+            _make_analytics_history(),
+        )
+
+        price_traces = charts["price_chart"]["traces"]
+        marker_traces = [t for t in price_traces if t["type"] == "execution_marker"]
+
+        assert len(marker_traces) == 0
+
+
+class TestChartSignalMarkers:
+
+    def test_build_price_chart_includes_signal_markers(self):
+        """
+        Price chart should include signal marker traces.
+        """
+
+        charts = build_charts(
+            _make_portfolio_history(),
+            _make_trade_history(),
+            _make_analytics_history(),
+        )
+
+        price_traces = charts["price_chart"]["traces"]
+        trace_ids = [t["id"] for t in price_traces]
+
+        assert "buy_signal" in trace_ids
+        assert "sell_signal" in trace_ids
+
+        buy_sig = next(t for t in price_traces if t["id"] == "buy_signal")
+        assert buy_sig["type"] == "signal_marker"
+        assert buy_sig["group"] == "signals"
+        assert buy_sig["category"] == "buy"
+
+        sell_sig = next(t for t in price_traces if t["id"] == "sell_signal")
+        assert sell_sig["type"] == "signal_marker"
+        assert sell_sig["group"] == "signals"
+        assert sell_sig["category"] == "sell"
+
+    def test_execution_markers_have_executions_group(self):
+        """
+        All execution markers should have group='executions'.
+        """
+
+        charts = build_charts(
+            _make_portfolio_history(),
+            _make_trade_history(),
+            _make_analytics_history(),
+        )
+
+        price_traces = charts["price_chart"]["traces"]
+        exec_traces = [t for t in price_traces if t["type"] == "execution_marker"]
+
+        for trace in exec_traces:
+            assert trace["group"] == "executions"
+
+
+class TestEquityChart:
+
+    def test_build_equity_chart_includes_strategy_and_benchmark(self):
+        """
+        Equity chart should include strategy and benchmark traces.
+        """
+
+        charts = build_charts(
+            _make_portfolio_history(),
+            _make_trade_history(),
+            _make_analytics_history(),
+        )
+
+        equity_traces = charts["equity_chart"]["traces"]
+        trace_ids = [t["id"] for t in equity_traces]
+
+        assert "strategy" in trace_ids
+        assert "benchmark" in trace_ids
+
+        strategy_trace = next(t for t in equity_traces if t["id"] == "strategy")
+        assert strategy_trace["type"] == "line"
+        assert strategy_trace["y"] == [100000.0, 101000.0, 102000.0]
+
+        benchmark_trace = next(t for t in equity_traces if t["id"] == "benchmark")
+        assert benchmark_trace["type"] == "benchmark_line"
+        assert benchmark_trace["y"] == [100000.0, 100500.0, 101000.0]
+
+
+class TestDrawdownChart:
+
+    def test_build_drawdown_chart_includes_drawdown_trace(self):
+        """
+        Drawdown chart should include a drawdown area trace.
+        """
+
+        charts = build_charts(
+            _make_portfolio_history(),
+            _make_trade_history(),
+            _make_analytics_history(),
+        )
+
+        dd_traces = charts["drawdown_chart"]["traces"]
+
+        assert len(dd_traces) == 1
+
+        dd_trace = dd_traces[0]
+        assert dd_trace["id"] == "drawdown"
+        assert dd_trace["type"] == "area"
+        assert dd_trace["y"] == [0.0, 0.0, 500.0]
+
+
+class TestChartStructure:
+
+    def test_build_charts_returns_all_chart_keys(self):
+        """
+        build_charts should return price, equity, and drawdown charts.
+        """
+
+        charts = build_charts(
+            _make_portfolio_history(),
+            _make_trade_history(),
+            _make_analytics_history(),
+        )
+
+        assert set(charts.keys()) == {"price_chart", "equity_chart", "drawdown_chart"}
+        assert "traces" in charts["price_chart"]
+        assert "traces" in charts["equity_chart"]
+        assert "traces" in charts["drawdown_chart"]

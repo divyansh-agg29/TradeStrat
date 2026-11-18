@@ -27,219 +27,216 @@ def sample_dataframe():
     )
 
 
-def test_calculate_macd_success(sample_dataframe):
-    """Test successful MACD calculation."""
+class TestMACDCalculation:
 
-    result = calculate_macd(sample_dataframe)
+    def test_success(self, sample_dataframe):
+        """Test successful MACD calculation."""
 
-    assert "MACD_12_26_9" in result.columns
-    assert "MACD_Signal_12_26_9" in result.columns
-    assert "MACD_Histogram_12_26_9" in result.columns
+        result = calculate_macd(sample_dataframe)
 
-    assert result["MACD_12_26_9"].notna().sum() > 0
-    assert result["MACD_Signal_12_26_9"].notna().sum() > 0
-    assert result["MACD_Histogram_12_26_9"].notna().sum() > 0
+        assert "MACD_12_26_9" in result.columns
+        assert "MACD_Signal_12_26_9" in result.columns
+        assert "MACD_Histogram_12_26_9" in result.columns
+
+        assert result["MACD_12_26_9"].notna().sum() > 0
+        assert result["MACD_Signal_12_26_9"].notna().sum() > 0
+        assert result["MACD_Histogram_12_26_9"].notna().sum() > 0
+
+    def test_original_dataframe_not_modified(self, sample_dataframe):
+        """Ensure the original DataFrame is not modified."""
+
+        original = sample_dataframe.copy()
+
+        result = calculate_macd(sample_dataframe)
+
+        assert "MACD_12_26_9" not in sample_dataframe.columns
+        assert "MACD_Signal_12_26_9" not in sample_dataframe.columns
+        assert "MACD_Histogram_12_26_9" not in sample_dataframe.columns
+
+        pd.testing.assert_frame_equal(sample_dataframe, original)
+
+        assert "MACD_12_26_9" in result.columns
+
+    def test_existing_columns_are_preserved(self, sample_dataframe):
+        """Verify original columns remain unchanged."""
+
+        result = calculate_macd(sample_dataframe)
+
+        expected_columns = [
+            "Open",
+            "High",
+            "Low",
+            "Close",
+            "Volume",
+            "MACD_12_26_9",
+            "MACD_Signal_12_26_9",
+            "MACD_Histogram_12_26_9",
+        ]
+
+        assert list(result.columns) == expected_columns
+
+    def test_custom_price_column(self, sample_dataframe):
+        """Verify MACD can be calculated on a custom column."""
+
+        result = calculate_macd(
+            sample_dataframe,
+            price_column="Open",
+        )
+
+        assert "MACD_12_26_9" in result.columns
+        assert "MACD_Signal_12_26_9" in result.columns
+        assert "MACD_Histogram_12_26_9" in result.columns
+
+    def test_duplicate_indicator_raises_exception(self, sample_dataframe):
+        """Verify duplicate MACD configuration is rejected."""
+
+        result = calculate_macd(sample_dataframe)
+
+        with pytest.raises(
+            ValueError,
+            match="Indicator column 'MACD_12_26_9' already exists.",
+        ):
+            calculate_macd(result)
+
+    def test_multiple_macd_indicators_can_be_added(self, sample_dataframe):
+        """Verify multiple MACD configurations can coexist."""
+
+        result = calculate_macd(
+            sample_dataframe,
+            fast_period=12,
+            slow_period=26,
+            signal_period=9,
+        )
+
+        result = calculate_macd(
+            result,
+            fast_period=5,
+            slow_period=35,
+            signal_period=5,
+        )
+
+        assert "MACD_12_26_9" in result.columns
+        assert "MACD_Signal_12_26_9" in result.columns
+        assert "MACD_Histogram_12_26_9" in result.columns
+
+        assert "MACD_5_35_5" in result.columns
+        assert "MACD_Signal_5_35_5" in result.columns
+        assert "MACD_Histogram_5_35_5" in result.columns
+
+        assert len(result.columns) == 11
 
 
-def test_original_dataframe_not_modified(sample_dataframe):
-    """Ensure the original DataFrame is not modified."""
+class TestMACDValidation:
 
-    original = sample_dataframe.copy()
-
-    result = calculate_macd(sample_dataframe)
-
-    assert "MACD_12_26_9" not in sample_dataframe.columns
-    assert "MACD_Signal_12_26_9" not in sample_dataframe.columns
-    assert "MACD_Histogram_12_26_9" not in sample_dataframe.columns
-
-    pd.testing.assert_frame_equal(sample_dataframe, original)
-
-    assert "MACD_12_26_9" in result.columns
-
-
-def test_existing_columns_are_preserved(sample_dataframe):
-    """Verify original columns remain unchanged."""
-
-    result = calculate_macd(sample_dataframe)
-
-    expected_columns = [
-        "Open",
-        "High",
-        "Low",
-        "Close",
-        "Volume",
-        "MACD_12_26_9",
-        "MACD_Signal_12_26_9",
-        "MACD_Histogram_12_26_9",
-    ]
-
-    assert list(result.columns) == expected_columns
-
-
-def test_custom_price_column(sample_dataframe):
-    """Verify MACD can be calculated on a custom column."""
-
-    result = calculate_macd(
+    @pytest.mark.parametrize(
+        "fast_period, slow_period, signal_period",
+        [
+            (0, 26, 9),
+            (12, 0, 9),
+            (12, 26, 0),
+            (-1, 26, 9),
+            (12, -1, 9),
+            (12, 26, -1),
+        ],
+    )
+    def test_invalid_period_values(
+        self,
         sample_dataframe,
-        price_column="Open",
+        fast_period,
+        slow_period,
+        signal_period,
+    ):
+        """Verify non-positive periods raise ValueError."""
+
+        with pytest.raises(
+            ValueError,
+            match="must be greater than zero.",
+        ):
+            calculate_macd(
+                sample_dataframe,
+                fast_period=fast_period,
+                slow_period=slow_period,
+                signal_period=signal_period,
+            )
+
+    @pytest.mark.parametrize(
+        "fast_period, slow_period, signal_period",
+        [
+            (12.5, 26, 9),
+            ("12", 26, 9),
+            (12, "26", 9),
+            (12, 26, "9"),
+            (None, 26, 9),
+        ],
     )
-
-    assert "MACD_12_26_9" in result.columns
-    assert "MACD_Signal_12_26_9" in result.columns
-    assert "MACD_Histogram_12_26_9" in result.columns
-
-
-def test_duplicate_indicator_raises_exception(sample_dataframe):
-    """Verify duplicate MACD configuration is rejected."""
-
-    result = calculate_macd(sample_dataframe)
-
-    with pytest.raises(
-        ValueError,
-        match="Indicator column 'MACD_12_26_9' already exists.",
-    ):
-        calculate_macd(result)
-
-
-@pytest.mark.parametrize(
-    "fast_period, slow_period, signal_period",
-    [
-        (0, 26, 9),
-        (12, 0, 9),
-        (12, 26, 0),
-        (-1, 26, 9),
-        (12, -1, 9),
-        (12, 26, -1),
-    ],
-)
-def test_invalid_period_values(
-    sample_dataframe,
-    fast_period,
-    slow_period,
-    signal_period,
-):
-    """Verify non-positive periods raise ValueError."""
-
-    with pytest.raises(
-        ValueError,
-        match="must be greater than zero.",
-    ):
-        calculate_macd(
-            sample_dataframe,
-            fast_period=fast_period,
-            slow_period=slow_period,
-            signal_period=signal_period,
-        )
-
-
-@pytest.mark.parametrize(
-    "fast_period, slow_period, signal_period",
-    [
-        (12.5, 26, 9),
-        ("12", 26, 9),
-        (12, "26", 9),
-        (12, 26, "9"),
-        (None, 26, 9),
-    ],
-)
-def test_invalid_period_types(
-    sample_dataframe,
-    fast_period,
-    slow_period,
-    signal_period,
-):
-    """Verify invalid period types raise TypeError."""
-
-    with pytest.raises(
-        TypeError,
-        match="must be an integer.",
-    ):
-        calculate_macd(
-            sample_dataframe,
-            fast_period=fast_period,
-            slow_period=slow_period,
-            signal_period=signal_period,
-        )
-
-
-def test_fast_period_must_be_less_than_slow_period(
-    sample_dataframe,
-):
-    """Verify fast_period must be less than slow_period."""
-
-    with pytest.raises(
-        ValueError,
-        match="fast_period must be less than slow_period.",
-    ):
-        calculate_macd(
-            sample_dataframe,
-            fast_period=26,
-            slow_period=12,
-        )
-
-
-def test_missing_price_column(sample_dataframe):
-    """Verify missing price column raises ValueError."""
-
-    with pytest.raises(
-        ValueError,
-        match="Price column 'Adj Close' not found.",
-    ):
-        calculate_macd(
-            sample_dataframe,
-            price_column="Adj Close",
-        )
-
-
-def test_invalid_dataframe_type():
-    """Verify non-DataFrame input raises TypeError."""
-
-    with pytest.raises(
-        TypeError,
-        match="Input must be a pandas DataFrame.",
-    ):
-        calculate_macd([])
-
-
-def test_empty_dataframe():
-    """Verify empty DataFrame is handled correctly."""
-
-    empty_df = pd.DataFrame(
-        columns=["Open", "High", "Low", "Close", "Volume"]
-    )
-
-    result = calculate_macd(empty_df)
-
-    assert "MACD_12_26_9" in result.columns
-    assert "MACD_Signal_12_26_9" in result.columns
-    assert "MACD_Histogram_12_26_9" in result.columns
-
-    assert result.empty
-
-
-def test_multiple_macd_indicators_can_be_added(sample_dataframe):
-    """Verify multiple MACD configurations can coexist."""
-
-    result = calculate_macd(
+    def test_invalid_period_types(
+        self,
         sample_dataframe,
-        fast_period=12,
-        slow_period=26,
-        signal_period=9,
-    )
+        fast_period,
+        slow_period,
+        signal_period,
+    ):
+        """Verify invalid period types raise TypeError."""
 
-    result = calculate_macd(
-        result,
-        fast_period=5,
-        slow_period=35,
-        signal_period=5,
-    )
+        with pytest.raises(
+            TypeError,
+            match="must be an integer.",
+        ):
+            calculate_macd(
+                sample_dataframe,
+                fast_period=fast_period,
+                slow_period=slow_period,
+                signal_period=signal_period,
+            )
 
-    assert "MACD_12_26_9" in result.columns
-    assert "MACD_Signal_12_26_9" in result.columns
-    assert "MACD_Histogram_12_26_9" in result.columns
+    def test_fast_period_must_be_less_than_slow_period(
+        self,
+        sample_dataframe,
+    ):
+        """Verify fast_period must be less than slow_period."""
 
-    assert "MACD_5_35_5" in result.columns
-    assert "MACD_Signal_5_35_5" in result.columns
-    assert "MACD_Histogram_5_35_5" in result.columns
+        with pytest.raises(
+            ValueError,
+            match="fast_period must be less than slow_period.",
+        ):
+            calculate_macd(
+                sample_dataframe,
+                fast_period=26,
+                slow_period=12,
+            )
 
-    assert len(result.columns) == 11
+    def test_missing_price_column(self, sample_dataframe):
+        """Verify missing price column raises ValueError."""
+
+        with pytest.raises(
+            ValueError,
+            match="Price column 'Adj Close' not found.",
+        ):
+            calculate_macd(
+                sample_dataframe,
+                price_column="Adj Close",
+            )
+
+    def test_invalid_dataframe_type(self):
+        """Verify non-DataFrame input raises TypeError."""
+
+        with pytest.raises(
+            TypeError,
+            match="Input must be a pandas DataFrame.",
+        ):
+            calculate_macd([])
+
+    def test_empty_dataframe(self):
+        """Verify empty DataFrame is handled correctly."""
+
+        empty_df = pd.DataFrame(
+            columns=["Open", "High", "Low", "Close", "Volume"]
+        )
+
+        result = calculate_macd(empty_df)
+
+        assert "MACD_12_26_9" in result.columns
+        assert "MACD_Signal_12_26_9" in result.columns
+        assert "MACD_Histogram_12_26_9" in result.columns
+
+        assert result.empty

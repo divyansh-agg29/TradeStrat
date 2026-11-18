@@ -1,9 +1,11 @@
-def test_health_endpoint(client):
-    response = client.get("/health")
+class TestHealthRoute:
 
-    assert response.status_code == 200
+    def test_health_endpoint(self, client):
+        response = client.get("/health")
 
-    data = response.get_json()
+        assert response.status_code == 200
 
-    assert data["success"] is True
-    assert data["data"]["status"] == "healthy"
+        data = response.get_json()
+
+        assert data["success"] is True
+        assert data["data"]["status"] == "healthy"

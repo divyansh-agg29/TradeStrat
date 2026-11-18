@@ -1,6 +1,11 @@
 
 ## Development Changelog
 
+### 2026-11-19 — Test Suite: Class-Based Reorganization
+- Moved all bare test functions into descriptive `Test*` classes (672 tests)
+- Replaced section-header comments with class groupings
+- No production code or test semantics changed
+
 ### 2026-11-18 — API Validation & Input Hardening
 - Added `float()` casts for `initial_capital` and `risk_free_rate` in backtest parser to match comparison parser
 - Added `initial_capital` validation in compare tab's `validateComparisonRequest()`
