@@ -27,6 +27,13 @@ def _parse_comparison_request(data: dict) -> ComparisonRequest:
 
     strategies_raw = data.get("strategies", [])
 
+    if not isinstance(strategies_raw, list) or len(strategies_raw) < 2:
+        raise ValueError("At least 2 strategies are required for comparison.")
+
+    for s in strategies_raw:
+        if not isinstance(s, dict):
+            raise ValueError("Each strategy must be an object.")
+
     strategies = [
         StrategyConfig(
             type=s.get("type", ""),
@@ -57,6 +64,9 @@ def _parse_request(data: dict) -> BacktestRequest:
         raise ValueError(
             "Missing required field: strategy."
         )
+
+    if not isinstance(strategy, dict):
+        raise ValueError("Field 'strategy' must be an object.")
 
     strategy_config = StrategyConfig(
         type=strategy.get("type", ""),
@@ -90,14 +100,14 @@ def _parse_request(data: dict) -> BacktestRequest:
         ticker=data.get("ticker", ""),
         start_date=data.get("start_date", ""),
         end_date=data.get("end_date", ""),
-        initial_capital=data.get(
+        initial_capital=float(data.get(
             "initial_capital",
             100000,
-        ),
-        risk_free_rate=data.get(
+        )),
+        risk_free_rate=float(data.get(
             "risk_free_rate",
             0.0,
-        ),
+        )),
         strategy=strategy_config,
         risk=risk_config,
         position_sizing=position_sizing_config,

@@ -108,18 +108,12 @@ def test_compare_endpoint_invalid_json(client):
     )
 
 
-@patch("api.routes.run_comparison")
 def test_compare_endpoint_too_few_strategies(
-    mock_run_comparison,
     client,
 ):
     """
     A payload with fewer than 2 strategies should return HTTP 400.
     """
-
-    mock_run_comparison.side_effect = ValueError(
-        "A comparison requires between 2 and 6 strategies."
-    )
 
     response = client.post(
         "/compare",
@@ -131,7 +125,7 @@ def test_compare_endpoint_too_few_strategies(
     data = response.get_json()
 
     assert data["success"] is False
-    assert "2 and 6" in data["error"]["message"]
+    assert "At least 2 strategies" in data["error"]["message"]
 
 
 @patch("api.routes.run_comparison")

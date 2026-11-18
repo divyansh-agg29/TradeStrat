@@ -1,6 +1,12 @@
 
 ## Development Changelog
 
+### 2026-11-18 — API Validation & Input Hardening
+- Added `float()` casts for `initial_capital` and `risk_free_rate` in backtest parser to match comparison parser
+- Added `initial_capital` validation in compare tab's `validateComparisonRequest()`
+- Added `isinstance(strategy, dict)` type checks in both backtest and comparison parsers to return 400 instead of 500
+- Added early validation for strategies list (must be a list with at least 2 entries) in comparison parser
+
 ### 2026-11-17 — Documentation, Logging & Polish
 
 **Documentation & Logging**

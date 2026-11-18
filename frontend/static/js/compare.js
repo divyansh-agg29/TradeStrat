@@ -248,6 +248,10 @@ function validateComparisonRequest(request) {
         errors.push("Start date must be before end date.");
     }
 
+    if (!request.initial_capital || request.initial_capital <= 0 || isNaN(request.initial_capital)) {
+        errors.push("Initial capital must be greater than zero.");
+    }
+
     // Validate interval and date range compatibility
     if (request.interval && request.start_date && request.end_date) {
         const intervalValidation = validateIntervalDateRange(

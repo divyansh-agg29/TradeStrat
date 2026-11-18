@@ -193,7 +193,6 @@ var _priceChartType = "candlestick";
 function renderChartFromSpec(containerId, chartSpec, chartKey) {
 
     if (!chartSpec || !chartSpec.traces) {
-        console.warn("No chart spec for", chartKey);
         return;
     }
 
