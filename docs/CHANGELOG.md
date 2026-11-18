@@ -8,6 +8,10 @@
 - Converted 5 strategy functions into classes: `SmaStrategy`, `EmaStrategy`, `MacdStrategy`, `RsiStrategy`, `BbBounceStrategy`
 - Kept backward-compatible wrapper functions; no test or caller changes needed
 
+**Serializer Deduplication**
+- Replaced 4 identical `_serialize_*_metrics` functions with `_serialize_dataclass`
+- Replaced 3 similar `_serialize_*_history` functions with `_serialize_dataframe`
+
 **Test Reorganization**
 - Moved all bare test functions into descriptive `Test*` classes (672 tests)
 - Replaced section-header comments with class groupings

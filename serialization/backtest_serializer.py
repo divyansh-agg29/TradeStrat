@@ -14,7 +14,6 @@ import math
 
 from models import BacktestResult
 from utils.logger import get_logger
-from analytics import BenchmarkMetrics,PortfolioMetrics,RiskMetrics,TradeMetrics
 from interpretation import build_kpi_cards
 from serialization.chart_serializer import build_charts
 import pandas as pd
@@ -41,25 +40,25 @@ def serialize_backtest_result(
     logger.info("Serializing backtest result.")
 
     return {
-        "portfolio_metrics": _serialize_portfolio_metrics(
+        "portfolio_metrics": _serialize_dataclass(
             result.analytics_result.portfolio_metrics
         ),
-        "risk_metrics": _serialize_risk_metrics(
+        "risk_metrics": _serialize_dataclass(
             result.analytics_result.risk_metrics
         ),
-        "trade_metrics": _serialize_trade_metrics(
+        "trade_metrics": _serialize_dataclass(
             result.analytics_result.trade_metrics
         ),
-        "portfolio_history": _serialize_portfolio_history(
+        "portfolio_history": _serialize_dataframe(
             result.simulation_result.portfolio_history
         ),
-        "analytics_history": _serialize_analytics_history(
+        "analytics_history": _serialize_dataframe(
             result.analytics_result.analytics_history
         ),
-        "trade_history": _serialize_trade_history(
-            result.simulation_result.trade_history
+        "trade_history": _serialize_dataframe(
+            result.simulation_result.trade_history, drop_index=True
         ),
-        "benchmark_metrics": _serialize_benchmark_metrics(
+        "benchmark_metrics": _serialize_dataclass(
             result.analytics_result.benchmark_metrics
         ),
         "kpi_cards": build_kpi_cards(
@@ -81,93 +80,12 @@ def _sanitize_value(value):
     return value
 
 
-def _serialize_portfolio_metrics(
-    metrics: PortfolioMetrics,
-) -> dict:
-    """
-    Serialize portfolio metrics.
-    """
+def _serialize_dataclass(obj) -> dict:
+    """Serialize a dataclass instance by sanitizing each field value."""
+    return {k: _sanitize_value(v) for k, v in vars(obj).items()}
 
-    return {k: _sanitize_value(v) for k, v in vars(metrics).items()}
 
-def _serialize_risk_metrics(
-    metrics: RiskMetrics,
-) -> dict:
-    """
-    Serialize risk metrics.
-    """
-
-    return {k: _sanitize_value(v) for k, v in vars(metrics).items()}
-
-def _serialize_trade_metrics(
-    metrics: TradeMetrics,
-) -> dict:
-    """
-    Serialize trade metrics.
-    """
-
-    return {k: _sanitize_value(v) for k, v in vars(metrics).items()}
-
-def _serialize_benchmark_metrics(
-    metrics: BenchmarkMetrics,
-) -> dict:
-    """
-    Serialize benchmark metrics.
-    """
-
-    return {k: _sanitize_value(v) for k, v in vars(metrics).items()}
-
-def _serialize_portfolio_history(
-    portfolio_history: pd.DataFrame,
-) -> list[dict]:
-    """
-    Serialize portfolio history.
-    """
-
-    portfolio_history = (
-        portfolio_history
-        .astype(object)
-        .where(pd.notnull(portfolio_history), None)
-    )
-
-    return (
-        portfolio_history
-        .reset_index()
-        .to_dict(orient="records")
-    )
-
-def _serialize_analytics_history(
-    analytics_history: pd.DataFrame,
-) -> list[dict]:
-    """
-    Serialize analytics history.
-    """
-
-    analytics_history = analytics_history.astype(object).where(
-        pd.notnull(analytics_history),
-        None
-    )
-
-    return (
-        analytics_history
-        .reset_index()
-        .to_dict(orient="records")
-    )
-
-def _serialize_trade_history(
-    trade_history: pd.DataFrame,
-) -> list[dict]:
-    """
-    Serialize completed trade history.
-    """
-
-    trade_history = trade_history.astype(object).where(
-        pd.notnull(trade_history),
-        None
-    )
-
-    return (
-        trade_history
-        .reset_index(drop=True)
-        .to_dict(orient="records")
-    )
+def _serialize_dataframe(df: pd.DataFrame, drop_index: bool = False) -> list[dict]:
+    """Serialize a DataFrame to a list of dicts, replacing NaN/None."""
+    df = df.astype(object).where(pd.notnull(df), None)
+    return df.reset_index(drop=drop_index).to_dict(orient="records")
