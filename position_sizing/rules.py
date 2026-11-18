@@ -6,11 +6,30 @@ fixed percentage, Kelly criterion, risk-based) and their registry
 for dynamic resolution by the Position Sizing Manager.
 """
 
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
 
+class PositionSizingRule(ABC):
+    """
+    Abstract base class for all position sizing rules.
+
+    Subclasses must implement ``calculate_shares``.
+    """
+
+    @abstractmethod
+    def calculate_shares(
+        self,
+        portfolio_value: float,
+        cash: float,
+        current_price: float,
+        stop_loss_price: float | None = None,
+    ) -> int:
+        """Return the number of whole shares to buy."""
+
+
 @dataclass(frozen=True)
-class AllInPositionSizing:
+class AllInPositionSizing(PositionSizingRule):
     """
     All-in position sizing rule.
 
@@ -36,7 +55,7 @@ class AllInPositionSizing:
 
 
 @dataclass(frozen=True)
-class FixedPercentagePositionSizing:
+class FixedPercentagePositionSizing(PositionSizingRule):
     """
     Fixed percentage position sizing rule.
 
@@ -80,7 +99,7 @@ class FixedPercentagePositionSizing:
 
 
 @dataclass(frozen=True)
-class FixedAmountPositionSizing:
+class FixedAmountPositionSizing(PositionSizingRule):
     """
     Fixed dollar amount position sizing rule.
 
@@ -119,7 +138,7 @@ class FixedAmountPositionSizing:
 
 
 @dataclass(frozen=True)
-class FixedSharesPositionSizing:
+class FixedSharesPositionSizing(PositionSizingRule):
     """
     Fixed shares position sizing rule.
 
@@ -158,7 +177,7 @@ class FixedSharesPositionSizing:
 
 
 @dataclass(frozen=True)
-class RiskBasedPositionSizing:
+class RiskBasedPositionSizing(PositionSizingRule):
     """
     Risk-based position sizing rule.
 
@@ -214,7 +233,7 @@ class RiskBasedPositionSizing:
 
 
 @dataclass(frozen=True)
-class KellyCriterionPositionSizing:
+class KellyCriterionPositionSizing(PositionSizingRule):
     """
     Kelly Criterion position sizing rule.
 
@@ -294,7 +313,7 @@ class KellyCriterionPositionSizing:
         return int(affordable // current_price)
 
 
-POSITION_SIZING_REGISTRY: dict[str, type] = {
+POSITION_SIZING_REGISTRY: dict[str, type[PositionSizingRule]] = {
     "all_in": AllInPositionSizing,
     "fixed_percentage": FixedPercentagePositionSizing,
     "fixed_amount": FixedAmountPositionSizing,

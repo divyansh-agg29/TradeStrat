@@ -5,11 +5,61 @@ Implements stop-loss and take-profit rule classes and their
 registries for dynamic resolution by the Risk Manager.
 """
 
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
 
+class StopLossRule(ABC):
+    """
+    Abstract base class for all stop-loss rules.
+
+    Subclasses must implement ``should_stop`` and ``get_stop_price``.
+    """
+
+    @abstractmethod
+    def should_stop(
+        self,
+        entry_price: float,
+        current_price: float,
+        peak_price: float | None = None,
+    ) -> bool:
+        """Return True when the stop-loss condition is met."""
+
+    @abstractmethod
+    def get_stop_price(
+        self,
+        entry_price: float,
+        peak_price: float | None = None,
+    ) -> float:
+        """Return the stop-loss trigger price."""
+
+
+class TakeProfitRule(ABC):
+    """
+    Abstract base class for all take-profit rules.
+
+    Subclasses must implement ``should_take_profit`` and
+    ``get_take_profit_price``.
+    """
+
+    @abstractmethod
+    def should_take_profit(
+        self,
+        entry_price: float,
+        current_price: float,
+    ) -> bool:
+        """Return True when the take-profit condition is met."""
+
+    @abstractmethod
+    def get_take_profit_price(
+        self,
+        entry_price: float,
+    ) -> float:
+        """Return the take-profit trigger price."""
+
+
 @dataclass(frozen=True)
-class FixedPercentageStopLoss:
+class FixedPercentageStopLoss(StopLossRule):
     """
     Fixed percentage stop-loss rule.
 
@@ -51,7 +101,7 @@ class FixedPercentageStopLoss:
 
 
 @dataclass(frozen=True)
-class FixedPriceOffsetStopLoss:
+class FixedPriceOffsetStopLoss(StopLossRule):
     """
     Fixed price offset stop-loss from entry price.
 
@@ -84,7 +134,7 @@ class FixedPriceOffsetStopLoss:
 
 
 @dataclass(frozen=True)
-class TrailingStopLoss:
+class TrailingStopLoss(StopLossRule):
     """
     Trailing stop-loss rule.
 
@@ -121,7 +171,7 @@ class TrailingStopLoss:
         return peak_price * (1 - self.percent)
 
 
-STOP_LOSS_REGISTRY: dict[str, type] = {
+STOP_LOSS_REGISTRY: dict[str, type[StopLossRule]] = {
     "fixed_percentage": FixedPercentageStopLoss,
     "fixed_price_offset": FixedPriceOffsetStopLoss,
     "trailing_stop": TrailingStopLoss,
@@ -129,7 +179,7 @@ STOP_LOSS_REGISTRY: dict[str, type] = {
 
 
 @dataclass(frozen=True)
-class FixedPercentageTakeProfit:
+class FixedPercentageTakeProfit(TakeProfitRule):
     """
     Fixed percentage take-profit rule.
 
@@ -169,7 +219,7 @@ class FixedPercentageTakeProfit:
 
 
 @dataclass(frozen=True)
-class FixedAmountTakeProfit:
+class FixedAmountTakeProfit(TakeProfitRule):
     """
     Fixed amount take-profit rule.
 
@@ -199,7 +249,7 @@ class FixedAmountTakeProfit:
         return entry_price + self.amount
 
 
-TAKE_PROFIT_REGISTRY: dict[str, type] = {
+TAKE_PROFIT_REGISTRY: dict[str, type[TakeProfitRule]] = {
     "fixed_percentage": FixedPercentageTakeProfit,
     "fixed_amount": FixedAmountTakeProfit,
 }

@@ -6,7 +6,7 @@ and evaluates stop-loss / take-profit conditions.
 """
 
 from risk.config import RiskConfig
-from risk.rules import STOP_LOSS_REGISTRY, TAKE_PROFIT_REGISTRY
+from risk.rules import STOP_LOSS_REGISTRY, TAKE_PROFIT_REGISTRY, StopLossRule, TakeProfitRule
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -23,8 +23,8 @@ class RiskManager:
 
     def __init__(self, risk_config: RiskConfig | None = None):
         self.risk_config = risk_config
-        self._rule = None
-        self._take_profit_rule = None
+        self._rule: StopLossRule | None = None
+        self._take_profit_rule: TakeProfitRule | None = None
 
         if risk_config is not None and risk_config.stop_loss_type is not None:
             rule_class = STOP_LOSS_REGISTRY.get(risk_config.stop_loss_type)

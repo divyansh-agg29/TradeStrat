@@ -1,6 +1,7 @@
 from .config import PositionSizingConfig
 from .manager import PositionSizingManager
 from .rules import (
+    PositionSizingRule,
     FixedPercentagePositionSizing,
     FixedAmountPositionSizing,
     FixedSharesPositionSizing,
@@ -13,6 +14,7 @@ from .rules import (
 __all__ = [
     "PositionSizingConfig",
     "PositionSizingManager",
+    "PositionSizingRule",
     "FixedPercentagePositionSizing",
     "FixedAmountPositionSizing",
     "FixedSharesPositionSizing",

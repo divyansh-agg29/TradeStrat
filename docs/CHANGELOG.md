@@ -1,12 +1,17 @@
 
 ## Development Changelog
 
-### 2026-11-19 — Strategy Class Hierarchy & Test Reorganization
+### 2026-11-19 — Architecture Improvements
 
 **Strategy Refactor**
 - Introduced `Strategy` ABC and `CrossoverStrategy` intermediate base class
 - Converted 5 strategy functions into classes: `SmaStrategy`, `EmaStrategy`, `MacdStrategy`, `RsiStrategy`, `BbBounceStrategy`
 - Kept backward-compatible wrapper functions; no test or caller changes needed
+
+**Risk & Position Sizing ABCs**
+- Added `StopLossRule`, `TakeProfitRule`, `PositionSizingRule` abstract base classes
+- All 5 risk rule classes and 6 position sizing classes now inherit from their ABC
+- Registry type hints updated; manager fields annotated with ABC types
 
 **Serializer Deduplication**
 - Replaced 4 identical `_serialize_*_metrics` functions with `_serialize_dataclass`

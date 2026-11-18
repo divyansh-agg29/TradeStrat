@@ -8,6 +8,7 @@ and calculates the number of shares to buy for each trade.
 from position_sizing.config import PositionSizingConfig
 from position_sizing.rules import (
     AllInPositionSizing,
+    PositionSizingRule,
     POSITION_SIZING_REGISTRY,
 )
 from utils.logger import get_logger
@@ -30,7 +31,7 @@ class PositionSizingManager:
         config: PositionSizingConfig | None = None,
     ):
         self.config = config
-        self._rule = None
+        self._rule: PositionSizingRule | None = None
 
         if config is None or config.sizing_type is None:
             self._rule = AllInPositionSizing()
