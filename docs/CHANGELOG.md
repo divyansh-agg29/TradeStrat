@@ -1,10 +1,16 @@
 
 ## Development Changelog
 
-### 2026-11-19 — Test Suite: Class-Based Reorganization
+### 2026-11-19 — Strategy Class Hierarchy & Test Reorganization
+
+**Strategy Refactor**
+- Introduced `Strategy` ABC and `CrossoverStrategy` intermediate base class
+- Converted 5 strategy functions into classes: `SmaStrategy`, `EmaStrategy`, `MacdStrategy`, `RsiStrategy`, `BbBounceStrategy`
+- Kept backward-compatible wrapper functions; no test or caller changes needed
+
+**Test Reorganization**
 - Moved all bare test functions into descriptive `Test*` classes (672 tests)
 - Replaced section-header comments with class groupings
-- No production code or test semantics changed
 
 ### 2026-11-18 — API Validation & Input Hardening
 - Added `float()` casts for `initial_capital` and `risk_free_rate` in backtest parser to match comparison parser

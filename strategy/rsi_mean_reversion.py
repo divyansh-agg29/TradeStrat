@@ -18,10 +18,79 @@ Responsibilities
 import pandas as pd
 
 from indicators.momentum import calculate_rsi
+from strategy.base import Strategy
 from strategy.result import IndicatorConfig, StrategyOutput
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+
+class RsiStrategy(Strategy):
+    """RSI mean reversion strategy implementation."""
+
+    name = "RSI mean reversion"
+
+    def validate_params(self, rsi_period=14, overbought=70, oversold=30, **_):
+        if rsi_period <= 0:
+            logger.error("Invalid RSI period: %s", rsi_period)
+            raise ValueError(
+                "rsi_period must be greater than zero."
+            )
+
+        if overbought <= oversold:
+            logger.error(
+                "Invalid threshold configuration: "
+                "overbought=%s oversold=%s",
+                overbought,
+                oversold,
+            )
+            raise ValueError(
+                "overbought must be greater than oversold."
+            )
+
+    def compute_indicators(self, df, price_column="Close", rsi_period=14, **_):
+        rsi_column = f"RSI{rsi_period}"
+
+        if rsi_column not in df.columns:
+            logger.debug("%s not found. Calculating.", rsi_column)
+            df = calculate_rsi(df, period=rsi_period, price_column=price_column)
+
+        columns = {"rsi": rsi_column}
+        return df, columns
+
+    def generate_signals(self, df, columns, overbought=70, oversold=30, **_):
+        rsi_column = columns["rsi"]
+
+        df["Signal"] = "HOLD"
+
+        previous_rsi = df[rsi_column].shift(1)
+        current_rsi = df[rsi_column]
+
+        buy_mask = (
+            (previous_rsi >= oversold)
+            & (current_rsi < oversold)
+        )
+
+        sell_mask = (
+            (previous_rsi <= overbought)
+            & (current_rsi > overbought)
+        )
+
+        df.loc[buy_mask, "Signal"] = "BUY"
+        df.loc[sell_mask, "Signal"] = "SELL"
+
+        return df
+
+    def build_indicator_metadata(self, columns, rsi_period=14, **_):
+        return [
+            IndicatorConfig(
+                column=columns["rsi"],
+                name=f"RSI {rsi_period}",
+                display="subplot",
+                subplot_id="rsi",
+                y_range=(0, 100),
+            ),
+        ]
 
 
 def generate_rsi_mean_reversion_signals(
@@ -30,7 +99,7 @@ def generate_rsi_mean_reversion_signals(
     overbought: int = 70,
     oversold: int = 30,
     price_column: str = "Close",
-) -> pd.DataFrame:
+) -> StrategyOutput:
     """
     Generate trading signals using the RSI mean reversion strategy.
 
@@ -76,95 +145,10 @@ def generate_rsi_mean_reversion_signals(
         - overbought <= oversold.
     """
 
-    logger.info(
-        "Generating RSI mean reversion signals "
-        "(period=%s, overbought=%s, oversold=%s).",
-        rsi_period,
-        overbought,
-        oversold,
+    return RsiStrategy().run(
+        df,
+        price_column=price_column,
+        rsi_period=rsi_period,
+        overbought=overbought,
+        oversold=oversold,
     )
-
-    # ------------------------------------------------------------------
-    # Strategy validation
-    # ------------------------------------------------------------------
-
-    if df.empty:
-        logger.error("Input DataFrame is empty.")
-        raise ValueError("Input DataFrame cannot be empty.")
-
-    if rsi_period <= 0:
-        logger.error(
-            "Invalid RSI period: %s",
-            rsi_period,
-        )
-        raise ValueError(
-            "rsi_period must be greater than zero."
-        )
-
-    if overbought <= oversold:
-        logger.error(
-            "Invalid threshold configuration: "
-            "overbought=%s oversold=%s",
-            overbought,
-            oversold,
-        )
-        raise ValueError(
-            "overbought must be greater than oversold."
-        )
-
-    result_df = df.copy()
-
-    rsi_column = f"RSI{rsi_period}"
-
-    # ------------------------------------------------------------------
-    # Ensure indicator exists
-    # ------------------------------------------------------------------
-
-    if rsi_column not in result_df.columns:
-        logger.debug("%s not found. Calculating.", rsi_column)
-        result_df = calculate_rsi(
-            result_df,
-            period=rsi_period,
-            price_column=price_column,
-        )
-
-    # ------------------------------------------------------------------
-    # Generate signals
-    # ------------------------------------------------------------------
-
-    result_df["Signal"] = "HOLD"
-
-    previous_rsi = result_df[rsi_column].shift(1)
-    current_rsi = result_df[rsi_column]
-
-    buy_mask = (
-        (previous_rsi >= oversold)
-        & (current_rsi < oversold)
-    )
-
-    sell_mask = (
-        (previous_rsi <= overbought)
-        & (current_rsi > overbought)
-    )
-
-    result_df.loc[buy_mask, "Signal"] = "BUY"
-    result_df.loc[sell_mask, "Signal"] = "SELL"
-
-    logger.info(
-        "Signal generation complete. "
-        "BUY=%d SELL=%d",
-        int(buy_mask.sum()),
-        int(sell_mask.sum()),
-    )
-
-    indicators = [
-        IndicatorConfig(
-            column=rsi_column,
-            name=f"RSI {rsi_period}",
-            display="subplot",
-            subplot_id="rsi",
-            y_range=(0, 100),
-        ),
-    ]
-
-    return StrategyOutput(df=result_df, indicators=indicators)

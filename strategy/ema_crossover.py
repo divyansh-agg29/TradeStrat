@@ -17,10 +17,58 @@ Responsibilities
 import pandas as pd
 
 from indicators.moving_average import calculate_ema
+from strategy.crossover import CrossoverStrategy
 from strategy.result import IndicatorConfig, StrategyOutput
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+
+class EmaStrategy(CrossoverStrategy):
+    """EMA crossover strategy implementation."""
+
+    name = "EMA crossover"
+
+    def validate_params(self, short_period=20, long_period=50, **_):
+        if short_period >= long_period:
+            logger.error(
+                "Invalid EMA configuration: "
+                "short_period=%s long_period=%s",
+                short_period,
+                long_period,
+            )
+            raise ValueError(
+                "short_period must be smaller than long_period."
+            )
+
+    def compute_indicators(self, df, price_column="Close", short_period=20, long_period=50, **_):
+        short_column = f"EMA{short_period}"
+        long_column = f"EMA{long_period}"
+
+        if short_column not in df.columns:
+            logger.debug("%s not found. Calculating.", short_column)
+            df = calculate_ema(df, period=short_period, price_column=price_column)
+
+        if long_column not in df.columns:
+            logger.debug("%s not found. Calculating.", long_column)
+            df = calculate_ema(df, period=long_period, price_column=price_column)
+
+        columns = {"short": short_column, "long": long_column}
+        return df, columns
+
+    def build_indicator_metadata(self, columns, short_period=20, long_period=50, **_):
+        return [
+            IndicatorConfig(
+                column=columns["short"],
+                name=f"EMA {short_period}",
+                display="overlay",
+            ),
+            IndicatorConfig(
+                column=columns["long"],
+                name=f"EMA {long_period}",
+                display="overlay",
+            ),
+        ]
 
 
 def generate_ema_crossover_signals(
@@ -28,7 +76,7 @@ def generate_ema_crossover_signals(
     short_period: int = 20,
     long_period: int = 50,
     price_column: str = "Close",
-) -> pd.DataFrame:
+) -> StrategyOutput:
     """
     Generate trading signals using the EMA crossover strategy.
 
@@ -70,100 +118,9 @@ def generate_ema_crossover_signals(
         - short_period >= long_period.
     """
 
-    logger.info(
-        "Generating EMA crossover signals "
-        "(short=%s, long=%s).",
-        short_period,
-        long_period,
+    return EmaStrategy().run(
+        df,
+        price_column=price_column,
+        short_period=short_period,
+        long_period=long_period,
     )
-
-    # ------------------------------------------------------------------
-    # Strategy validation
-    # ------------------------------------------------------------------
-
-    if df.empty:
-        logger.error("Input DataFrame is empty.")
-        raise ValueError("Input DataFrame cannot be empty.")
-
-    if short_period >= long_period:
-        logger.error(
-            "Invalid EMA configuration: "
-            "short_period=%s long_period=%s",
-            short_period,
-            long_period,
-        )
-        raise ValueError(
-            "short_period must be smaller than long_period."
-        )
-
-    result_df = df.copy()
-
-    short_column = f"EMA{short_period}"
-    long_column = f"EMA{long_period}"
-
-    # ------------------------------------------------------------------
-    # Ensure indicators exist
-    # ------------------------------------------------------------------
-
-    if short_column not in result_df.columns:
-        logger.debug("%s not found. Calculating.", short_column)
-        result_df = calculate_ema(
-            result_df,
-            period=short_period,
-            price_column=price_column,
-        )
-
-    if long_column not in result_df.columns:
-        logger.debug("%s not found. Calculating.", long_column)
-        result_df = calculate_ema(
-            result_df,
-            period=long_period,
-            price_column=price_column,
-        )
-
-    # ------------------------------------------------------------------
-    # Generate signals
-    # ------------------------------------------------------------------
-
-    result_df["Signal"] = "HOLD"
-
-    previous_short = result_df[short_column].shift(1)
-    previous_long = result_df[long_column].shift(1)
-
-    current_short = result_df[short_column]
-    current_long = result_df[long_column]
-
-    buy_mask = (
-        (previous_short <= previous_long)
-        & (current_short > current_long)
-    )
-
-    sell_mask = (
-        (previous_short >= previous_long)
-        & (current_short < current_long)
-    )
-
-    result_df.loc[buy_mask, "Signal"] = "BUY"
-    result_df.loc[sell_mask, "Signal"] = "SELL"
-
-    logger.info(
-        "Signal generation complete. "
-        "BUY=%d SELL=%d",
-        int(buy_mask.sum()),
-        int(sell_mask.sum()),
-    )
-
-    indicators = [
-        IndicatorConfig(
-            column=short_column,
-            name=f"EMA {short_period}",
-            display="overlay",
-        ),
-        IndicatorConfig(
-            column=long_column,
-            name=f"EMA {long_period}",
-            display="overlay",
-        ),
-    ]
-
-    return StrategyOutput(df=result_df, indicators=indicators)
