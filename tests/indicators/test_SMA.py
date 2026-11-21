@@ -1,9 +1,10 @@
 """
 Unit tests for indicators.moving_average.
 
-These tests verify the behaviour of the calculate_sma() function,
-including successful calculations, input validation, duplicate
-indicator prevention and copy semantics.
+These tests verify the SMA-specific values produced by calculate_sma().
+Behaviour shared with the other single-period indicators (validation,
+duplicate prevention, copy semantics) lives in
+test_indicator_contract.py.
 """
 
 import pandas as pd
@@ -44,34 +45,6 @@ class TestSMACalculation:
             else:
                 assert actual == exp
 
-    def test_original_dataframe_not_modified(self, sample_dataframe):
-        """Ensure the original DataFrame is not modified."""
-
-        original = sample_dataframe.copy()
-
-        result = calculate_sma(sample_dataframe, period=3)
-
-        assert "SMA3" not in sample_dataframe.columns
-        assert "SMA3" in result.columns
-
-        pd.testing.assert_frame_equal(sample_dataframe, original)
-
-    def test_existing_columns_are_preserved(self, sample_dataframe):
-        """Verify original columns remain unchanged."""
-
-        result = calculate_sma(sample_dataframe, period=3)
-
-        expected_columns = [
-            "Open",
-            "High",
-            "Low",
-            "Close",
-            "Volume",
-            "SMA3",
-        ]
-
-        assert list(result.columns) == expected_columns
-
     def test_custom_price_column(self, sample_dataframe):
         """Verify SMA can be calculated on a custom column."""
 
@@ -86,88 +59,3 @@ class TestSMACalculation:
         assert pd.isna(result.loc[0, "SMA2"])
         assert result.loc[1, "SMA2"] == 15.0
         assert result.loc[2, "SMA2"] == 25.0
-
-    def test_duplicate_indicator_raises_exception(self, sample_dataframe):
-        """Verify duplicate indicator columns are rejected."""
-
-        result = calculate_sma(sample_dataframe, period=3)
-
-        with pytest.raises(
-            ValueError,
-            match="Indicator column 'SMA3' already exists.",
-        ):
-            calculate_sma(result, period=3)
-
-    def test_multiple_indicators_can_be_added(self, sample_dataframe):
-        """Verify multiple SMA indicators can coexist."""
-
-        result = calculate_sma(sample_dataframe, period=2)
-        result = calculate_sma(result, period=3)
-
-        assert "SMA2" in result.columns
-        assert "SMA3" in result.columns
-
-        assert len(result.columns) == 7
-
-
-class TestSMAValidation:
-
-    @pytest.mark.parametrize(
-        "period",
-        [0, -1, -20],
-    )
-    def test_invalid_period_value(self, sample_dataframe, period):
-        """Verify non-positive periods raise ValueError."""
-
-        with pytest.raises(
-            ValueError,
-            match="Period must be greater than zero.",
-        ):
-            calculate_sma(sample_dataframe, period)
-
-    @pytest.mark.parametrize(
-        "period",
-        [2.5, "20", None],
-    )
-    def test_invalid_period_type(self, sample_dataframe, period):
-        """Verify invalid period types raise TypeError."""
-
-        with pytest.raises(
-            TypeError,
-            match="Period must be an integer.",
-        ):
-            calculate_sma(sample_dataframe, period)
-
-    def test_missing_price_column(self, sample_dataframe):
-        """Verify missing price column raises ValueError."""
-
-        with pytest.raises(
-            ValueError,
-            match="Price column 'Adj Close' not found.",
-        ):
-            calculate_sma(
-                sample_dataframe,
-                period=3,
-                price_column="Adj Close",
-            )
-
-    def test_invalid_dataframe_type(self):
-        """Verify non-DataFrame input raises TypeError."""
-
-        with pytest.raises(
-            TypeError,
-            match="Input must be a pandas DataFrame.",
-        ):
-            calculate_sma([], period=3)
-
-    def test_empty_dataframe(self):
-        """Verify empty DataFrame is handled correctly."""
-
-        empty_df = pd.DataFrame(
-            columns=["Open", "High", "Low", "Close", "Volume"]
-        )
-
-        result = calculate_sma(empty_df, period=3)
-
-        assert "SMA3" in result.columns
-        assert result.empty

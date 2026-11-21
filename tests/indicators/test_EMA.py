@@ -1,9 +1,10 @@
 """
 Unit tests for indicators.moving_average.
 
-These tests verify the behaviour of the calculate_ema() function,
-including successful calculations, input validation, duplicate
-indicator prevention and copy semantics.
+These tests verify the EMA-specific values produced by calculate_ema().
+Behaviour shared with the other single-period indicators (validation,
+duplicate prevention, copy semantics) lives in
+test_indicator_contract.py.
 """
 
 import pandas as pd
@@ -47,34 +48,6 @@ class TestEMACalculation:
         for actual, exp in zip(result["EMA3"], expected):
             assert actual == pytest.approx(exp)
 
-    def test_original_dataframe_not_modified(self, sample_dataframe):
-        """Ensure the original DataFrame is not modified."""
-
-        original = sample_dataframe.copy()
-
-        result = calculate_ema(sample_dataframe, period=3)
-
-        assert "EMA3" not in sample_dataframe.columns
-        assert "EMA3" in result.columns
-
-        pd.testing.assert_frame_equal(sample_dataframe, original)
-
-    def test_existing_columns_are_preserved(self, sample_dataframe):
-        """Verify original columns remain unchanged."""
-
-        result = calculate_ema(sample_dataframe, period=3)
-
-        expected_columns = [
-            "Open",
-            "High",
-            "Low",
-            "Close",
-            "Volume",
-            "EMA3",
-        ]
-
-        assert list(result.columns) == expected_columns
-
     def test_custom_price_column(self, sample_dataframe):
         """Verify EMA can be calculated on a custom column."""
 
@@ -96,88 +69,3 @@ class TestEMACalculation:
 
         for actual, exp in zip(result["EMA2"], expected):
             assert actual == pytest.approx(exp)
-
-    def test_duplicate_indicator_raises_exception(self, sample_dataframe):
-        """Verify duplicate indicator columns are rejected."""
-
-        result = calculate_ema(sample_dataframe, period=3)
-
-        with pytest.raises(
-            ValueError,
-            match="Indicator column 'EMA3' already exists.",
-        ):
-            calculate_ema(result, period=3)
-
-    def test_multiple_indicators_can_be_added(self, sample_dataframe):
-        """Verify multiple EMA indicators can coexist."""
-
-        result = calculate_ema(sample_dataframe, period=2)
-        result = calculate_ema(result, period=3)
-
-        assert "EMA2" in result.columns
-        assert "EMA3" in result.columns
-
-        assert len(result.columns) == 7
-
-
-class TestEMAValidation:
-
-    @pytest.mark.parametrize(
-        "period",
-        [0, -1, -20],
-    )
-    def test_invalid_period_value(self, sample_dataframe, period):
-        """Verify non-positive periods raise ValueError."""
-
-        with pytest.raises(
-            ValueError,
-            match="Period must be greater than zero.",
-        ):
-            calculate_ema(sample_dataframe, period)
-
-    @pytest.mark.parametrize(
-        "period",
-        [2.5, "20", None],
-    )
-    def test_invalid_period_type(self, sample_dataframe, period):
-        """Verify invalid period types raise TypeError."""
-
-        with pytest.raises(
-            TypeError,
-            match="Period must be an integer.",
-        ):
-            calculate_ema(sample_dataframe, period)
-
-    def test_missing_price_column(self, sample_dataframe):
-        """Verify missing price column raises ValueError."""
-
-        with pytest.raises(
-            ValueError,
-            match="Price column 'Adj Close' not found.",
-        ):
-            calculate_ema(
-                sample_dataframe,
-                period=3,
-                price_column="Adj Close",
-            )
-
-    def test_invalid_dataframe_type(self):
-        """Verify non-DataFrame input raises TypeError."""
-
-        with pytest.raises(
-            TypeError,
-            match="Input must be a pandas DataFrame.",
-        ):
-            calculate_ema([], period=3)
-
-    def test_empty_dataframe(self):
-        """Verify empty DataFrame is handled correctly."""
-
-        empty_df = pd.DataFrame(
-            columns=["Open", "High", "Low", "Close", "Volume"]
-        )
-
-        result = calculate_ema(empty_df, period=3)
-
-        assert "EMA3" in result.columns
-        assert result.empty
