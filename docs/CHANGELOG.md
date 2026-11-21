@@ -1,5 +1,13 @@
-
 ## Development Changelog
+
+### 2026-11-21 — Shared Frontend API Client
+- Added `apiPost(url, body)` in `api.js`: shared fetch + error-handling for all POST endpoints
+- Refactored `runBacktest()` in `api.js` to delegate to `apiPost()`
+- Refactored `onRunComparison()` in `compare.js` to delegate to `apiPost()`
+
+### 2026-11-21 — Indicator Test Deduplication
+- Added `tests/indicators/test_indicator_contract.py`: shared parametrized contract tests for SMA, EMA and RSI
+- Removed 13 duplicated tests from each of `test_SMA.py`, `test_EMA.py`, `test_RSI.py`; kept value-specific tests
 
 ### 2026-11-19 — Architecture Improvements
 
@@ -20,6 +28,7 @@
 **Test Reorganization**
 - Moved all bare test functions into descriptive `Test*` classes (672 tests)
 - Replaced section-header comments with class groupings
+
 
 ### 2026-11-18 — API Validation & Input Hardening
 - Added `float()` casts for `initial_capital` and `risk_free_rate` in backtest parser to match comparison parser

@@ -56,21 +56,13 @@ function buildBacktestRequest(configuration) {
 }
 
 
-async function runBacktest(configuration) {
+async function apiPost(url, body) {
 
-    const requestBody =buildBacktestRequest(configuration);
-
-    const response = await fetch(
-        BACKTEST_ENDPOINT,
-        {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(requestBody)
-        }
-    );
-
+    const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+    });
 
     if (!response.ok) {
         let errorMessage = `Server error (${response.status})`;
@@ -88,12 +80,15 @@ async function runBacktest(configuration) {
     const result = await response.json();
 
     if (!result.success) {
-
-        throw new Error(
-            result.error.message
-        );
-
+        throw new Error(result.error.message);
     }
 
     return result;
+}
+
+
+async function runBacktest(configuration) {
+
+    const requestBody = buildBacktestRequest(configuration);
+    return apiPost(BACKTEST_ENDPOINT, requestBody);
 }

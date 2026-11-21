@@ -309,37 +309,11 @@ async function onRunComparison() {
 
     try {
 
-        const response = await fetch("/compare", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(request),
-        });
-
-        if (!response.ok) {
-            let errorMessage = `Server error (${response.status})`;
-            try {
-                const errorData = await response.json();
-                if (errorData.error && errorData.error.message) {
-                    errorMessage = errorData.error.message;
-                }
-            } catch (e) {
-                // Response body was not JSON (e.g., HTML error page from proxy)
-            }
-            showErrorModal("Server Error", errorMessage);
-            return;
-        }
-
-        const result = await response.json();
-
-        if (!result.success) {
-            showErrorModal(result.error.type, result.error.message);
-            return;
-        }
-
+        const result = await apiPost("/compare", request);
         renderComparisonResults(result.data);
 
     } catch (err) {
-        showErrorModal("Network Error", err.message);
+        showErrorModal("Error", err.message);
     } finally {
         hideLoadingOverlay();
         btn.disabled = false;
