@@ -27,6 +27,11 @@ class PositionSizingRule(ABC):
     ) -> int:
         """Return the number of whole shares to buy."""
 
+    @classmethod
+    @abstractmethod
+    def ui_metadata(cls) -> dict:
+        """Return parameter schema for frontend form generation."""
+
 
 @dataclass(frozen=True)
 class AllInPositionSizing(PositionSizingRule):
@@ -52,6 +57,10 @@ class AllInPositionSizing(PositionSizingRule):
             return 0
 
         return int(cash // current_price)
+
+    @classmethod
+    def ui_metadata(cls):
+        return {"label": "All-In", "parameters": []}
 
 
 @dataclass(frozen=True)
@@ -97,6 +106,15 @@ class FixedPercentagePositionSizing(PositionSizingRule):
 
         return int(affordable // current_price)
 
+    @classmethod
+    def ui_metadata(cls):
+        return {
+            "label": "Fixed Percentage",
+            "parameters": [
+                {"key": "percent", "label": "Portfolio %", "type": "number", "default": 25, "min": 0.1, "max": 100, "step": 0.1, "display_scale": 100},
+            ],
+        }
+
 
 @dataclass(frozen=True)
 class FixedAmountPositionSizing(PositionSizingRule):
@@ -136,6 +154,15 @@ class FixedAmountPositionSizing(PositionSizingRule):
 
         return int(affordable // current_price)
 
+    @classmethod
+    def ui_metadata(cls):
+        return {
+            "label": "Fixed Amount",
+            "parameters": [
+                {"key": "amount", "label": "Amount", "type": "number", "default": 10000, "min": 1, "step": 1},
+            ],
+        }
+
 
 @dataclass(frozen=True)
 class FixedSharesPositionSizing(PositionSizingRule):
@@ -174,6 +201,15 @@ class FixedSharesPositionSizing(PositionSizingRule):
         max_affordable = int(cash // current_price)
 
         return min(self.shares, max_affordable)
+
+    @classmethod
+    def ui_metadata(cls):
+        return {
+            "label": "Fixed Shares",
+            "parameters": [
+                {"key": "shares", "label": "Shares", "type": "number", "default": 100, "min": 1, "step": 1},
+            ],
+        }
 
 
 @dataclass(frozen=True)
@@ -230,6 +266,15 @@ class RiskBasedPositionSizing(PositionSizingRule):
         max_affordable = int(cash // current_price)
 
         return min(shares, max_affordable)
+
+    @classmethod
+    def ui_metadata(cls):
+        return {
+            "label": "Risk-Based",
+            "parameters": [
+                {"key": "risk_percent", "label": "Risk %", "type": "number", "default": 2, "min": 0.1, "max": 100, "step": 0.1, "display_scale": 100},
+            ],
+        }
 
 
 @dataclass(frozen=True)
@@ -311,6 +356,17 @@ class KellyCriterionPositionSizing(PositionSizingRule):
         affordable = min(allocation, cash)
 
         return int(affordable // current_price)
+
+    @classmethod
+    def ui_metadata(cls):
+        return {
+            "label": "Kelly Criterion",
+            "parameters": [
+                {"key": "win_rate", "label": "Win Rate %", "type": "number", "default": 55, "min": 0.1, "max": 99.9, "step": 0.1, "display_scale": 100},
+                {"key": "win_loss_ratio", "label": "Win/Loss Ratio", "type": "number", "default": 1.5, "min": 0.01, "step": 0.01},
+                {"key": "kelly_fraction", "label": "Kelly Fraction", "type": "number", "default": 50, "min": 0.1, "max": 100, "step": 0.1, "display_scale": 100},
+            ],
+        }
 
 
 POSITION_SIZING_REGISTRY: dict[str, type[PositionSizingRule]] = {

@@ -1,11 +1,17 @@
 ## Development Changelog
 
-### 2026-11-21 — Shared Frontend API Client
+### 2026-11-24 — Dynamic Registry Endpoint
+- Added `GET /registries` endpoint serving UI metadata for all four registries (strategies, stop-loss, take-profit, position sizing)
+- Frontend now fetches registry data on page load; deleted three hardcoded JS registry files (~365 lines)
+
+### 2026-11-21
+
+**Shared Frontend API Client**
 - Added `apiPost(url, body)` in `api.js`: shared fetch + error-handling for all POST endpoints
 - Refactored `runBacktest()` in `api.js` to delegate to `apiPost()`
 - Refactored `onRunComparison()` in `compare.js` to delegate to `apiPost()`
 
-### 2026-11-21 — Indicator Test Deduplication
+**Indicator Test Deduplication**
 - Added `tests/indicators/test_indicator_contract.py`: shared parametrized contract tests for SMA, EMA and RSI
 - Removed 13 duplicated tests from each of `test_SMA.py`, `test_EMA.py`, `test_RSI.py`; kept value-specific tests
 

@@ -140,3 +140,16 @@ class Strategy(ABC):
         """
         Return indicator metadata for chart rendering.
         """
+
+    @classmethod
+    @abstractmethod
+    def ui_metadata(cls) -> dict:
+        """
+        Return parameter schema for frontend form generation.
+
+        Returns
+        -------
+        dict
+            ``{"label": str, "parameters": [{"key", "label", "type",
+            "default", "min"?, "max"?, "step"?, "display_scale"?}, ...]}``
+        """

@@ -1,4 +1,4 @@
-from .registry import STRATEGY_REGISTRY
+from .registry import STRATEGY_REGISTRY, STRATEGY_CLASS_REGISTRY
 from .result import IndicatorConfig, StrategyOutput
 from .base import Strategy
 from .crossover import CrossoverStrategy
@@ -15,6 +15,7 @@ __all__ = [
     "generate_rsi_mean_reversion_signals",
     "generate_bb_bounce_signals",
     "STRATEGY_REGISTRY",
+    "STRATEGY_CLASS_REGISTRY",
     "IndicatorConfig",
     "StrategyOutput",
     "Strategy",

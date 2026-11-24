@@ -14,6 +14,9 @@ from utils.rate_limiter import limiter
 from models import BacktestRequest, ComparisonRequest, PositionSizingConfig, RiskConfig, StrategyConfig
 from serialization import serialize_backtest_result, serialize_comparison_result
 from services import run_backtest, run_comparison
+from strategy import STRATEGY_CLASS_REGISTRY
+from risk import STOP_LOSS_REGISTRY, TAKE_PROFIT_REGISTRY
+from position_sizing import POSITION_SIZING_REGISTRY
 
 logger = get_logger(__name__)
 
@@ -139,6 +142,45 @@ def health():
             },
         }
     ), 200
+
+@api.route("/registries", methods=["GET"])
+def registries():
+    """
+    Return UI metadata for all configurable registries.
+
+    The frontend fetches this on page load to dynamically build
+    dropdowns and parameter forms — Python is the single source of truth.
+    """
+
+    strategies = [
+        {"key": key, **cls.ui_metadata()}
+        for key, cls in STRATEGY_CLASS_REGISTRY.items()
+    ]
+
+    stop_loss = [
+        {"key": key, **cls.ui_metadata()}
+        for key, cls in STOP_LOSS_REGISTRY.items()
+    ]
+
+    take_profit = [
+        {"key": key, **cls.ui_metadata()}
+        for key, cls in TAKE_PROFIT_REGISTRY.items()
+    ]
+
+    # Exclude "all_in" — it's the hidden default shown as "All-In (Default)" / "None"
+    position_sizing = [
+        {"key": key, **cls.ui_metadata()}
+        for key, cls in POSITION_SIZING_REGISTRY.items()
+        if key != "all_in"
+    ]
+
+    return jsonify({
+        "strategies": strategies,
+        "stop_loss": stop_loss,
+        "take_profit": take_profit,
+        "position_sizing": position_sizing,
+    }), 200
+
 
 @api.route("/backtest", methods=["POST"])
 @limiter.limit("5 per minute")

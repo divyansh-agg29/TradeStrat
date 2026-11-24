@@ -33,6 +33,11 @@ class StopLossRule(ABC):
     ) -> float:
         """Return the stop-loss trigger price."""
 
+    @classmethod
+    @abstractmethod
+    def ui_metadata(cls) -> dict:
+        """Return parameter schema for frontend form generation."""
+
 
 class TakeProfitRule(ABC):
     """
@@ -56,6 +61,11 @@ class TakeProfitRule(ABC):
         entry_price: float,
     ) -> float:
         """Return the take-profit trigger price."""
+
+    @classmethod
+    @abstractmethod
+    def ui_metadata(cls) -> dict:
+        """Return parameter schema for frontend form generation."""
 
 
 @dataclass(frozen=True)
@@ -99,6 +109,15 @@ class FixedPercentageStopLoss(StopLossRule):
 
         return entry_price * (1 - self.percent)
 
+    @classmethod
+    def ui_metadata(cls):
+        return {
+            "label": "Fixed Percentage",
+            "parameters": [
+                {"key": "percent", "label": "Stop Loss %", "type": "number", "default": 5, "min": 0.1, "step": 0.1, "display_scale": 100},
+            ],
+        }
+
 
 @dataclass(frozen=True)
 class FixedPriceOffsetStopLoss(StopLossRule):
@@ -131,6 +150,15 @@ class FixedPriceOffsetStopLoss(StopLossRule):
         peak_price: float | None = None,
     ) -> float:
         return entry_price - self.offset
+
+    @classmethod
+    def ui_metadata(cls):
+        return {
+            "label": "Fixed Price Offset",
+            "parameters": [
+                {"key": "offset", "label": "Price Offset", "type": "number", "default": 100, "min": 0.1, "step": 0.1},
+            ],
+        }
 
 
 @dataclass(frozen=True)
@@ -169,6 +197,15 @@ class TrailingStopLoss(StopLossRule):
         if peak_price is None:
             peak_price = entry_price
         return peak_price * (1 - self.percent)
+
+    @classmethod
+    def ui_metadata(cls):
+        return {
+            "label": "Trailing Stop",
+            "parameters": [
+                {"key": "percent", "label": "Trail %", "type": "number", "default": 5, "min": 0.1, "step": 0.1, "display_scale": 100},
+            ],
+        }
 
 
 STOP_LOSS_REGISTRY: dict[str, type[StopLossRule]] = {
@@ -217,6 +254,15 @@ class FixedPercentageTakeProfit(TakeProfitRule):
 
         return entry_price * (1 + self.percent)
 
+    @classmethod
+    def ui_metadata(cls):
+        return {
+            "label": "Fixed Percentage",
+            "parameters": [
+                {"key": "percent", "label": "Take Profit %", "type": "number", "default": 10, "min": 0.1, "step": 0.1, "display_scale": 100},
+            ],
+        }
+
 
 @dataclass(frozen=True)
 class FixedAmountTakeProfit(TakeProfitRule):
@@ -247,6 +293,15 @@ class FixedAmountTakeProfit(TakeProfitRule):
         entry_price: float,
     ) -> float:
         return entry_price + self.amount
+
+    @classmethod
+    def ui_metadata(cls):
+        return {
+            "label": "Fixed Amount",
+            "parameters": [
+                {"key": "amount", "label": "Take Profit Amount", "type": "number", "default": 100, "min": 0.1, "step": 0.1},
+            ],
+        }
 
 
 TAKE_PROFIT_REGISTRY: dict[str, type[TakeProfitRule]] = {

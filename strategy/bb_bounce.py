@@ -115,6 +115,16 @@ class BbBounceStrategy(Strategy):
             ),
         ]
 
+    @classmethod
+    def ui_metadata(cls):
+        return {
+            "label": "BB Bounce",
+            "parameters": [
+                {"key": "period", "label": "BB Period", "type": "number", "default": 20, "min": 1},
+                {"key": "std_multiplier", "label": "Std Multiplier", "type": "number", "default": 2.0, "min": 0.1, "step": 0.1},
+            ],
+        }
+
 
 def generate_bb_bounce_signals(
     df: pd.DataFrame,

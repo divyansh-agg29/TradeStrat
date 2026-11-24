@@ -94,6 +94,17 @@ class MacdStrategy(CrossoverStrategy):
             ),
         ]
 
+    @classmethod
+    def ui_metadata(cls):
+        return {
+            "label": "MACD Crossover",
+            "parameters": [
+                {"key": "short_period", "label": "Short EMA", "type": "number", "default": 12, "min": 1},
+                {"key": "long_period", "label": "Long EMA", "type": "number", "default": 26, "min": 1},
+                {"key": "signal_period", "label": "Signal EMA", "type": "number", "default": 9, "min": 1},
+            ],
+        }
+
 
 def generate_macd_crossover_signals(
     df: pd.DataFrame,

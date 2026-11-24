@@ -70,6 +70,16 @@ class SmaStrategy(CrossoverStrategy):
             ),
         ]
 
+    @classmethod
+    def ui_metadata(cls):
+        return {
+            "label": "SMA Crossover",
+            "parameters": [
+                {"key": "short_period", "label": "Short SMA", "type": "number", "default": 20, "min": 1},
+                {"key": "long_period", "label": "Long SMA", "type": "number", "default": 50, "min": 1},
+            ],
+        }
+
 
 def generate_sma_crossover_signals(
     df: pd.DataFrame,

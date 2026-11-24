@@ -2,7 +2,15 @@
 
 document.addEventListener(
     "DOMContentLoaded",
-    initializeApplication
+    async function() {
+        try {
+            await loadRegistries();
+        } catch (err) {
+            showErrorModal("Initialization Error", err.message);
+            return;
+        }
+        initializeApplication();
+    }
 );
 
 function initializeApplication() {

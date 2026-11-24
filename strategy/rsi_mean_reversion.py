@@ -92,6 +92,17 @@ class RsiStrategy(Strategy):
             ),
         ]
 
+    @classmethod
+    def ui_metadata(cls):
+        return {
+            "label": "RSI Mean Reversion",
+            "parameters": [
+                {"key": "rsi_period", "label": "RSI Period", "type": "number", "default": 14, "min": 1},
+                {"key": "overbought", "label": "Overbought", "type": "number", "default": 70, "min": 1},
+                {"key": "oversold", "label": "Oversold", "type": "number", "default": 30, "min": 1},
+            ],
+        }
+
 
 def generate_rsi_mean_reversion_signals(
     df: pd.DataFrame,

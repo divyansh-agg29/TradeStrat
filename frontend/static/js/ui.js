@@ -434,6 +434,10 @@ function onStrategyChanged() {
             input.min = param.min;
         }
 
+        if (param.step !== undefined) {
+            input.step = param.step;
+        }
+
         group.appendChild(label);
         group.appendChild(input);
         ui.strategyParametersContainer.appendChild(group);
