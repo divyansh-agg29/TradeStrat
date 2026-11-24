@@ -8,8 +8,8 @@ required to execute a single backtest.
 from dataclasses import dataclass
 
 from models.strategy_config import StrategyConfig
-from position_sizing.config import PositionSizingConfig
-from risk.config import RiskConfig
+from models.position_sizing_config import PositionSizingConfig
+from models.risk_config import RiskConfig
 
 
 @dataclass(frozen=True)

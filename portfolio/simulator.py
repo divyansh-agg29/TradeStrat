@@ -23,10 +23,10 @@ from typing import Any
 
 import pandas as pd
 
-from position_sizing.config import PositionSizingConfig
+from models.position_sizing_config import PositionSizingConfig
+from models.risk_config import RiskConfig
 from position_sizing.manager import PositionSizingManager
 from risk.manager import RiskManager
-from risk.config import RiskConfig
 from utils.logger import get_logger
 
 logger = get_logger(__name__)

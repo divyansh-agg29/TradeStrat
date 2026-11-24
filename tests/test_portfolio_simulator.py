@@ -3,8 +3,7 @@ import pytest
 
 from portfolio import SimulationResult, simulate_portfolio, PositionEntry, OpenPosition
 from portfolio.simulator import CompletedTrade, PortfolioState
-from position_sizing.config import PositionSizingConfig
-from risk.config import RiskConfig
+from models import PositionSizingConfig, RiskConfig
 
 def create_sample_dataframe(
     signals: list[str] | None = None,

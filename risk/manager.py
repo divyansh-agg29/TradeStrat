@@ -5,7 +5,7 @@ Resolves risk rule configurations into concrete rule objects
 and evaluates stop-loss / take-profit conditions.
 """
 
-from risk.config import RiskConfig
+from models.risk_config import RiskConfig
 from risk.rules import STOP_LOSS_REGISTRY, TAKE_PROFIT_REGISTRY, StopLossRule, TakeProfitRule
 from utils.logger import get_logger
 

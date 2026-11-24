@@ -1,4 +1,4 @@
-from .config import RiskConfig
+from models.risk_config import RiskConfig
 from .rules import (
     StopLossRule,
     TakeProfitRule,

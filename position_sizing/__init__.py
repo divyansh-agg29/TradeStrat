@@ -1,4 +1,4 @@
-from .config import PositionSizingConfig
+from models.position_sizing_config import PositionSizingConfig
 from .manager import PositionSizingManager
 from .rules import (
     PositionSizingRule,

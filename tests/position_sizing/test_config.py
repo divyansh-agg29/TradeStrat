@@ -4,7 +4,7 @@ Tests for PositionSizingConfig.
 
 import pytest
 
-from position_sizing import PositionSizingConfig
+from models import PositionSizingConfig
 
 
 class TestPositionSizingConfig:

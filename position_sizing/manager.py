@@ -5,7 +5,7 @@ Resolves position sizing configurations into concrete rule objects
 and calculates the number of shares to buy for each trade.
 """
 
-from position_sizing.config import PositionSizingConfig
+from models.position_sizing_config import PositionSizingConfig
 from position_sizing.rules import (
     AllInPositionSizing,
     PositionSizingRule,

@@ -1,8 +1,14 @@
 ## Development Changelog
 
-### 2026-11-24 — Dynamic Registry Endpoint
+### 2026-11-24
+
+**Dynamic Registry Endpoint**
 - Added `GET /registries` endpoint serving UI metadata for all four registries (strategies, stop-loss, take-profit, position sizing)
 - Frontend now fetches registry data on page load; deleted three hardcoded JS registry files (~365 lines)
+
+**Models Package Cleanup**
+- Moved `RiskConfig` and `PositionSizingConfig` into `models/`; deleted `risk/config.py` and `position_sizing/config.py`
+- Canonical import path is now `from models import RiskConfig, PositionSizingConfig`
 
 ### 2026-11-21
 
