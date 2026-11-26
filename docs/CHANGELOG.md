@@ -2,6 +2,10 @@
 
 ### 2026-11-25
 
+**Removed Legacy Chart Renderers**
+- Deleted `renderPriceChart()`, `renderEquityChart()` and `renderDrawdownChart()` from `dashboard.js` (~335 lines); the backend always returns `charts`
+- `renderCharts()` now unconditionally uses `renderChartFromSpec()`
+
 **Retired Legacy Strategy Registry**
 - `backtest_service` now resolves strategies via `STRATEGY_CLASS_REGISTRY` and calls `strategy_class().run(...)`; `_get_strategy_function` renamed to `_get_strategy_class`
 - Strategy and registry tests now exercise the classes directly; service tests patch `_get_strategy_class`
