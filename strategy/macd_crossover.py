@@ -14,11 +14,9 @@ Responsibilities
 - Return an enriched copy of the input DataFrame.
 """
 
-import pandas as pd
-
 from indicators.momentum import calculate_macd
 from strategy.crossover import CrossoverStrategy
-from strategy.result import IndicatorConfig, StrategyOutput
+from strategy.result import IndicatorConfig
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -104,63 +102,3 @@ class MacdStrategy(CrossoverStrategy):
                 {"key": "signal_period", "label": "Signal EMA", "type": "number", "default": 9, "min": 1},
             ],
         }
-
-
-def generate_macd_crossover_signals(
-    df: pd.DataFrame,
-    short_period: int = 12,
-    long_period: int = 26,
-    signal_period=9,
-    price_column: str = "Close",
-) -> StrategyOutput:
-    """
-    Generate trading signals using the MACD crossover strategy.
-
-    BUY Signal
-        Generated when the MACD crosses ABOVE the Signal.
-
-    SELL Signal
-        Generated when the MACD crosses BELOW the Signal.
-
-    HOLD Signal
-        Generated on all other rows.
-
-    Parameters
-    ----------
-    df : pandas.DataFrame
-        Market data DataFrame.
-
-    short_period : int, default=12
-        Short-term EMA period.
-
-    long_period : int, default=26
-        Long-term EMA period.
-
-    signal_period : int, default=9
-        Signal line EMA period.
-
-    price_column : str, default="Close"
-        Column used for EMA calculations if indicators
-        need to be generated.
-
-    Returns
-    -------
-    StrategyOutput
-        Contains the enriched DataFrame and indicator metadata.
-
-    Raises
-    ------
-    ValueError
-        If:
-
-        - DataFrame is empty.
-        - short_period >= long_period.
-    """
-
-    return MacdStrategy().run(
-        df,
-        price_column=price_column,
-        short_period=short_period,
-        long_period=long_period,
-        signal_period=signal_period,
-    )

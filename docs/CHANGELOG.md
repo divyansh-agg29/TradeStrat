@@ -1,5 +1,11 @@
 ## Development Changelog
 
+### 2026-11-25
+
+**Retired Legacy Strategy Registry**
+- `backtest_service` now resolves strategies via `STRATEGY_CLASS_REGISTRY` and calls `strategy_class().run(...)`; `_get_strategy_function` renamed to `_get_strategy_class`
+- Strategy and registry tests now exercise the classes directly; service tests patch `_get_strategy_class`
+
 ### 2026-11-24
 
 **Dynamic Registry Endpoint**

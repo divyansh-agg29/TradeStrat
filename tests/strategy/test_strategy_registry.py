@@ -4,20 +4,23 @@ Tests for the strategy registry.
 
 import pytest
 
-from strategy import STRATEGY_REGISTRY
-from strategy.sma_crossover import generate_sma_crossover_signals
-from strategy.ema_crossover import generate_ema_crossover_signals
-from strategy.macd_crossover import generate_macd_crossover_signals
-from strategy.rsi_mean_reversion import generate_rsi_mean_reversion_signals
-from strategy.bb_bounce import generate_bb_bounce_signals
+from strategy import (
+    STRATEGY_CLASS_REGISTRY,
+    BbBounceStrategy,
+    EmaStrategy,
+    MacdStrategy,
+    RsiStrategy,
+    SmaStrategy,
+    Strategy,
+)
 
 
 EXPECTED_STRATEGIES = {
-    "sma_crossover": generate_sma_crossover_signals,
-    "ema_crossover": generate_ema_crossover_signals,
-    "macd_crossover": generate_macd_crossover_signals,
-    "rsi_mean_reversion": generate_rsi_mean_reversion_signals,
-    "bb_bounce": generate_bb_bounce_signals,
+    "sma_crossover": SmaStrategy,
+    "ema_crossover": EmaStrategy,
+    "macd_crossover": MacdStrategy,
+    "rsi_mean_reversion": RsiStrategy,
+    "bb_bounce": BbBounceStrategy,
 }
 
 
@@ -28,24 +31,24 @@ class TestStrategyRegistry:
         The registry should contain all known strategies and nothing extra.
         """
 
-        assert set(STRATEGY_REGISTRY.keys()) == set(EXPECTED_STRATEGIES.keys())
+        assert set(STRATEGY_CLASS_REGISTRY.keys()) == set(EXPECTED_STRATEGIES.keys())
 
     @pytest.mark.parametrize(
-        "name, expected_fn",
+        "name, expected_class",
         EXPECTED_STRATEGIES.items(),
     )
-    def test_strategy_maps_to_correct_function(self, name, expected_fn):
+    def test_strategy_maps_to_correct_class(self, name, expected_class):
         """
-        Each strategy key should map to its implementation function.
-        """
-
-        assert STRATEGY_REGISTRY[name] is expected_fn
-
-    def test_all_registered_strategies_are_callable(self):
-        """
-        Every registered strategy implementation should be callable.
+        Each strategy key should map to its implementation class.
         """
 
-        for strategy_function in STRATEGY_REGISTRY.values():
+        assert STRATEGY_CLASS_REGISTRY[name] is expected_class
 
-            assert callable(strategy_function)
+    def test_all_registered_strategies_subclass_strategy(self):
+        """
+        Every registered strategy should inherit from the Strategy ABC.
+        """
+
+        for strategy_class in STRATEGY_CLASS_REGISTRY.values():
+
+            assert issubclass(strategy_class, Strategy)

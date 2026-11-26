@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from strategy import generate_bb_bounce_signals
+from strategy import BbBounceStrategy
 from tests.strategy.helpers import create_market_data
 
 
@@ -12,7 +12,7 @@ class TestBBBounceSignalGeneration:
 
         df = create_market_data([100] * 50)
 
-        result = generate_bb_bounce_signals(df).df
+        result = BbBounceStrategy().run(df).df
 
         assert "Signal" in result.columns
 
@@ -21,7 +21,7 @@ class TestBBBounceSignalGeneration:
 
         df = create_market_data([100] * 50)
 
-        result = generate_bb_bounce_signals(df).df
+        result = BbBounceStrategy().run(df).df
 
         assert set(result["Signal"].unique()).issubset(
             {"BUY", "SELL", "HOLD"}
@@ -32,7 +32,7 @@ class TestBBBounceSignalGeneration:
 
         df = create_market_data([100] * 50)
 
-        result = generate_bb_bounce_signals(df).df
+        result = BbBounceStrategy().run(df).df
 
         assert set(result["Signal"].unique()) == {"HOLD"}
 
@@ -44,7 +44,7 @@ class TestBBBounceSignalGeneration:
 
         df = create_market_data(prices)
 
-        result = generate_bb_bounce_signals(
+        result = BbBounceStrategy().run(
             df,
             period=5,
             std_multiplier=1.0,
@@ -61,7 +61,7 @@ class TestBBBounceSignalGeneration:
 
         df = create_market_data(prices)
 
-        result = generate_bb_bounce_signals(
+        result = BbBounceStrategy().run(
             df,
             period=5,
             std_multiplier=1.0,
@@ -78,7 +78,7 @@ class TestBBBounceSignalGeneration:
 
         df = create_market_data(prices)
 
-        result = generate_bb_bounce_signals(
+        result = BbBounceStrategy().run(
             df,
             period=10,
             std_multiplier=3.0,
@@ -100,7 +100,7 @@ class TestBBBounceIndicatorIntegration:
         df["BB_Upper20_2.0"] = 110
         df["BB_Lower20_2.0"] = 100
 
-        result = generate_bb_bounce_signals(df).df
+        result = BbBounceStrategy().run(df).df
 
         assert (result["BB_Middle20_2.0"] == 105).all()
         assert (result["BB_Upper20_2.0"] == 110).all()
@@ -111,7 +111,7 @@ class TestBBBounceIndicatorIntegration:
 
         df = create_market_data([100] * 50)
 
-        result = generate_bb_bounce_signals(df).df
+        result = BbBounceStrategy().run(df).df
 
         assert "BB_Middle20_2.0" in result.columns
         assert "BB_Upper20_2.0" in result.columns
@@ -122,7 +122,7 @@ class TestBBBounceIndicatorIntegration:
 
         df = create_market_data([100] * 50)
 
-        result = generate_bb_bounce_signals(
+        result = BbBounceStrategy().run(
             df,
             period=10,
         ).df
@@ -136,7 +136,7 @@ class TestBBBounceIndicatorIntegration:
 
         df = create_market_data([100] * 50)
 
-        result = generate_bb_bounce_signals(
+        result = BbBounceStrategy().run(
             df,
             std_multiplier=1.5,
         ).df
@@ -151,7 +151,7 @@ class TestBBBounceIndicatorIntegration:
         df = create_market_data([100] * 50)
         df["CustomPrice"] = [110] * 50
 
-        result = generate_bb_bounce_signals(
+        result = BbBounceStrategy().run(
             df,
             price_column="CustomPrice",
         ).df
@@ -168,7 +168,7 @@ class TestBBBounceValidation:
         df = pd.DataFrame()
 
         with pytest.raises(ValueError, match="cannot be empty"):
-            generate_bb_bounce_signals(df)
+            BbBounceStrategy().run(df)
 
     def test_invalid_period_raises_value_error(self):
         """Period must be positive."""
@@ -176,7 +176,7 @@ class TestBBBounceValidation:
         df = create_market_data([100] * 50)
 
         with pytest.raises(ValueError, match="greater than zero"):
-            generate_bb_bounce_signals(
+            BbBounceStrategy().run(
                 df,
                 period=0,
             )
@@ -187,7 +187,7 @@ class TestBBBounceValidation:
         df = create_market_data([100] * 50)
 
         with pytest.raises(ValueError, match="greater than zero"):
-            generate_bb_bounce_signals(
+            BbBounceStrategy().run(
                 df,
                 period=-5,
             )
@@ -198,7 +198,7 @@ class TestBBBounceValidation:
         df = create_market_data([100] * 50)
 
         with pytest.raises(ValueError, match="greater than zero"):
-            generate_bb_bounce_signals(
+            BbBounceStrategy().run(
                 df,
                 std_multiplier=0,
             )
@@ -209,7 +209,7 @@ class TestBBBounceValidation:
         df = create_market_data([100] * 50)
 
         with pytest.raises(ValueError, match="greater than zero"):
-            generate_bb_bounce_signals(
+            BbBounceStrategy().run(
                 df,
                 std_multiplier=-1.0,
             )
@@ -220,7 +220,7 @@ class TestBBBounceValidation:
         df = create_market_data([100] * 50)
 
         with pytest.raises(ValueError, match="not found"):
-            generate_bb_bounce_signals(
+            BbBounceStrategy().run(
                 df,
                 price_column="NonExistentColumn",
             )
@@ -234,7 +234,7 @@ class TestBBBounceDataFrameContract:
         df = create_market_data([100] * 50)
         original = df.copy(deep=True)
 
-        generate_bb_bounce_signals(df)
+        BbBounceStrategy().run(df)
 
         pd.testing.assert_frame_equal(df, original)
 
@@ -243,7 +243,7 @@ class TestBBBounceDataFrameContract:
 
         df = create_market_data([100] * 50)
 
-        result = generate_bb_bounce_signals(df).df
+        result = BbBounceStrategy().run(df).df
 
         assert result is not df
 
@@ -252,7 +252,7 @@ class TestBBBounceDataFrameContract:
 
         df = create_market_data([100] * 50)
 
-        result = generate_bb_bounce_signals(df).df
+        result = BbBounceStrategy().run(df).df
 
         for column in df.columns:
             assert column in result.columns
@@ -267,7 +267,7 @@ class TestBBBounceDataFrameContract:
             freq="D",
         )
 
-        result = generate_bb_bounce_signals(df).df
+        result = BbBounceStrategy().run(df).df
 
         pd.testing.assert_index_equal(df.index, result.index)
 
@@ -279,7 +279,7 @@ class TestBBBounceEdgeCases:
 
         df = create_market_data([100] * 50)
 
-        result = generate_bb_bounce_signals(df).df
+        result = BbBounceStrategy().run(df).df
 
         assert result.iloc[0]["Signal"] == "HOLD"
 
@@ -288,7 +288,7 @@ class TestBBBounceEdgeCases:
 
         df = create_market_data([100] * 50)
 
-        result = generate_bb_bounce_signals(df).df
+        result = BbBounceStrategy().run(df).df
 
         assert result["Signal"].isna().sum() == 0
 
@@ -297,7 +297,7 @@ class TestBBBounceEdgeCases:
 
         df = create_market_data([100] * 25)
 
-        result = generate_bb_bounce_signals(
+        result = BbBounceStrategy().run(
             df,
             period=20,
         ).df
@@ -313,7 +313,7 @@ class TestBBBounceStrategyOutput:
 
         df = create_market_data([100] * 50)
 
-        result = generate_bb_bounce_signals(df)
+        result = BbBounceStrategy().run(df)
 
         assert hasattr(result, "df")
         assert hasattr(result, "indicators")
@@ -323,7 +323,7 @@ class TestBBBounceStrategyOutput:
 
         df = create_market_data([100] * 50)
 
-        result = generate_bb_bounce_signals(df)
+        result = BbBounceStrategy().run(df)
 
         assert len(result.indicators) == 3
 
@@ -338,7 +338,7 @@ class TestBBBounceStrategyOutput:
 
         df = create_market_data([100] * 50)
 
-        result = generate_bb_bounce_signals(df)
+        result = BbBounceStrategy().run(df)
 
         for indicator in result.indicators:
             assert indicator.display == "overlay"
@@ -348,7 +348,7 @@ class TestBBBounceStrategyOutput:
 
         df = create_market_data([100] * 50)
 
-        result = generate_bb_bounce_signals(df)
+        result = BbBounceStrategy().run(df)
 
         for indicator in result.indicators:
             assert indicator.column in result.df.columns

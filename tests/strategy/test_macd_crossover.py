@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from strategy import generate_macd_crossover_signals
+from strategy import MacdStrategy
 from tests.strategy.helpers import create_market_data
 
 
@@ -12,7 +12,7 @@ class TestMACDCrossoverSignalGeneration:
 
         df = create_market_data(range(1, 101))
 
-        result = generate_macd_crossover_signals(df).df
+        result = MacdStrategy().run(df).df
 
         assert "Signal" in result.columns
 
@@ -21,7 +21,7 @@ class TestMACDCrossoverSignalGeneration:
 
         df = create_market_data(range(1, 101))
 
-        result = generate_macd_crossover_signals(df).df
+        result = MacdStrategy().run(df).df
 
         assert set(result["Signal"].unique()).issubset(
             {"BUY", "SELL", "HOLD"}
@@ -37,7 +37,7 @@ class TestMACDCrossoverSignalGeneration:
 
         df = create_market_data(prices)
 
-        result = generate_macd_crossover_signals(df).df
+        result = MacdStrategy().run(df).df
 
         assert "BUY" in result["Signal"].values
 
@@ -51,7 +51,7 @@ class TestMACDCrossoverSignalGeneration:
 
         df = create_market_data(prices)
 
-        result = generate_macd_crossover_signals(df).df
+        result = MacdStrategy().run(df).df
 
         assert "SELL" in result["Signal"].values
 
@@ -60,7 +60,7 @@ class TestMACDCrossoverSignalGeneration:
 
         df = create_market_data([100] * 100)
 
-        result = generate_macd_crossover_signals(df).df
+        result = MacdStrategy().run(df).df
 
         assert set(result["Signal"].unique()) == {"HOLD"}
 
@@ -76,7 +76,7 @@ class TestMACDCrossoverIndicatorIntegration:
         df["MACD_Signal_12_26_9"] = 888
         df["MACD_Histogram_12_26_9"] = 777
 
-        result = generate_macd_crossover_signals(df).df
+        result = MacdStrategy().run(df).df
 
         assert (result["MACD_12_26_9"] == 999).all()
         assert (result["MACD_Signal_12_26_9"] == 888).all()
@@ -87,7 +87,7 @@ class TestMACDCrossoverIndicatorIntegration:
 
         df = create_market_data(range(1, 101))
 
-        result = generate_macd_crossover_signals(df).df
+        result = MacdStrategy().run(df).df
 
         assert "MACD_12_26_9" in result.columns
         assert "MACD_Signal_12_26_9" in result.columns
@@ -98,7 +98,7 @@ class TestMACDCrossoverIndicatorIntegration:
 
         df = create_market_data(range(1, 101))
 
-        result = generate_macd_crossover_signals(
+        result = MacdStrategy().run(
             df,
             short_period=10,
             long_period=30,
@@ -118,7 +118,7 @@ class TestMACDCrossoverValidation:
         df = pd.DataFrame()
 
         with pytest.raises(ValueError, match="Input DataFrame cannot be empty"):
-            generate_macd_crossover_signals(df)
+            MacdStrategy().run(df)
 
     def test_invalid_period_order_raises_value_error(self):
         """short_period must be smaller than long_period."""
@@ -126,7 +126,7 @@ class TestMACDCrossoverValidation:
         df = create_market_data(range(1, 101))
 
         with pytest.raises(ValueError, match="short_period must be smaller than long_period"):
-            generate_macd_crossover_signals(
+            MacdStrategy().run(
                 df,
                 short_period=50,
                 long_period=20,
@@ -138,7 +138,7 @@ class TestMACDCrossoverValidation:
         df = create_market_data(range(1, 101))
 
         with pytest.raises(ValueError, match="short_period must be smaller than long_period"):
-            generate_macd_crossover_signals(
+            MacdStrategy().run(
                 df,
                 short_period=20,
                 long_period=20,
@@ -150,7 +150,7 @@ class TestMACDCrossoverValidation:
         df = create_market_data(range(1, 101))
 
         with pytest.raises(ValueError, match="Price column.*not found"):
-            generate_macd_crossover_signals(
+            MacdStrategy().run(
                 df,
                 price_column="AdjustedClose",
             )
@@ -161,7 +161,7 @@ class TestMACDCrossoverValidation:
         df = create_market_data(range(1, 101))
 
         with pytest.raises(ValueError, match="must be greater than zero"):
-            generate_macd_crossover_signals(
+            MacdStrategy().run(
                 df,
                 signal_period=0,
             )
@@ -175,7 +175,7 @@ class TestMACDCrossoverDataFrameContract:
         df = create_market_data(range(1, 101))
         original = df.copy(deep=True)
 
-        generate_macd_crossover_signals(df)
+        MacdStrategy().run(df)
 
         pd.testing.assert_frame_equal(df, original)
 
@@ -184,7 +184,7 @@ class TestMACDCrossoverDataFrameContract:
 
         df = create_market_data(range(1, 101))
 
-        result = generate_macd_crossover_signals(df).df
+        result = MacdStrategy().run(df).df
 
         assert result is not df
 
@@ -193,7 +193,7 @@ class TestMACDCrossoverDataFrameContract:
 
         df = create_market_data(range(1, 101))
 
-        result = generate_macd_crossover_signals(df).df
+        result = MacdStrategy().run(df).df
 
         for column in df.columns:
             assert column in result.columns
@@ -208,7 +208,7 @@ class TestMACDCrossoverDataFrameContract:
             freq="D",
         )
 
-        result = generate_macd_crossover_signals(df).df
+        result = MacdStrategy().run(df).df
 
         pd.testing.assert_index_equal(df.index, result.index)
 
@@ -220,7 +220,7 @@ class TestMACDCrossoverEdgeCases:
 
         df = create_market_data(range(1, 101))
 
-        result = generate_macd_crossover_signals(df).df
+        result = MacdStrategy().run(df).df
 
         assert result.iloc[0]["Signal"] == "HOLD"
 
@@ -229,6 +229,6 @@ class TestMACDCrossoverEdgeCases:
 
         df = create_market_data(range(1, 101))
 
-        result = generate_macd_crossover_signals(df).df
+        result = MacdStrategy().run(df).df
 
         assert result["Signal"].isna().sum() == 0

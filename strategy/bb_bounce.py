@@ -15,11 +15,9 @@ Responsibilities
 - Return an enriched copy of the input DataFrame.
 """
 
-import pandas as pd
-
 from indicators.moving_average import calculate_bollinger_bands
 from strategy.base import Strategy
-from strategy.result import IndicatorConfig, StrategyOutput
+from strategy.result import IndicatorConfig
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -124,59 +122,3 @@ class BbBounceStrategy(Strategy):
                 {"key": "std_multiplier", "label": "Std Multiplier", "type": "number", "default": 2.0, "min": 0.1, "step": 0.1},
             ],
         }
-
-
-def generate_bb_bounce_signals(
-    df: pd.DataFrame,
-    period: int = 20,
-    std_multiplier: float = 2.0,
-    price_column: str = "Close",
-) -> StrategyOutput:
-    """
-    Generate trading signals using the Bollinger Bands bounce strategy.
-
-    BUY Signal
-        Generated when the price crosses BELOW the lower band.
-
-    SELL Signal
-        Generated when the price crosses ABOVE the upper band.
-
-    HOLD Signal
-        Generated on all other rows.
-
-    Parameters
-    ----------
-    df : pandas.DataFrame
-        Market data DataFrame.
-
-    period : int, default=20
-        Period used for the Bollinger Bands calculation.
-
-    std_multiplier : float, default=2.0
-        Number of standard deviations for band width.
-
-    price_column : str, default="Close"
-        Column used for BB calculation if the indicator
-        needs to be generated.
-
-    Returns
-    -------
-    StrategyOutput
-        Contains the enriched DataFrame and indicator metadata.
-
-    Raises
-    ------
-    ValueError
-        If:
-
-        - DataFrame is empty.
-        - period is not positive.
-        - std_multiplier is not positive.
-    """
-
-    return BbBounceStrategy().run(
-        df,
-        price_column=price_column,
-        period=period,
-        std_multiplier=std_multiplier,
-    )

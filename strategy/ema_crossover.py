@@ -14,11 +14,9 @@ Responsibilities
 - Return an enriched copy of the input DataFrame.
 """
 
-import pandas as pd
-
 from indicators.moving_average import calculate_ema
 from strategy.crossover import CrossoverStrategy
-from strategy.result import IndicatorConfig, StrategyOutput
+from strategy.result import IndicatorConfig
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -79,58 +77,3 @@ class EmaStrategy(CrossoverStrategy):
                 {"key": "long_period", "label": "Long EMA", "type": "number", "default": 50, "min": 1},
             ],
         }
-
-
-def generate_ema_crossover_signals(
-    df: pd.DataFrame,
-    short_period: int = 20,
-    long_period: int = 50,
-    price_column: str = "Close",
-) -> StrategyOutput:
-    """
-    Generate trading signals using the EMA crossover strategy.
-
-    BUY Signal
-        Generated when the short EMA crosses ABOVE the long EMA.
-
-    SELL Signal
-        Generated when the short EMA crosses BELOW the long EMA.
-
-    HOLD Signal
-        Generated on all other rows.
-
-    Parameters
-    ----------
-    df : pandas.DataFrame
-        Market data DataFrame.
-
-    short_period : int, default=20
-        Short-term EMA period.
-
-    long_period : int, default=50
-        Long-term EMA period.
-
-    price_column : str, default="Close"
-        Column used for EMA calculations if indicators
-        need to be generated.
-
-    Returns
-    -------
-    StrategyOutput
-        Contains the enriched DataFrame and indicator metadata.
-
-    Raises
-    ------
-    ValueError
-        If:
-
-        - DataFrame is empty.
-        - short_period >= long_period.
-    """
-
-    return EmaStrategy().run(
-        df,
-        price_column=price_column,
-        short_period=short_period,
-        long_period=long_period,
-    )

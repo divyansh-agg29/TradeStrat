@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from strategy import generate_sma_crossover_signals
+from strategy import SmaStrategy
 from tests.strategy.helpers import create_market_data
 
 
@@ -12,7 +12,7 @@ class TestSMACrossoverSignalGeneration:
 
         df = create_market_data(range(1, 101))
 
-        result = generate_sma_crossover_signals(df).df
+        result = SmaStrategy().run(df).df
 
         assert "Signal" in result.columns
 
@@ -21,7 +21,7 @@ class TestSMACrossoverSignalGeneration:
 
         df = create_market_data(range(1, 101))
 
-        result = generate_sma_crossover_signals(df).df
+        result = SmaStrategy().run(df).df
 
         assert set(result["Signal"].unique()).issubset(
             {"BUY", "SELL", "HOLD"}
@@ -37,7 +37,7 @@ class TestSMACrossoverSignalGeneration:
 
         df = create_market_data(prices)
 
-        result = generate_sma_crossover_signals(df).df
+        result = SmaStrategy().run(df).df
 
         assert "BUY" in result["Signal"].values
 
@@ -51,7 +51,7 @@ class TestSMACrossoverSignalGeneration:
 
         df = create_market_data(prices)
 
-        result = generate_sma_crossover_signals(df).df
+        result = SmaStrategy().run(df).df
 
         assert "SELL" in result["Signal"].values
 
@@ -60,7 +60,7 @@ class TestSMACrossoverSignalGeneration:
 
         df = create_market_data([100] * 100)
 
-        result = generate_sma_crossover_signals(df).df
+        result = SmaStrategy().run(df).df
 
         assert set(result["Signal"].unique()) == {"HOLD"}
 
@@ -75,7 +75,7 @@ class TestSMACrossoverIndicatorIntegration:
         df["SMA20"] = 999
         df["SMA50"] = 888
 
-        result = generate_sma_crossover_signals(df).df
+        result = SmaStrategy().run(df).df
 
         assert (result["SMA20"] == 999).all()
         assert (result["SMA50"] == 888).all()
@@ -85,7 +85,7 @@ class TestSMACrossoverIndicatorIntegration:
 
         df = create_market_data(range(1, 101))
 
-        result = generate_sma_crossover_signals(df).df
+        result = SmaStrategy().run(df).df
 
         assert "SMA20" in result.columns
         assert "SMA50" in result.columns
@@ -95,7 +95,7 @@ class TestSMACrossoverIndicatorIntegration:
 
         df = create_market_data(range(1, 101))
 
-        result = generate_sma_crossover_signals(
+        result = SmaStrategy().run(
             df,
             short_period=10,
             long_period=30,
@@ -113,7 +113,7 @@ class TestSMACrossoverValidation:
         df = pd.DataFrame()
 
         with pytest.raises(ValueError, match="Input DataFrame cannot be empty"):
-            generate_sma_crossover_signals(df)
+            SmaStrategy().run(df)
 
     def test_invalid_period_order_raises_value_error(self):
         """short_period must be smaller than long_period."""
@@ -121,7 +121,7 @@ class TestSMACrossoverValidation:
         df = create_market_data(range(1, 101))
 
         with pytest.raises(ValueError, match="short_period must be smaller than long_period"):
-            generate_sma_crossover_signals(
+            SmaStrategy().run(
                 df,
                 short_period=50,
                 long_period=20,
@@ -133,7 +133,7 @@ class TestSMACrossoverValidation:
         df = create_market_data(range(1, 101))
 
         with pytest.raises(ValueError, match="short_period must be smaller than long_period"):
-            generate_sma_crossover_signals(
+            SmaStrategy().run(
                 df,
                 short_period=20,
                 long_period=20,
@@ -145,7 +145,7 @@ class TestSMACrossoverValidation:
         df = create_market_data(range(1, 101))
 
         with pytest.raises(ValueError, match="Price column.*not found"):
-            generate_sma_crossover_signals(
+            SmaStrategy().run(
                 df,
                 price_column="AdjustedClose",
             )
@@ -159,7 +159,7 @@ class TestSMACrossoverDataFrameContract:
         df = create_market_data(range(1, 101))
         original = df.copy(deep=True)
 
-        generate_sma_crossover_signals(df)
+        SmaStrategy().run(df)
 
         pd.testing.assert_frame_equal(df, original)
 
@@ -168,7 +168,7 @@ class TestSMACrossoverDataFrameContract:
 
         df = create_market_data(range(1, 101))
 
-        result = generate_sma_crossover_signals(df).df
+        result = SmaStrategy().run(df).df
 
         assert result is not df
 
@@ -177,7 +177,7 @@ class TestSMACrossoverDataFrameContract:
 
         df = create_market_data(range(1, 101))
 
-        result = generate_sma_crossover_signals(df).df
+        result = SmaStrategy().run(df).df
 
         for column in df.columns:
             assert column in result.columns
@@ -192,7 +192,7 @@ class TestSMACrossoverDataFrameContract:
             freq="D",
         )
 
-        result = generate_sma_crossover_signals(df).df
+        result = SmaStrategy().run(df).df
 
         pd.testing.assert_index_equal(df.index, result.index)
 
@@ -204,7 +204,7 @@ class TestSMACrossoverEdgeCases:
 
         df = create_market_data(range(10))
 
-        result = generate_sma_crossover_signals(df).df
+        result = SmaStrategy().run(df).df
 
         assert set(result["Signal"].unique()) == {"HOLD"}
 
@@ -213,7 +213,7 @@ class TestSMACrossoverEdgeCases:
 
         df = create_market_data(range(1, 101))
 
-        result = generate_sma_crossover_signals(df).df
+        result = SmaStrategy().run(df).df
 
         assert result.iloc[0]["Signal"] == "HOLD"
 
@@ -222,6 +222,6 @@ class TestSMACrossoverEdgeCases:
 
         df = create_market_data(range(1, 101))
 
-        result = generate_sma_crossover_signals(df).df
+        result = SmaStrategy().run(df).df
 
         assert result["Signal"].isna().sum() == 0

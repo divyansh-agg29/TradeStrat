@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from strategy import generate_ema_crossover_signals
+from strategy import EmaStrategy
 from tests.strategy.helpers import create_market_data
 
 
@@ -12,7 +12,7 @@ class TestEMACrossoverSignalGeneration:
 
         df = create_market_data(range(1, 101))
 
-        result = generate_ema_crossover_signals(df).df
+        result = EmaStrategy().run(df).df
 
         assert "Signal" in result.columns
 
@@ -21,7 +21,7 @@ class TestEMACrossoverSignalGeneration:
 
         df = create_market_data(range(1, 101))
 
-        result = generate_ema_crossover_signals(df).df
+        result = EmaStrategy().run(df).df
 
         assert set(result["Signal"].unique()).issubset(
             {"BUY", "SELL", "HOLD"}
@@ -37,7 +37,7 @@ class TestEMACrossoverSignalGeneration:
 
         df = create_market_data(prices)
 
-        result = generate_ema_crossover_signals(df).df
+        result = EmaStrategy().run(df).df
 
         assert "BUY" in result["Signal"].values
 
@@ -51,7 +51,7 @@ class TestEMACrossoverSignalGeneration:
 
         df = create_market_data(prices)
 
-        result = generate_ema_crossover_signals(df).df
+        result = EmaStrategy().run(df).df
 
         assert "SELL" in result["Signal"].values
 
@@ -60,7 +60,7 @@ class TestEMACrossoverSignalGeneration:
 
         df = create_market_data([100] * 100)
 
-        result = generate_ema_crossover_signals(df).df
+        result = EmaStrategy().run(df).df
 
         assert set(result["Signal"].unique()) == {"HOLD"}
 
@@ -75,7 +75,7 @@ class TestEMACrossoverIndicatorIntegration:
         df["EMA20"] = 999
         df["EMA50"] = 888
 
-        result = generate_ema_crossover_signals(df).df
+        result = EmaStrategy().run(df).df
 
         assert (result["EMA20"] == 999).all()
         assert (result["EMA50"] == 888).all()
@@ -85,7 +85,7 @@ class TestEMACrossoverIndicatorIntegration:
 
         df = create_market_data(range(1, 101))
 
-        result = generate_ema_crossover_signals(df).df
+        result = EmaStrategy().run(df).df
 
         assert "EMA20" in result.columns
         assert "EMA50" in result.columns
@@ -95,7 +95,7 @@ class TestEMACrossoverIndicatorIntegration:
 
         df = create_market_data(range(1, 101))
 
-        result = generate_ema_crossover_signals(
+        result = EmaStrategy().run(
             df,
             short_period=10,
             long_period=30,
@@ -113,7 +113,7 @@ class TestEMACrossoverValidation:
         df = pd.DataFrame()
 
         with pytest.raises(ValueError, match="Input DataFrame cannot be empty"):
-            generate_ema_crossover_signals(df)
+            EmaStrategy().run(df)
 
     def test_invalid_period_order_raises_value_error(self):
         """short_period must be smaller than long_period."""
@@ -121,7 +121,7 @@ class TestEMACrossoverValidation:
         df = create_market_data(range(1, 101))
 
         with pytest.raises(ValueError, match="short_period must be smaller than long_period"):
-            generate_ema_crossover_signals(
+            EmaStrategy().run(
                 df,
                 short_period=50,
                 long_period=20,
@@ -133,7 +133,7 @@ class TestEMACrossoverValidation:
         df = create_market_data(range(1, 101))
 
         with pytest.raises(ValueError, match="short_period must be smaller than long_period"):
-            generate_ema_crossover_signals(
+            EmaStrategy().run(
                 df,
                 short_period=20,
                 long_period=20,
@@ -145,7 +145,7 @@ class TestEMACrossoverValidation:
         df = create_market_data(range(1, 101))
 
         with pytest.raises(ValueError, match="Price column.*not found"):
-            generate_ema_crossover_signals(
+            EmaStrategy().run(
                 df,
                 price_column="AdjustedClose",
             )
@@ -159,7 +159,7 @@ class TestEMACrossoverDataFrameContract:
         df = create_market_data(range(1, 101))
         original = df.copy(deep=True)
 
-        generate_ema_crossover_signals(df)
+        EmaStrategy().run(df)
 
         pd.testing.assert_frame_equal(df, original)
 
@@ -168,7 +168,7 @@ class TestEMACrossoverDataFrameContract:
 
         df = create_market_data(range(1, 101))
 
-        result = generate_ema_crossover_signals(df).df
+        result = EmaStrategy().run(df).df
 
         assert result is not df
 
@@ -177,7 +177,7 @@ class TestEMACrossoverDataFrameContract:
 
         df = create_market_data(range(1, 101))
 
-        result = generate_ema_crossover_signals(df).df
+        result = EmaStrategy().run(df).df
 
         for column in df.columns:
             assert column in result.columns
@@ -192,7 +192,7 @@ class TestEMACrossoverDataFrameContract:
             freq="D",
         )
 
-        result = generate_ema_crossover_signals(df).df
+        result = EmaStrategy().run(df).df
 
         pd.testing.assert_index_equal(df.index, result.index)
 
@@ -204,7 +204,7 @@ class TestEMACrossoverEdgeCases:
 
         df = create_market_data(range(1, 101))
 
-        result = generate_ema_crossover_signals(df).df
+        result = EmaStrategy().run(df).df
 
         assert result.iloc[0]["Signal"] == "HOLD"
 
@@ -213,6 +213,6 @@ class TestEMACrossoverEdgeCases:
 
         df = create_market_data(range(1, 101))
 
-        result = generate_ema_crossover_signals(df).df
+        result = EmaStrategy().run(df).df
 
         assert result["Signal"].isna().sum() == 0

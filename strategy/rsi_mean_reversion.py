@@ -15,11 +15,9 @@ Responsibilities
 - Return an enriched copy of the input DataFrame.
 """
 
-import pandas as pd
-
 from indicators.momentum import calculate_rsi
 from strategy.base import Strategy
-from strategy.result import IndicatorConfig, StrategyOutput
+from strategy.result import IndicatorConfig
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -102,64 +100,3 @@ class RsiStrategy(Strategy):
                 {"key": "oversold", "label": "Oversold", "type": "number", "default": 30, "min": 1},
             ],
         }
-
-
-def generate_rsi_mean_reversion_signals(
-    df: pd.DataFrame,
-    rsi_period: int = 14,
-    overbought: int = 70,
-    oversold: int = 30,
-    price_column: str = "Close",
-) -> StrategyOutput:
-    """
-    Generate trading signals using the RSI mean reversion strategy.
-
-    BUY Signal
-        Generated when the RSI crosses BELOW the oversold threshold.
-
-    SELL Signal
-        Generated when the RSI crosses ABOVE the overbought threshold.
-
-    HOLD Signal
-        Generated on all other rows.
-
-    Parameters
-    ----------
-    df : pandas.DataFrame
-        Market data DataFrame.
-
-    rsi_period : int, default=14
-        Period used for the RSI calculation.
-
-    overbought : int, default=70
-        RSI level above which a SELL signal is generated.
-
-    oversold : int, default=30
-        RSI level below which a BUY signal is generated.
-
-    price_column : str, default="Close"
-        Column used for RSI calculation if the indicator
-        needs to be generated.
-
-    Returns
-    -------
-    StrategyOutput
-        Contains the enriched DataFrame and indicator metadata.
-
-    Raises
-    ------
-    ValueError
-        If:
-
-        - DataFrame is empty.
-        - rsi_period is not positive.
-        - overbought <= oversold.
-    """
-
-    return RsiStrategy().run(
-        df,
-        price_column=price_column,
-        rsi_period=rsi_period,
-        overbought=overbought,
-        oversold=oversold,
-    )

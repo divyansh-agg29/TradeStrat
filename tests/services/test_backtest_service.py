@@ -4,6 +4,7 @@ Tests for the Backtest Service.
 
 import pandas as pd
 import pytest
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from analytics import AnalyticsResult
@@ -99,11 +100,11 @@ class TestBacktestServiceSuccess:
         )
 
         with patch(
-            "services.backtest_service._get_strategy_function"
+            "services.backtest_service._get_strategy_class"
         ) as mock_strategy:
 
             mock_strategy.return_value = (
-                lambda df, **kwargs: strategy_output
+                lambda: SimpleNamespace(run=lambda df, **kwargs: strategy_output)
             )
 
             result = run_backtest(
@@ -174,11 +175,11 @@ class TestBacktestServiceSuccess:
         mock_analyze_performance.return_value = analytics_result
 
         with patch(
-            "services.backtest_service._get_strategy_function"
+            "services.backtest_service._get_strategy_class"
         ) as mock_strategy:
 
             mock_strategy.return_value = (
-                lambda df, **kwargs: strategy_output
+                lambda: SimpleNamespace(run=lambda df, **kwargs: strategy_output)
             )
 
             run_backtest(
@@ -233,11 +234,11 @@ class TestBacktestServiceSuccess:
         mock_analyze_performance.return_value = analytics_result
 
         with patch(
-            "services.backtest_service._get_strategy_function"
+            "services.backtest_service._get_strategy_class"
         ) as mock_strategy:
 
             mock_strategy.return_value = (
-                lambda df, **kwargs: strategy_output
+                lambda: SimpleNamespace(run=lambda df, **kwargs: strategy_output)
             )
 
             run_backtest(
@@ -366,11 +367,11 @@ class TestBacktestServiceErrorPropagation:
         )
 
         with patch(
-            "services.backtest_service._get_strategy_function"
+            "services.backtest_service._get_strategy_class"
         ) as mock_strategy:
 
             mock_strategy.return_value = (
-                lambda df, **kwargs: StrategyOutput(df=strategy_df, indicators=[])
+                lambda: SimpleNamespace(run=lambda df, **kwargs: StrategyOutput(df=strategy_df, indicators=[]))
             )
 
             with pytest.raises(
@@ -424,11 +425,11 @@ class TestBacktestServiceDefaults:
         mock_analyze_performance.return_value = analytics_result
 
         with patch(
-            "services.backtest_service._get_strategy_function"
+            "services.backtest_service._get_strategy_class"
         ) as mock_strategy:
 
             mock_strategy.return_value = (
-                lambda df, **kwargs: strategy_output
+                lambda: SimpleNamespace(run=lambda df, **kwargs: strategy_output)
             )
 
             run_backtest(

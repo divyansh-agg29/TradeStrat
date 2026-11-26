@@ -21,7 +21,7 @@ from data.service import get_stock_data
 from models import BacktestRequest, BacktestResult
 from portfolio import SimulationResult, simulate_portfolio
 from models import StrategyConfig
-from strategy import STRATEGY_REGISTRY, StrategyOutput
+from strategy import STRATEGY_CLASS_REGISTRY, StrategyOutput
 from utils.logger import get_logger
 
 from datetime import datetime, timedelta
@@ -54,7 +54,7 @@ def run_backtest(
 
     logger.info("Starting backtest (interval=%s).", request.interval)
 
-    strategy_function = _get_strategy_function(
+    strategy_class = _get_strategy_class(
         request.strategy.type
     )
 
@@ -62,7 +62,7 @@ def run_backtest(
 
     strategy_result = _execute_strategy(
         market_data,
-        strategy_function,
+        strategy_class,
         request.strategy,
     )
 
@@ -236,16 +236,16 @@ def _trim_to_requested_period(
         )
     return trimmed
 
-def _get_strategy_function(
+def _get_strategy_class(
     strategy_type: str,
 ):
     """
-    Retrieve the strategy implementation associated with the
+    Retrieve the strategy class associated with the
     supplied strategy type.
     """
 
     try:
-        return STRATEGY_REGISTRY[strategy_type]
+        return STRATEGY_CLASS_REGISTRY[strategy_type]
 
     except KeyError as exc:
         raise ValueError(
@@ -254,7 +254,7 @@ def _get_strategy_function(
 
 def _execute_strategy(
     market_data,
-    strategy_function,
+    strategy_class,
     strategy: StrategyConfig,
 ):
     """
@@ -266,7 +266,7 @@ def _execute_strategy(
         strategy.type,
     )
 
-    return strategy_function(
+    return strategy_class().run(
         market_data,
         **strategy.parameters,
     )

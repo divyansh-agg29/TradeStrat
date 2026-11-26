@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from strategy import generate_rsi_mean_reversion_signals
+from strategy import RsiStrategy
 from tests.strategy.helpers import create_market_data
 
 
@@ -12,7 +12,7 @@ class TestRSIMeanReversionSignalGeneration:
 
         df = create_market_data(range(1, 101))
 
-        result = generate_rsi_mean_reversion_signals(df).df
+        result = RsiStrategy().run(df).df
 
         assert "Signal" in result.columns
 
@@ -21,7 +21,7 @@ class TestRSIMeanReversionSignalGeneration:
 
         df = create_market_data(range(1, 101))
 
-        result = generate_rsi_mean_reversion_signals(df).df
+        result = RsiStrategy().run(df).df
 
         assert set(result["Signal"].unique()).issubset(
             {"BUY", "SELL", "HOLD"}
@@ -32,7 +32,7 @@ class TestRSIMeanReversionSignalGeneration:
 
         df = create_market_data([100] * 100)
 
-        result = generate_rsi_mean_reversion_signals(df).df
+        result = RsiStrategy().run(df).df
 
         assert set(result["Signal"].unique()) == {"HOLD"}
 
@@ -46,7 +46,7 @@ class TestRSIMeanReversionIndicatorIntegration:
 
         df["RSI14"] = 50
 
-        result = generate_rsi_mean_reversion_signals(df).df
+        result = RsiStrategy().run(df).df
 
         assert (result["RSI14"] == 50).all()
 
@@ -55,7 +55,7 @@ class TestRSIMeanReversionIndicatorIntegration:
 
         df = create_market_data(range(1, 101))
 
-        result = generate_rsi_mean_reversion_signals(df).df
+        result = RsiStrategy().run(df).df
 
         assert "RSI14" in result.columns
 
@@ -64,7 +64,7 @@ class TestRSIMeanReversionIndicatorIntegration:
 
         df = create_market_data(range(1, 101))
 
-        result = generate_rsi_mean_reversion_signals(
+        result = RsiStrategy().run(
             df,
             rsi_period=10,
         ).df
@@ -80,7 +80,7 @@ class TestRSIMeanReversionValidation:
         df = pd.DataFrame()
 
         with pytest.raises(ValueError, match="Input DataFrame cannot be empty"):
-            generate_rsi_mean_reversion_signals(df)
+            RsiStrategy().run(df)
 
     def test_invalid_rsi_period_raises_value_error(self):
         """RSI period must be positive."""
@@ -88,7 +88,7 @@ class TestRSIMeanReversionValidation:
         df = create_market_data(range(1, 101))
 
         with pytest.raises(ValueError, match="rsi_period must be greater than zero"):
-            generate_rsi_mean_reversion_signals(
+            RsiStrategy().run(
                 df,
                 rsi_period=0,
             )
@@ -99,7 +99,7 @@ class TestRSIMeanReversionValidation:
         df = create_market_data(range(1, 101))
 
         with pytest.raises(ValueError, match="overbought must be greater than oversold"):
-            generate_rsi_mean_reversion_signals(
+            RsiStrategy().run(
                 df,
                 overbought=30,
                 oversold=70,
@@ -111,7 +111,7 @@ class TestRSIMeanReversionValidation:
         df = create_market_data(range(1, 101))
 
         with pytest.raises(ValueError, match="overbought must be greater than oversold"):
-            generate_rsi_mean_reversion_signals(
+            RsiStrategy().run(
                 df,
                 overbought=50,
                 oversold=50,
@@ -123,7 +123,7 @@ class TestRSIMeanReversionValidation:
         df = create_market_data(range(1, 101))
 
         with pytest.raises(ValueError, match="Price column.*not found"):
-            generate_rsi_mean_reversion_signals(
+            RsiStrategy().run(
                 df,
                 price_column="AdjustedClose",
             )
@@ -137,7 +137,7 @@ class TestRSIMeanReversionDataFrameContract:
         df = create_market_data(range(1, 101))
         original = df.copy(deep=True)
 
-        generate_rsi_mean_reversion_signals(df)
+        RsiStrategy().run(df)
 
         pd.testing.assert_frame_equal(df, original)
 
@@ -146,7 +146,7 @@ class TestRSIMeanReversionDataFrameContract:
 
         df = create_market_data(range(1, 101))
 
-        result = generate_rsi_mean_reversion_signals(df).df
+        result = RsiStrategy().run(df).df
 
         assert result is not df
 
@@ -155,7 +155,7 @@ class TestRSIMeanReversionDataFrameContract:
 
         df = create_market_data(range(1, 101))
 
-        result = generate_rsi_mean_reversion_signals(df).df
+        result = RsiStrategy().run(df).df
 
         for column in df.columns:
             assert column in result.columns
@@ -170,7 +170,7 @@ class TestRSIMeanReversionDataFrameContract:
             freq="D",
         )
 
-        result = generate_rsi_mean_reversion_signals(df).df
+        result = RsiStrategy().run(df).df
 
         pd.testing.assert_index_equal(df.index, result.index)
 
@@ -182,7 +182,7 @@ class TestRSIMeanReversionEdgeCases:
 
         df = create_market_data(range(1, 101))
 
-        result = generate_rsi_mean_reversion_signals(df).df
+        result = RsiStrategy().run(df).df
 
         assert result.iloc[0]["Signal"] == "HOLD"
 
@@ -191,6 +191,6 @@ class TestRSIMeanReversionEdgeCases:
 
         df = create_market_data(range(1, 101))
 
-        result = generate_rsi_mean_reversion_signals(df).df
+        result = RsiStrategy().run(df).df
 
         assert result["Signal"].isna().sum() == 0
